@@ -16,6 +16,7 @@
 
             <nav class="nav" aria-label="Navegación principal">
                 <a href="{{ path('consumption_index') }}" class="{{ route starts with 'consumption' ? 'is-active' }}">Registro de consumo</a>
+                <a href="{{ path('non_conformity_index') }}" class="{{ route starts with 'non_conformity' ? 'is-active' }}">No conformidades</a>
                 {% if is_granted('ROLE_ADMIN') %}
                     <a href="{{ path('audit_index') }}" class="{{ route starts with 'audit' ? 'is-active' }}">Registro de actividad</a>
                     <a href="{{ path('admin_user_index') }}" class="{{ route starts with 'admin_user' ? 'is-active' }}">Usuarios</a>
