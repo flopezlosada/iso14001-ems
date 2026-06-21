@@ -1,0 +1,72 @@
+{% extends 'app_shell.html.twig' %}
+
+{% block title %}{{ nonConformity.reference }}{% endblock %}
+
+{% block breadcrumb %}
+    <a href="{{ path('app_homepage') }}">Inicio</a><span class="sep">/</span>
+    <a href="{{ path('non_conformity_index') }}">No conformidades</a><span class="sep">/</span>
+    {{ nonConformity.reference }}
+{% endblock %}
+
+{% block body %}
+    <div class="page-head">
+        <div>
+            <h1 class="mono">{{ nonConformity.reference }}</h1>
+            <p class="lead">{{ nonConformity.origin.label }}{% if nonConformity.originDetail %} · {{ nonConformity.originDetail }}{% endif %} · {{ nonConformity.status.label }}</p>
+        </div>
+        <a class="btn secondary" href="{{ path('non_conformity_edit', { id: nonConformity.id }) }}">Editar no conformidad</a>
+    </div>
+
+    <div class="card">
+        <dl class="detail-grid">
+            <dt>Fecha de apertura</dt><dd>{{ nonConformity.openedAt|date('d/m/Y') }}</dd>
+            <dt>Fecha de cierre</dt><dd>{{ nonConformity.closedAt ? nonConformity.closedAt|date('d/m/Y') : '—' }}</dd>
+            <dt>Proceso afectado</dt><dd>{{ nonConformity.affectedProcess ? nonConformity.affectedProcess.label : '—' }}</dd>
+            <dt>Apartado ISO 14001</dt><dd>{{ nonConformity.isoClause ?? '—' }}</dd>
+            <dt>Responsable</dt><dd>{{ nonConformity.responsible ? nonConformity.responsible.fullName : '—' }}</dd>
+        </dl>
+        <h2>Descripción</h2>
+        <p>{{ nonConformity.description|nl2br }}</p>
+        <h2>Análisis de causas</h2>
+        <p>{{ nonConformity.rootCause ? nonConformity.rootCause|nl2br : '—' }}</p>
+    </div>
+
+    <div class="page-head">
+        <h2>Acciones correctivas (PAC)</h2>
+        <a class="btn" href="{{ path('corrective_action_new', { id: nonConformity.id }) }}">+ Añadir acción</a>
+    </div>
+
+    <div class="card">
+        {% if nonConformity.correctiveActions is empty %}
+            <div class="empty-state">
+                <h2>Aún no hay acciones correctivas</h2>
+                <p>Añade la primera acción del plan para eliminar la causa de la no conformidad.</p>
+            </div>
+        {% else %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Ref.</th><th>Descripción</th><th>Responsable</th><th>Prevista</th><th>Autorización</th><th>Eficacia</th><th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for action in nonConformity.correctiveActions %}
+                        <tr>
+                            <td class="mono">{{ action.reference }}</td>
+                            <td class="muted">{{ action.description|length > 60 ? action.description|slice(0, 60) ~ '…' : action.description }}</td>
+                            <td>{{ action.responsible ? action.responsible.fullName : '—' }}</td>
+                            <td>{{ action.plannedDate ? action.plannedDate|date('d/m/Y') : '—' }}</td>
+                            <td>
+                                {%- if action.requiresDirectionAuthorization -%}
+                                    {{ action.authorizedBy ? 'Autorizada' : 'Pendiente' }}
+                                {%- else -%}No requiere{%- endif -%}
+                            </td>
+                            <td>{{ action.efficacy ? action.efficacy.label : 'Pendiente' }}</td>
+                            <td><a href="{{ path('corrective_action_edit', { id: nonConformity.id, actionId: action.id }) }}">Editar</a></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    </div>
+{% endblock %}

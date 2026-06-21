@@ -1,0 +1,32 @@
+{% extends 'app_shell.html.twig' %}
+
+{% block title %}{{ isNew ? 'Nueva acción correctiva' : 'Editar ' ~ action.reference }} · {{ nonConformity.reference }}{% endblock %}
+
+{% block breadcrumb %}
+    <a href="{{ path('app_homepage') }}">Inicio</a><span class="sep">/</span>
+    <a href="{{ path('non_conformity_index') }}">No conformidades</a><span class="sep">/</span>
+    <a href="{{ path('non_conformity_show', { id: nonConformity.id }) }}">{{ nonConformity.reference }}</a><span class="sep">/</span>
+    {{ isNew ? 'Nueva acción' : action.reference }}
+{% endblock %}
+
+{% block body %}
+    <div class="page-head">
+        <h1>{{ isNew ? 'Nueva acción correctiva' : 'Editar ' ~ action.reference }}</h1>
+    </div>
+
+    <div class="card" style="max-width: 640px;">
+        {{ form_start(form, { 'attr': { 'novalidate': 'novalidate' } }) }}
+            {{ form_errors(form) }}
+            {% for field in [form.description, form.responsible, form.plannedDate, form.implementationEvidence, form.requiresDirectionAuthorization, form.authorizedBy, form.reviewedBy, form.reviewedAt, form.efficacy] %}
+                <div class="form-row">
+                    {{ form_label(field) }}
+                    {{ form_widget(field) }}
+                    {% if field.vars.help %}<p class="help">{{ field.vars.help }}</p>{% endif %}
+                    {{ form_errors(field) }}
+                </div>
+            {% endfor %}
+            <button class="btn" type="submit">Guardar</button>
+            <a class="btn secondary" href="{{ path('non_conformity_show', { id: nonConformity.id }) }}">Cancelar</a>
+        {{ form_end(form) }}
+    </div>
+{% endblock %}
