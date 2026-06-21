@@ -56,4 +56,42 @@
             </table>
         {% endif %}
     </div>
+
+    <div class="page-head">
+        <h2>Incidencias</h2>
+        <a class="btn" href="{{ path('supplier_incident_new', { id: supplier.id }) }}">+ Añadir incidencia</a>
+    </div>
+
+    <div class="card">
+        {% if supplier.incidents is empty %}
+            <div class="empty-state">
+                <h2>Sin incidencias registradas</h2>
+                <p>Registra aquí los problemas de plazo, calidad o cumplimiento del proveedor.</p>
+            </div>
+        {% else %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Fecha</th><th>Descripción</th><th>Resolución</th><th>Grave</th><th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for incident in supplier.incidents %}
+                        <tr>
+                            <td>{{ incident.occurredOn|date('d/m/Y') }}</td>
+                            <td class="muted">{{ incident.description|length > 60 ? incident.description|slice(0, 60) ~ '…' : incident.description }}</td>
+                            <td class="muted">{{ incident.resolution ?? '—' }}</td>
+                            <td>
+                                {%- if incident.severe -%}
+                                    Sí ·
+                                    <a href="{{ path('non_conformity_new', { origin: 'internal', description: 'Incidencia con proveedor ' ~ supplier.name ~ ': ' ~ incident.description }) }}">Abrir NC</a>
+                                {%- else -%}No{%- endif -%}
+                            </td>
+                            <td><a href="{{ path('supplier_incident_edit', { id: supplier.id, incidentId: incident.id }) }}">Editar</a></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    </div>
 {% endblock %}
