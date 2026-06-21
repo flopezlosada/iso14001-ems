@@ -53,7 +53,18 @@ class SecurityController extends AbstractController
         }
 
         $email = trim((string) $request->request->get('email', ''));
-        $user = '' !== $email ? $users->findActiveByEmail($email) : null;
+
+        // Server-side validation (the native browser one is disabled): reject empty/malformed
+        // input here. This is about input format, not whether the address is registered, so it
+        // is safe to surface and does not enable user enumeration.
+        if (false === filter_var($email, \FILTER_VALIDATE_EMAIL)) {
+            return $this->render('security/login.html.twig', [
+                'google_sso_enabled' => '' !== $this->googleClientId,
+                'error' => 'Introduce un correo electrónico válido.',
+            ], new Response('', Response::HTTP_UNPROCESSABLE_ENTITY));
+        }
+
+        $user = $users->findActiveByEmail($email);
 
         if (null !== $user) {
             $loginLink = $loginLinkHandler->createLoginLink($user);

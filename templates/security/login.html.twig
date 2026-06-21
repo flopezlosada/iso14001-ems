@@ -5,6 +5,9 @@
 {% block body %}
     <h1>Acceso</h1>
     <div class="card">
+        {% if error is defined and error %}
+            <p class="form-error">{{ error }}</p>
+        {% endif %}
         <p class="muted">Introduce tu correo y te enviaremos un enlace para entrar, sin contraseña.</p>
         <form method="post" action="{{ path('login') }}" novalidate>
             <div class="form-row">

@@ -83,6 +83,16 @@ final class SecurityControllerTest extends WebTestCase
         self::assertEmailCount(0);
     }
 
+    public function testBlankEmailReshowsLoginWithErrorAndSendsNothing(): void
+    {
+        $client = static::createClient();
+        $client->request('POST', '/login', ['email' => '   ']);
+
+        self::assertResponseStatusCodeSame(422);
+        self::assertSelectorTextContains('.form-error', 'correo electrónico válido');
+        self::assertEmailCount(0);
+    }
+
     public function testRequestingLinkForInactiveUserSendsNothing(): void
     {
         $client = static::createClient();
