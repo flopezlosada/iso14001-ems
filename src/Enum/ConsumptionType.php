@@ -29,8 +29,25 @@ enum ConsumptionType: string
             self::ELECTRICITY => 'kWh',
             self::WATER => 'm³',
             self::GASOIL => 'L',
-            self::PAPER => 'packages',
-            self::TONER => 'cartridges',
+            self::PAPER => 'paquetes',
+            self::TONER => 'cartuchos',
+        };
+    }
+
+    /**
+     * Human-facing label (Spanish, the application's UI language). Single source of truth for
+     * the consumption type name, used both in forms and listings.
+     *
+     * @return string the display name
+     */
+    public function label(): string
+    {
+        return match ($this) {
+            self::ELECTRICITY => 'Luz',
+            self::WATER => 'Agua',
+            self::GASOIL => 'Gasoil',
+            self::PAPER => 'Papel',
+            self::TONER => 'Tóner',
         };
     }
 

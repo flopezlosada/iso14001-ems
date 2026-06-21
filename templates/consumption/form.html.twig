@@ -1,0 +1,23 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ reading.id ? 'Editar' : 'Nueva' }} lectura · {{ year }}{% endblock %}
+
+{% block body %}
+    <h1>{{ reading.id ? 'Editar lectura' : 'Nueva lectura' }} · {{ year }}</h1>
+
+    <div class="card">
+        {{ form_start(form) }}
+            {{ form_errors(form) }}
+            {% for field in [form.type, form.periodMonth, form.quantity, form.cost, form.notes] %}
+                <div class="form-row">
+                    {{ form_label(field) }}
+                    {{ form_widget(field) }}
+                    {% if field.vars.help %}<p class="help">{{ field.vars.help }}</p>{% endif %}
+                    {{ form_errors(field) }}
+                </div>
+            {% endfor %}
+            <button class="btn" type="submit">Guardar</button>
+            <a class="btn secondary" href="{{ path('consumption_year', { year: year }) }}">Cancelar</a>
+        {{ form_end(form) }}
+    </div>
+{% endblock %}

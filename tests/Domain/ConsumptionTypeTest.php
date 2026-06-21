@@ -17,8 +17,14 @@ final class ConsumptionTypeTest extends TestCase
         self::assertSame('kWh', ConsumptionType::ELECTRICITY->unit());
         self::assertSame('m³', ConsumptionType::WATER->unit());
         self::assertSame('L', ConsumptionType::GASOIL->unit());
-        self::assertSame('packages', ConsumptionType::PAPER->unit());
-        self::assertSame('cartridges', ConsumptionType::TONER->unit());
+        self::assertSame('paquetes', ConsumptionType::PAPER->unit());
+        self::assertSame('cartuchos', ConsumptionType::TONER->unit());
+    }
+
+    public function testEachTypeHasASpanishLabel(): void
+    {
+        self::assertSame('Luz', ConsumptionType::ELECTRICITY->label());
+        self::assertSame('Tóner', ConsumptionType::TONER->label());
     }
 
     public function testOnlyTonerDoesNotTrackCost(): void

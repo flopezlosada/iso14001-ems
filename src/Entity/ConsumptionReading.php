@@ -47,6 +47,7 @@ class ConsumptionReading
     #[ORM\Column(type: Types::DECIMAL, precision: 12, scale: 3)]
     #[Assert\NotNull]
     #[Assert\PositiveOrZero]
+    #[Assert\Regex(pattern: '/^\d{1,9}(\.\d{1,3})?$/', message: 'Introduce un número válido (usa el punto, máx. 3 decimales).')]
     private string $quantity;
 
     /**
@@ -54,6 +55,7 @@ class ConsumptionReading
      */
     #[ORM\Column(type: Types::DECIMAL, precision: 12, scale: 2, nullable: true)]
     #[Assert\PositiveOrZero]
+    #[Assert\Regex(pattern: '/^\d{1,10}(\.\d{1,2})?$/', message: 'Introduce un importe válido (usa el punto, máx. 2 decimales).')]
     private ?string $cost = null;
 
     #[ORM\Column(length: 255, nullable: true)]
@@ -85,6 +87,8 @@ class ConsumptionReading
     #[Assert\Callback]
     public function validateCost(\Symfony\Component\Validator\Context\ExecutionContextInterface $context): void
     {
+        // isset() guards the non-nullable typed $type: when the form is submitted without a
+        // type, it stays uninitialized and a direct access would be a fatal error here.
         if (null !== $this->cost && isset($this->type) && !$this->type->tracksCost()) {
             $context->buildViolation('This consumption type does not record a cost.')
                 ->atPath('cost')

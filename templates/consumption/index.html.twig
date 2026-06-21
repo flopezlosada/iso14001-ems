@@ -1,0 +1,43 @@
+{% extends 'base.html.twig' %}
+
+{% set month_names = ['', 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'] %}
+
+{% block title %}Consumos {{ year }}{% endblock %}
+
+{% block body %}
+    <h1>Consumos {{ year }}</h1>
+
+    <div class="toolbar">
+        <span class="muted">
+            <a class="btn secondary" href="{{ path('consumption_year', { year: year - 1 }) }}">← {{ year - 1 }}</a>
+            <a class="btn secondary" href="{{ path('consumption_year', { year: year + 1 }) }}">{{ year + 1 }} →</a>
+        </span>
+        <a class="btn" href="{{ path('consumption_new', { year: year }) }}">+ Añadir lectura</a>
+    </div>
+
+    <div class="card">
+        {% if readings is empty %}
+            <p class="muted">Todavía no hay lecturas registradas en {{ year }}.</p>
+        {% else %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Mes</th><th>Tipo</th><th>Cantidad</th><th>Coste</th><th>Observaciones</th><th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for reading in readings %}
+                        <tr>
+                            <td>{{ month_names[reading.periodMonth] }}</td>
+                            <td>{{ reading.type.label }}</td>
+                            <td>{{ reading.quantity }} {{ reading.type.unit }}</td>
+                            <td>{{ reading.cost is null ? '—' : reading.cost ~ ' €' }}</td>
+                            <td class="muted">{{ reading.notes ?? '' }}</td>
+                            <td><a href="{{ path('consumption_edit', { year: year, id: reading.id }) }}">Editar</a></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    </div>
+{% endblock %}
