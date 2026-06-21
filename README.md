@@ -33,6 +33,33 @@ ddev exec php bin/console doctrine:migrations:migrate --no-interaction
 The app reads `DATABASE_URL` from `.env`, defaulting to DDEV's internal MySQL service.
 Override it in `.env.local` (git-ignored) for any other environment.
 
+## Test data (seeding)
+
+Sample data lives in `src/DataFixtures` and is split in two groups:
+
+- **golden** — the stable backbone that would seed the eventual production database: roles and
+  permissions, the document registry (F.01), the environmental-aspect catalog and the
+  risks/opportunities register (both scored by the real `AspectSignificanceCalculator` /
+  `RiskScoreCalculator`, never by hand), the process-area map, legal requirements and objectives.
+- **demo** — sample transactional records to exercise the features (consumptions across
+  2024-2026, waste, suppliers, training, drills, indicators with measurements, non-conformities,
+  alerts, audit trail). The demo group **includes** the golden backbone it depends on.
+
+```bash
+ddev exec php bin/console doctrine:fixtures:load                  # everything (golden + demo)
+ddev exec php bin/console doctrine:fixtures:load --group=demo     # same as above
+ddev exec php bin/console doctrine:fixtures:load --group=golden   # only the production baseline
+```
+
+Log in locally with the seeded admin (`tester@example.test`): request a magic link and open it
+from Mailpit (`ddev launch -m`).
+
+> **All fixtures are synthetic** — names, e-mails (`@example.test`) and figures are invented,
+> modelled on the centre's real document structure but containing **no personal data**, so they
+> are safe to commit. The real IES La Cabrera data (PII/LOPD) is never seeded here: it will come
+> from a future ETL and live under the git-ignored `/fixtures/real/`, loaded only on local
+> machines.
+
 ## Quality gates
 
 ```bash

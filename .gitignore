@@ -1,4 +1,9 @@
 
+# Datos REALES de IES La Cabrera (PII / LOPD): jamás a git. Solo carga local.
+# Aquí va la salida del futuro ETL real (xlsx -> SQL/fixtures). Las fixtures
+# sintéticas de src/DataFixtures SÍ van a git: no contienen datos personales.
+/fixtures/real/
+
 ###> symfony/framework-bundle ###
 /.env.local
 /.env.local.php
