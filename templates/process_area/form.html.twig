@@ -1,0 +1,32 @@
+{% extends 'app_shell.html.twig' %}
+
+{% block title %}{{ isNew ? 'Nueva área' : 'Editar área' }}{% endblock %}
+
+{% block breadcrumb %}
+    <a href="{{ path('app_homepage') }}">Inicio</a><span class="sep">/</span>
+    <a href="{{ path('risk_index') }}">Riesgos y oportunidades</a><span class="sep">/</span>
+    <a href="{{ path('risk_area_index') }}">Procesos / Áreas</a><span class="sep">/</span>
+    {{ isNew ? 'Nueva área' : area.name }}
+{% endblock %}
+
+{% block body %}
+    <div class="page-head">
+        <h1>{{ isNew ? 'Nueva área' : 'Editar ' ~ area.name }}</h1>
+    </div>
+
+    <div class="card" style="max-width: 560px;">
+        {{ form_start(form, { 'attr': { 'novalidate': 'novalidate' } }) }}
+            {{ form_errors(form) }}
+            {% for field in [form.name, form.active] %}
+                <div class="form-row">
+                    {{ form_label(field) }}
+                    {{ form_widget(field) }}
+                    {% if field.vars.help %}<p class="help">{{ field.vars.help }}</p>{% endif %}
+                    {{ form_errors(field) }}
+                </div>
+            {% endfor %}
+            <button class="btn" type="submit">Guardar</button>
+            <a class="btn secondary" href="{{ path('risk_area_index') }}">Cancelar</a>
+        {{ form_end(form) }}
+    </div>
+{% endblock %}

@@ -1,0 +1,55 @@
+{% extends 'app_shell.html.twig' %}
+
+{% block title %}{{ item.type.label }} · {{ item.processArea.name }}{% endblock %}
+
+{% block breadcrumb %}
+    <a href="{{ path('app_homepage') }}">Inicio</a><span class="sep">/</span>
+    <a href="{{ path('risk_index') }}">Riesgos y oportunidades</a><span class="sep">/</span>
+    {{ item.type.label }}
+{% endblock %}
+
+{% block body %}
+    <div class="page-head">
+        <div>
+            <h1>{{ item.type.label }}</h1>
+            <p class="lead">{{ item.description }} <span class="muted">· {{ item.processArea.name }}</span></p>
+        </div>
+        <a class="btn secondary" href="{{ path('risk_edit', { id: item.id }) }}">Editar</a>
+    </div>
+
+    <div class="page-head">
+        <h2>Valoraciones por curso</h2>
+        <a class="btn" href="{{ path('risk_assessment_new', { id: item.id }) }}">+ Añadir valoración</a>
+    </div>
+
+    <div class="card">
+        {% if item.assessments is empty %}
+            <div class="empty-state">
+                <h2>Aún no hay valoraciones</h2>
+                <p>Valora el {{ item.type.label|lower }} para el curso en vigor ({{ item.type.firstFactorLabel|lower }} × impacto).</p>
+            </div>
+        {% else %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Curso</th><th>{{ item.type.firstFactorLabel }}</th><th>Impacto</th><th>PxI</th><th>Categoría</th><th>Rev.</th><th>Acciones</th><th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for assessment in item.assessments %}
+                        <tr>
+                            <td>{{ assessment.exercise }}</td>
+                            <td class="mono">{{ assessment.probability.value }}</td>
+                            <td class="mono">{{ assessment.impact.value }}</td>
+                            <td class="mono">{{ assessment.score }}</td>
+                            <td>{{ assessment.category ? assessment.category.label(item.type) : '—' }}</td>
+                            <td class="mono">{{ assessment.revisionNumber }}</td>
+                            <td class="muted">{{ assessment.actions|length }}</td>
+                            <td><a href="{{ path('risk_assessment_edit', { id: item.id, assessmentId: assessment.id }) }}">Editar</a></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    </div>
+{% endblock %}

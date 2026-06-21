@@ -1,0 +1,38 @@
+{% extends 'app_shell.html.twig' %}
+
+{% block title %}{{ isNew ? 'Nueva valoración' : 'Editar valoración ' ~ assessment.exercise }} · {{ item.type.label }}{% endblock %}
+
+{% block breadcrumb %}
+    <a href="{{ path('app_homepage') }}">Inicio</a><span class="sep">/</span>
+    <a href="{{ path('risk_index') }}">Riesgos y oportunidades</a><span class="sep">/</span>
+    <a href="{{ path('risk_show', { id: item.id }) }}">{{ item.type.label }}</a><span class="sep">/</span>
+    {{ isNew ? 'Nueva valoración' : 'Valoración ' ~ assessment.exercise }}
+{% endblock %}
+
+{% block body %}
+    <div class="page-head">
+        <h1>{{ isNew ? 'Nueva valoración' : 'Editar valoración ' ~ assessment.exercise }} · {{ item.type.label }}</h1>
+    </div>
+
+    <div class="card" style="max-width: 720px;">
+        {{ form_start(form, { 'attr': { 'novalidate': 'novalidate' } }) }}
+            {{ form_errors(form) }}
+            {% for field in [form.exercise, form.probability, form.impact, form.justification, form.revisionNumber] %}
+                <div class="form-row">
+                    {{ form_label(field) }}
+                    {{ form_widget(field) }}
+                    {% if field.vars.help %}<p class="help">{{ field.vars.help }}</p>{% endif %}
+                    {{ form_errors(field) }}
+                </div>
+            {% endfor %}
+
+            <h2>Plan de acción</h2>
+            <p class="help">Una o más acciones para abordar el {{ item.type.label|lower }}.</p>
+            {{ form_row(form.actions) }}
+
+            <p class="help">La puntuación (PxI) y la categoría se calculan automáticamente al guardar.</p>
+            <button class="btn" type="submit">Guardar</button>
+            <a class="btn secondary" href="{{ path('risk_show', { id: item.id }) }}">Cancelar</a>
+        {{ form_end(form) }}
+    </div>
+{% endblock %}
