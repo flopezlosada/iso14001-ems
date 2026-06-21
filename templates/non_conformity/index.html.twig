@@ -1,0 +1,46 @@
+{% extends 'app_shell.html.twig' %}
+
+{% block title %}No conformidades{% endblock %}
+
+{% block breadcrumb %}<a href="{{ path('app_homepage') }}">Inicio</a><span class="sep">/</span>No conformidades{% endblock %}
+
+{% block body %}
+    <div class="page-head">
+        <div>
+            <h1>No conformidades</h1>
+            <p class="lead">Listado de control de no conformidades del sistema de gestión ambiental (F.11.0).</p>
+        </div>
+        <a class="btn" href="{{ path('non_conformity_new') }}">+ Registrar no conformidad</a>
+    </div>
+
+    <div class="card">
+        {% if nonConformities is empty %}
+            <div class="empty-state">
+                <h2>Aún no hay no conformidades</h2>
+                <p>Registra la primera cuando detectes un incumplimiento.</p>
+                <a class="btn" href="{{ path('non_conformity_new') }}">Registrar la primera</a>
+            </div>
+        {% else %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Referencia</th><th>Apertura</th><th>Origen</th><th>Responsable</th><th>Descripción</th><th>Estado</th><th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for nc in nonConformities %}
+                        <tr>
+                            <td class="mono">{{ nc.reference }}</td>
+                            <td>{{ nc.openedAt|date('d/m/Y') }}</td>
+                            <td>{{ nc.origin.label }}{% if nc.originDetail %} <span class="muted">· {{ nc.originDetail }}</span>{% endif %}</td>
+                            <td>{{ nc.responsible ? nc.responsible.fullName : '—' }}</td>
+                            <td class="muted">{{ nc.description|length > 80 ? nc.description|slice(0, 80) ~ '…' : nc.description }}</td>
+                            <td>{{ nc.status.label }}</td>
+                            <td><a href="{{ path('non_conformity_show', { id: nc.id }) }}">Ver</a></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    </div>
+{% endblock %}

@@ -13,6 +13,7 @@ namespace App\Enum;
 enum Area: string
 {
     case CONSUMPTION = 'consumption';
+    case NONCONFORMITY = 'nonconformity';
     case WASTE = 'waste';
 
     /**
@@ -22,6 +23,7 @@ enum Area: string
     {
         return match ($this) {
             self::CONSUMPTION => 'Consumos',
+            self::NONCONFORMITY => 'No conformidades',
             self::WASTE => 'Residuos',
         };
     }
