@@ -51,6 +51,15 @@ class Supplier
     #[ORM\OrderBy(['year' => 'DESC'])]
     private Collection $evaluations;
 
+    /**
+     * Incidents detected during the commercial relationship (PC.05 §5.6).
+     *
+     * @var Collection<int, SupplierIncident>
+     */
+    #[ORM\OneToMany(targetEntity: SupplierIncident::class, mappedBy: 'supplier', cascade: ['persist', 'remove'], orphanRemoval: true)]
+    #[ORM\OrderBy(['occurredOn' => 'DESC'])]
+    private Collection $incidents;
+
     #[ORM\Column]
     private \DateTimeImmutable $createdAt;
 
@@ -62,6 +71,7 @@ class Supplier
         $this->createdAt = new \DateTimeImmutable();
         $this->updatedAt = $this->createdAt;
         $this->evaluations = new ArrayCollection();
+        $this->incidents = new ArrayCollection();
     }
 
     #[ORM\PrePersist]
@@ -142,6 +152,31 @@ class Supplier
     public function removeEvaluation(SupplierEvaluation $evaluation): static
     {
         $this->evaluations->removeElement($evaluation);
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, SupplierIncident> the incidents, most recent first
+     */
+    public function getIncidents(): Collection
+    {
+        return $this->incidents;
+    }
+
+    public function addIncident(SupplierIncident $incident): static
+    {
+        if (!$this->incidents->contains($incident)) {
+            $this->incidents->add($incident);
+            $incident->setSupplier($this);
+        }
+
+        return $this;
+    }
+
+    public function removeIncident(SupplierIncident $incident): static
+    {
+        $this->incidents->removeElement($incident);
 
         return $this;
     }

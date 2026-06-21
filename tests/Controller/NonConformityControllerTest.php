@@ -60,6 +60,22 @@ final class NonConformityControllerTest extends WebTestCase
         self::assertSelectorExists('select#non_conformity_origin');
     }
 
+    public function testNewFormPrefillsFromQueryParameters(): void
+    {
+        $client = $this->loggedInClient();
+        $crawler = $client->request('GET', '/non-conformities/new', [
+            'origin' => 'internal',
+            'description' => 'Incidencia con proveedor Hyguilander: producto defectuoso.',
+        ]);
+
+        self::assertResponseIsSuccessful();
+        self::assertSame(
+            'Incidencia con proveedor Hyguilander: producto defectuoso.',
+            $crawler->filter('#non_conformity_description')->text(),
+        );
+        self::assertSame('internal', $crawler->filter('#non_conformity_origin option[selected]')->attr('value'));
+    }
+
     public function testSubmittingValidNonConformityAutogeneratesReferenceAndRedirects(): void
     {
         $client = $this->loggedInClient();
