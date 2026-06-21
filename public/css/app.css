@@ -159,16 +159,13 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 500; color: var(--te
     color: var(--text);
     padding: 4px 6px;
 }
-.sidebar .brand .brand-mark {
-    width: 30px; height: 30px;
-    display: grid; place-items: center;
-    background: var(--accent);
-    color: var(--on-accent);
-    border-radius: var(--radius-sm);
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: .04em;
-}
+/* Marca SGA: el SVG hereda el color (currentColor). El contenedor lo fija al acento,
+   así sigue al tema claro/oscuro sin lógica extra. */
+.brand-mark { display: inline-flex; align-items: center; justify-content: center; color: var(--accent); }
+.brand-mark-svg { display: block; }
+.sidebar .brand .brand-mark { width: 30px; height: 30px; }
+.auth-card .brand-mark--lg { justify-content: center; margin: 0 auto 18px; }
+.dash-greeting .brand-mark--lg { flex: none; }
 .sidebar .brand .brand-name { font-family: var(--font-display); font-size: 17px; }
 
 .nav { display: flex; flex-direction: column; gap: 2px; }
