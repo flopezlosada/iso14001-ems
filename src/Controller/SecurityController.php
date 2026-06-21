@@ -23,16 +23,18 @@ use Symfony\Component\Security\Http\LoginLink\LoginLinkHandlerInterface;
 class SecurityController extends AbstractController
 {
     /**
-     * @param string $googleClientId the Google/Educamadrid OAuth client id; empty until
-     *                               credentials are set in .env.local, which keeps the SSO
-     *                               button disabled
+     * SSO is enabled only when the Google/Educamadrid OAuth client id is set (in .env.local);
+     * empty by default, which keeps the "Entrar con Educamadrid" button disabled.
      */
+    private readonly bool $googleSsoEnabled;
+
     public function __construct(
         #[Autowire('%env(GOOGLE_CLIENT_ID)%')]
-        private readonly string $googleClientId,
+        string $googleClientId,
         #[Autowire(service: 'limiter.magic_link')]
         private readonly RateLimiterFactory $magicLinkLimiter,
     ) {
+        $this->googleSsoEnabled = '' !== $googleClientId;
     }
 
     /**
@@ -43,7 +45,7 @@ class SecurityController extends AbstractController
     {
         if (!$request->isMethod('POST')) {
             return $this->render('security/login.html.twig', [
-                'google_sso_enabled' => '' !== $this->googleClientId,
+                'google_sso_enabled' => $this->googleSsoEnabled,
             ]);
         }
 
@@ -59,7 +61,7 @@ class SecurityController extends AbstractController
         // is safe to surface and does not enable user enumeration.
         if (false === filter_var($email, \FILTER_VALIDATE_EMAIL)) {
             return $this->render('security/login.html.twig', [
-                'google_sso_enabled' => '' !== $this->googleClientId,
+                'google_sso_enabled' => $this->googleSsoEnabled,
                 'error' => 'Introduce un correo electrónico válido.',
             ], new Response('', Response::HTTP_UNPROCESSABLE_ENTITY));
         }

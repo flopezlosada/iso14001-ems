@@ -1,0 +1,92 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Security;
+
+use App\Entity\User;
+use App\Repository\UserRepository;
+use KnpU\OAuth2ClientBundle\Client\ClientRegistry;
+use KnpU\OAuth2ClientBundle\Security\Authenticator\OAuth2Authenticator;
+use League\OAuth2\Client\Provider\GoogleUser;
+use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Session\FlashBagAwareSessionInterface;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
+use Symfony\Component\Security\Core\Exception\AuthenticationException;
+use Symfony\Component\Security\Core\Exception\CustomUserMessageAuthenticationException;
+use Symfony\Component\Security\Http\Authenticator\Passport\Badge\UserBadge;
+use Symfony\Component\Security\Http\Authenticator\Passport\Passport;
+use Symfony\Component\Security\Http\Authenticator\Passport\SelfValidatingPassport;
+
+/**
+ * Authenticates "Entrar con Educamadrid" (Google OAuth). Two gates:
+ *  1. the Google account must belong to the @educa.madrid.org domain, and
+ *  2. the user must already be registered and active (allow-list) — SSO never creates users.
+ */
+class GoogleAuthenticator extends OAuth2Authenticator
+{
+    private const ALLOWED_DOMAIN = 'educa.madrid.org';
+
+    public function __construct(
+        private readonly ClientRegistry $clientRegistry,
+        private readonly UserRepository $users,
+        private readonly UrlGeneratorInterface $urlGenerator,
+    ) {
+    }
+
+    public function supports(Request $request): ?bool
+    {
+        return 'connect_google_check' === $request->attributes->get('_route');
+    }
+
+    public function authenticate(Request $request): Passport
+    {
+        $client = $this->clientRegistry->getClient('google');
+        $accessToken = $this->fetchAccessToken($client);
+        $googleUser = $client->fetchUserFromToken($accessToken);
+        if (!$googleUser instanceof GoogleUser) {
+            throw new CustomUserMessageAuthenticationException('Respuesta inesperada del proveedor de acceso.');
+        }
+
+        $email = strtolower(trim((string) $googleUser->getEmail()));
+
+        // Exact domain match (no subdomains): compare the part after the last "@".
+        $atPos = strrpos($email, '@');
+        if (false === $atPos || substr($email, $atPos + 1) !== self::ALLOWED_DOMAIN) {
+            throw new CustomUserMessageAuthenticationException('Solo se permite el acceso con cuentas @educa.madrid.org.');
+        }
+
+        return new SelfValidatingPassport(new UserBadge($email, function (string $identifier): User {
+            $user = $this->users->findActiveByEmail($identifier);
+            if (null === $user) {
+                throw new CustomUserMessageAuthenticationException('Tu cuenta no está dada de alta en el sistema. Pide acceso al responsable.');
+            }
+
+            return $user;
+        }));
+    }
+
+    public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response
+    {
+        return new RedirectResponse($this->urlGenerator->generate('app_homepage'));
+    }
+
+    public function onAuthenticationFailure(Request $request, AuthenticationException $exception): ?Response
+    {
+        // CustomUserMessageAuthenticationException carries a Spanish, user-safe message; for any
+        // other failure show a generic message instead of an internal translation key.
+        $message = $exception instanceof CustomUserMessageAuthenticationException
+            ? $exception->getMessageKey()
+            : 'No se ha podido iniciar sesión. Inténtalo de nuevo.';
+
+        $session = $request->getSession();
+        if ($session instanceof FlashBagAwareSessionInterface) {
+            $session->getFlashBag()->add('error', $message);
+        }
+
+        return new RedirectResponse($this->urlGenerator->generate('login'));
+    }
+}

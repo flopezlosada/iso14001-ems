@@ -38,6 +38,7 @@
                 .btn.secondary { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
                 .flash { padding: .7rem 1rem; border-radius: var(--radius); margin-bottom: 1rem; }
                 .flash.success { background: #e6f4ec; color: var(--ok); }
+                .flash.error { background: #fdecea; color: var(--danger); }
                 .form-row { margin-bottom: 1rem; }
                 .form-row label { display: block; font-weight: 600; margin-bottom: .25rem; }
                 .form-row input, .form-row select {
@@ -66,6 +67,9 @@
         <main>
             {% for message in app.flashes('success') %}
                 <div class="flash success">{{ message }}</div>
+            {% endfor %}
+            {% for message in app.flashes('error') %}
+                <div class="flash error">{{ message }}</div>
             {% endfor %}
             {% block body %}{% endblock %}
         </main>

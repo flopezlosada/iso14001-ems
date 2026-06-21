@@ -15,6 +15,9 @@ security:
             lazy: true
             provider: app_user_provider
             entry_point: App\Security\LoginEntryPoint
+            custom_authenticators:
+                # The magic-link authenticator is registered automatically via the login_link key below.
+                - App\Security\GoogleAuthenticator
             login_throttling:
                 max_attempts: 5 # per IP + identifier, before the login check is throttled
                 interval: '15 minutes'
@@ -30,4 +33,5 @@ security:
     # Only the first matching rule applies.
     access_control:
         - { path: ^/login, roles: PUBLIC_ACCESS }
+        - { path: ^/connect, roles: PUBLIC_ACCESS }
         - { path: ^/, roles: ROLE_USER }
