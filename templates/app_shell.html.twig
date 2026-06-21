@@ -20,6 +20,7 @@
                 <a href="{{ path('non_conformity_index') }}" class="{{ route starts with 'non_conformity' ? 'is-active' }}">No conformidades</a>
                 <a href="{{ path('supplier_index') }}" class="{{ route starts with 'supplier' ? 'is-active' }}">Proveedores</a>
                 <a href="{{ path('training_index') }}" class="{{ route starts with 'training' ? 'is-active' }}">Formación</a>
+                <a href="{{ path('legal_requirement_index') }}" class="{{ route starts with 'legal_requirement' ? 'is-active' }}">Requisitos legales</a>
                 {% if is_granted('ROLE_ADMIN') %}
                     <a href="{{ path('audit_index') }}" class="{{ route starts with 'audit' ? 'is-active' }}">Registro de actividad</a>
                     <a href="{{ path('admin_user_index') }}" class="{{ route starts with 'admin_user' ? 'is-active' }}">Usuarios</a>

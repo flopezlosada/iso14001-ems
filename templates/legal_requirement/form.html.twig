@@ -1,0 +1,31 @@
+{% extends 'app_shell.html.twig' %}
+
+{% block title %}{{ isNew ? 'Registrar' : 'Editar' }} requisito legal{% endblock %}
+
+{% block breadcrumb %}
+    <a href="{{ path('app_homepage') }}">Inicio</a><span class="sep">/</span>
+    <a href="{{ path('legal_requirement_index') }}">Requisitos legales</a><span class="sep">/</span>
+    {{ isNew ? 'Registrar' : requirement.reference }}
+{% endblock %}
+
+{% block body %}
+    <div class="page-head">
+        <h1>{{ isNew ? 'Registrar requisito legal' : 'Editar ' ~ requirement.reference }}</h1>
+    </div>
+
+    <div class="card" style="max-width: 640px;">
+        {{ form_start(form, { 'attr': { 'novalidate': 'novalidate' } }) }}
+            {{ form_errors(form) }}
+            {% for field in [form.legalProvision, form.scope, form.environmentalVector, form.specificRequirement, form.complianceEvidence, form.complianceStatus, form.evaluationFrequency, form.lastReviewedOn, form.nextReviewOn] %}
+                <div class="form-row">
+                    {{ form_label(field) }}
+                    {{ form_widget(field) }}
+                    {% if field.vars.help %}<p class="help">{{ field.vars.help }}</p>{% endif %}
+                    {{ form_errors(field) }}
+                </div>
+            {% endfor %}
+            <button class="btn" type="submit">Guardar</button>
+            <a class="btn secondary" href="{{ path('legal_requirement_index') }}">Cancelar</a>
+        {{ form_end(form) }}
+    </div>
+{% endblock %}

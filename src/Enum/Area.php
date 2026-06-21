@@ -17,6 +17,7 @@ enum Area: string
     case WASTE = 'waste';
     case SUPPLIER = 'supplier';
     case TRAINING = 'training';
+    case LEGAL_REQUIREMENT = 'legal_requirement';
 
     /**
      * Human-facing area name (Spanish), used in the permissions matrix.
@@ -29,6 +30,7 @@ enum Area: string
             self::WASTE => 'Residuos',
             self::SUPPLIER => 'Proveedores',
             self::TRAINING => 'Formación',
+            self::LEGAL_REQUIREMENT => 'Requisitos legales',
         };
     }
 }
