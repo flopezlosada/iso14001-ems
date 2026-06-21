@@ -1,0 +1,58 @@
+{% extends 'app_shell.html.twig' %}
+
+{% block title %}{{ aspect.name }}{% endblock %}
+
+{% block breadcrumb %}
+    <a href="{{ path('app_homepage') }}">Inicio</a><span class="sep">/</span>
+    <a href="{{ path('aspect_index') }}">Aspectos ambientales</a><span class="sep">/</span>
+    {{ aspect.name }}
+{% endblock %}
+
+{% block body %}
+    <div class="page-head">
+        <div>
+            <h1>{{ aspect.name }}</h1>
+            <p class="lead">
+                {{ aspect.category ? aspect.category.label : aspect.type.label }}
+                {%- if aspect.unit %} · {{ aspect.unit }}{% endif %}
+                {%- if aspect.associatedImpact %} · {{ aspect.associatedImpact }}{% endif %}
+            </p>
+        </div>
+        <a class="btn secondary" href="{{ path('aspect_edit', { id: aspect.id }) }}">Editar aspecto</a>
+    </div>
+
+    <div class="page-head">
+        <h2>Evaluaciones anuales</h2>
+        <a class="btn" href="{{ path('aspect_evaluation_new', { id: aspect.id }) }}">+ Añadir evaluación</a>
+    </div>
+
+    <div class="card">
+        {% if aspect.evaluations is empty %}
+            <div class="empty-state">
+                <h2>Aún no hay evaluaciones</h2>
+                <p>Evalúa el aspecto para el año en curso (frecuencia, intensidad y peligrosidad).</p>
+            </div>
+        {% else %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Año</th><th>Frecuencia</th><th>Intensidad</th><th>Peligrosidad</th><th>Suma</th><th>Resultado</th><th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for evaluation in aspect.evaluations %}
+                        <tr>
+                            <td>{{ evaluation.year }}</td>
+                            <td>{{ evaluation.frequency ? evaluation.frequency.value : '—' }}</td>
+                            <td>{{ evaluation.intensity ? evaluation.intensity.value : '—' }}</td>
+                            <td>{{ evaluation.hazard ? evaluation.hazard.value : '—' }}</td>
+                            <td class="mono">{{ evaluation.significanceScore }}</td>
+                            <td>{{ evaluation.significant ? 'Significativo' : 'No significativo' }}</td>
+                            <td><a href="{{ path('aspect_evaluation_edit', { id: aspect.id, evaluationId: evaluation.id }) }}">Editar</a></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    </div>
+{% endblock %}

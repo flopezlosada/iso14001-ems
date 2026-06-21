@@ -1,0 +1,52 @@
+{% extends 'app_shell.html.twig' %}
+
+{% block title %}Aspectos ambientales{% endblock %}
+
+{% block breadcrumb %}<a href="{{ path('app_homepage') }}">Inicio</a><span class="sep">/</span>Aspectos ambientales{% endblock %}
+
+{% block body %}
+    <div class="page-head">
+        <div>
+            <h1>Aspectos ambientales</h1>
+            <p class="lead">Identificación y evaluación de aspectos ambientales directos (PG-06.01 / RG-06.01.01).</p>
+        </div>
+        <a class="btn" href="{{ path('aspect_new') }}">+ Registrar aspecto</a>
+    </div>
+
+    <div class="card">
+        {% if aspects is empty %}
+            <div class="empty-state">
+                <h2>Aún no hay aspectos</h2>
+                <p>Registra el primer aspecto ambiental del centro.</p>
+                <a class="btn" href="{{ path('aspect_new') }}">Registrar el primero</a>
+            </div>
+        {% else %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Aspecto</th><th>Categoría</th><th>Unidad</th><th>Significancia actual</th><th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for aspect in aspects %}
+                        {% set latest = aspect.latestEvaluation %}
+                        <tr>
+                            <td>{{ aspect.name }}{% if not aspect.active %} <span class="muted">(inactivo)</span>{% endif %}</td>
+                            <td>{{ aspect.category ? aspect.category.label : '—' }}</td>
+                            <td class="muted">{{ aspect.unit ?? '—' }}</td>
+                            <td>
+                                {%- if latest -%}
+                                    {{ latest.significant ? 'Significativo' : 'No significativo' }}
+                                    <span class="muted">· {{ latest.significanceScore }} ({{ latest.year }})</span>
+                                {%- else -%}
+                                    <span class="muted">Sin evaluar</span>
+                                {%- endif -%}
+                            </td>
+                            <td><a href="{{ path('aspect_show', { id: aspect.id }) }}">Ver</a></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    </div>
+{% endblock %}
