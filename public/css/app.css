@@ -168,6 +168,18 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 500; color: var(--te
 .dash-greeting .brand-mark--lg { flex: none; }
 .sidebar .brand .brand-name { font-family: var(--font-display); font-size: 17px; }
 
+/* Botón hamburguesa: transparente en el flujo de escritorio (oculto), barra superior en móvil.
+   display:contents hace que en escritorio la marca siga en la columna como antes. */
+.sidebar-head { display: contents; }
+.nav-toggle { display: none; background: transparent; border: 0; cursor: pointer; padding: 10px; color: var(--text); }
+.nav-toggle-bars, .nav-toggle-bars::before, .nav-toggle-bars::after {
+    content: ''; display: block; width: 20px; height: 2px; background: currentColor; border-radius: 2px;
+}
+.nav-toggle-bars { position: relative; }
+.nav-toggle-bars::before { position: absolute; top: -6px; left: 0; }
+.nav-toggle-bars::after { position: absolute; top: 6px; left: 0; }
+.nav-backdrop { display: none; }
+
 .nav { display: flex; flex-direction: column; gap: 2px; }
 .nav a {
     display: block;
@@ -531,17 +543,44 @@ input[type="email"], input[type="text"], select, textarea {
    ============================================================================= */
 @media (max-width: 760px) {
     .layout { grid-template-columns: 1fr; }
+    /* La barra lateral pasa a barra superior; la navegación entra como cajón lateral
+       desde la izquierda, superpuesta sobre el contenido, con fondo oscurecido. */
     .sidebar {
-        flex-direction: row;
-        align-items: center;
-        gap: 12px;
-        overflow-x: auto;
-        padding: 10px 14px;
+        flex-direction: column;
+        gap: 0;
+        padding: 8px 14px;
+        border-right: 0;
+        border-bottom: 1px solid var(--border);
     }
-    .sidebar .brand .brand-name { display: none; }
-    .nav { flex-direction: row; gap: 4px; }
-    .nav a { white-space: nowrap; padding: 6px 10px; }
+    .sidebar-head { display: flex; align-items: center; justify-content: space-between; }
+    .nav-toggle { display: inline-flex; align-items: center; }
     .sidebar .sidebar-foot { display: none; }
+
+    .nav {
+        position: fixed; top: 0; left: 0; bottom: 0;
+        width: 78%; max-width: 300px;
+        background: var(--surface-sidebar);
+        border-right: 1px solid var(--border);
+        padding: 16px 14px;
+        gap: 2px;
+        transform: translateX(-100%);
+        transition: transform .22s ease;
+        z-index: 60;
+        overflow-y: auto;
+    }
+    .sidebar.is-open .nav { transform: translateX(0); box-shadow: 0 0 40px rgba(0, 0, 0, .25); }
+    .nav a { padding: 11px 12px; }
+
+    .nav-backdrop {
+        display: block;
+        position: fixed; inset: 0;
+        background: rgba(0, 0, 0, .42);
+        opacity: 0; visibility: hidden;
+        transition: opacity .22s ease;
+        z-index: 55;
+    }
+    .sidebar.is-open .nav-backdrop { opacity: 1; visibility: visible; }
+
     .topbar { padding: 0 16px; height: auto; min-height: 56px; flex-wrap: wrap; padding-top: 8px; padding-bottom: 8px; }
     .page { padding: 22px 16px; }
     .page-head { flex-direction: column; }

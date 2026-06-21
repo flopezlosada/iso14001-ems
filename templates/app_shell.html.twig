@@ -9,12 +9,17 @@
 {% block shell %}
     <div class="layout">
         <aside class="sidebar">
-            <a class="brand" href="{{ path('app_homepage') }}">
-                <span class="brand-mark">{{ include('partials/_brand_mark.html.twig', { size: 30 }) }}</span>
-                <span class="brand-name">Gestión ambiental</span>
-            </a>
+            <div class="sidebar-head">
+                <a class="brand" href="{{ path('app_homepage') }}">
+                    <span class="brand-mark">{{ include('partials/_brand_mark.html.twig', { size: 30 }) }}</span>
+                    <span class="brand-name">Gestión ambiental</span>
+                </a>
+                <button class="nav-toggle" type="button" aria-label="Abrir menú" aria-expanded="false" aria-controls="main-nav">
+                    <span class="nav-toggle-bars"></span>
+                </button>
+            </div>
 
-            <nav class="nav" aria-label="Navegación principal">
+            <nav id="main-nav" class="nav" aria-label="Navegación principal">
                 <a href="{{ path('consumption_index') }}" class="{{ route starts with 'consumption' ? 'is-active' }}">Registro de consumo</a>
                 <a href="{{ path('waste_index') }}" class="{{ route starts with 'waste' ? 'is-active' }}">Residuos</a>
                 <a href="{{ path('non_conformity_index') }}" class="{{ route starts with 'non_conformity' ? 'is-active' }}">No conformidades</a>
@@ -25,6 +30,9 @@
                     <a href="{{ path('admin_role_index') }}" class="{{ route starts with 'admin_role' ? 'is-active' }}">Roles y permisos</a>
                 {% endif %}
             </nav>
+
+            {# Fondo oscurecido del cajón móvil; al pulsarlo se cierra. Solo visible en móvil. #}
+            <div class="nav-backdrop"></div>
 
             <div class="sidebar-foot">
                 SGA · ISO 14001<br>
