@@ -1,0 +1,50 @@
+{% extends 'app_shell.html.twig' %}
+
+{% block title %}Proveedores{% endblock %}
+
+{% block breadcrumb %}<a href="{{ path('app_homepage') }}">Inicio</a><span class="sep">/</span>Proveedores{% endblock %}
+
+{% block body %}
+    <div class="page-head">
+        <div>
+            <h1>Proveedores</h1>
+            <p class="lead">Control y evaluación de proveedores del sistema de gestión ambiental (F.12.0).</p>
+        </div>
+        <a class="btn" href="{{ path('supplier_new') }}">+ Registrar proveedor</a>
+    </div>
+
+    <div class="card">
+        {% if suppliers is empty %}
+            <div class="empty-state">
+                <h2>Aún no hay proveedores</h2>
+                <p>Registra el primer proveedor del centro.</p>
+                <a class="btn" href="{{ path('supplier_new') }}">Registrar el primero</a>
+            </div>
+        {% else %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Proveedor</th><th>Servicio y/o producto</th><th>Estado actual</th><th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for supplier in suppliers %}
+                        {% set latest = supplier.latestEvaluation %}
+                        <tr>
+                            <td>{{ supplier.name }}</td>
+                            <td class="muted">{{ supplier.productOrService }}</td>
+                            <td>
+                                {%- if latest -%}
+                                    {{ latest.criterion.statusLabel }} <span class="muted">· {{ latest.criterion.label }} ({{ latest.year }})</span>
+                                {%- else -%}
+                                    <span class="muted">Sin evaluar</span>
+                                {%- endif -%}
+                            </td>
+                            <td><a href="{{ path('supplier_show', { id: supplier.id }) }}">Ver</a></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    </div>
+{% endblock %}
