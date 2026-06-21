@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Entity;
 
+use App\Enum\Efficacy;
 use App\Enum\NonConformityOrigin;
 use App\Enum\NonConformityStatus;
 use App\Enum\ProcessType;
@@ -14,6 +15,7 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Validator\Context\ExecutionContextInterface;
 
 /**
  * A non-conformity (PC.10.0): any incident where an activity fails to meet a requirement. It is
@@ -269,6 +271,31 @@ class NonConformity
         $this->status = $status;
 
         return $this;
+    }
+
+    /**
+     * Soft closure rule (PC.10.0 §4.3.4): a non-conformity may only be closed once every corrective
+     * action has been reviewed effective (efficacy OK). A pending review (efficacy null) blocks
+     * closure, and a NO-OK review means the procedure must be reopened, not closed. A
+     * non-conformity resolved by an immediate correction (no corrective actions) can still be
+     * closed — that leniency keeps minor cases unencumbered.
+     */
+    #[Assert\Callback]
+    public function validateClosure(ExecutionContextInterface $context): void
+    {
+        if (NonConformityStatus::CLOSED !== $this->status) {
+            return;
+        }
+
+        foreach ($this->correctiveActions as $action) {
+            if (Efficacy::OK !== $action->getEfficacy()) {
+                $context->buildViolation('No se puede cerrar la no conformidad mientras alguna acción correctiva no esté verificada como eficaz (OK). Revisa o reabre las acciones pendientes o no eficaces.')
+                    ->atPath('status')
+                    ->addViolation();
+
+                return;
+            }
+        }
     }
 
     public function getOpenedAt(): \DateTimeImmutable
