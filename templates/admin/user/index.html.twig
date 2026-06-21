@@ -29,7 +29,7 @@
                     {% for user in users %}
                         <tr>
                             <td>{{ user.fullName }}</td>
-                            <td class="mono">{{ user.email }}</td>
+                            <td>{{ user.email }}</td>
                             <td>
                                 {% if user.active %}
                                     <span class="badge badge--success">Activo</span>
