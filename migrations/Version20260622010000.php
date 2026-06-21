@@ -11,7 +11,7 @@ use Doctrine\Migrations\AbstractMigration;
  * Add the explicit admin flag to role. Admin power stops being a side effect of the role code
  * ("admin") and becomes an auditable column; the existing admin role keeps its power via a backfill.
  */
-final class Version20260622000000 extends AbstractMigration
+final class Version20260622010000 extends AbstractMigration
 {
     public function getDescription(): string
     {
