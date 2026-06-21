@@ -61,7 +61,10 @@
         <header class="app">
             <a href="{{ path('app_homepage') }}">🌱 Gestión ISO 14001</a>
             {% if app.user %}
-                <span class="user-box">{{ app.user.userIdentifier }} · <a href="{{ path('app_logout') }}">Salir</a></span>
+                <span class="user-box">
+                    {% if is_granted('ROLE_ADMIN') %}<a href="{{ path('admin_user_index') }}">Usuarios</a> · <a href="{{ path('audit_index') }}">Registro</a> · {% endif %}
+                    {{ app.user.userIdentifier }} · <a href="{{ path('app_logout') }}">Salir</a>
+                </span>
             {% endif %}
         </header>
         <main>

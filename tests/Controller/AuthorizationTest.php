@@ -32,12 +32,12 @@ final class AuthorizationTest extends WebTestCase
             $role = new Role();
             $role->setCode('admin')->setName('Administrador');
             $em->persist($role);
-            $user->addRole($role);
+            $user->addAssignedRole($role);
         } elseif (null !== $consumptionLevel) {
             $role = new Role();
             $role->setCode('consumos')->setName('Consumos')->setLevel(Area::CONSUMPTION, $consumptionLevel);
             $em->persist($role);
-            $user->addRole($role);
+            $user->addAssignedRole($role);
         }
 
         $em->persist($user);
@@ -100,7 +100,7 @@ final class AuthorizationTest extends WebTestCase
         $em->persist($readOnly);
         $em->persist($writer);
         $user = (new User())->setFullName('Multi')->setEmail('multi@example.test')->setActive(true)
-            ->addRole($readOnly)->addRole($writer);
+            ->addAssignedRole($readOnly)->addAssignedRole($writer);
         $em->persist($user);
         $em->flush();
         $client->loginUser($user);
@@ -116,7 +116,7 @@ final class AuthorizationTest extends WebTestCase
 
         $role = (new Role())->setCode('consumos')->setName('Consumos')->setLevel(Area::CONSUMPTION, PermissionLevel::WRITE);
         $em->persist($role);
-        $user = (new User())->setFullName('Inactivo')->setEmail('inactivo@example.test')->setActive(false)->addRole($role);
+        $user = (new User())->setFullName('Inactivo')->setEmail('inactivo@example.test')->setActive(false)->addAssignedRole($role);
         $em->persist($user);
         $em->flush();
         $client->loginUser($user);

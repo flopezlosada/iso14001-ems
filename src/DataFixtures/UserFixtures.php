@@ -26,7 +26,7 @@ class UserFixtures extends Fixture
         $user->setFullName('Usuario de prueba')
             ->setEmail('tester@example.test')
             ->setActive(true)
-            ->addRole($admin);
+            ->addAssignedRole($admin);
         $manager->persist($user);
 
         $manager->flush();

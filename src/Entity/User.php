@@ -8,6 +8,7 @@ use App\Repository\UserRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Validator\Constraints as Assert;
 
@@ -22,6 +23,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  */
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: 'app_user')]
+#[UniqueEntity(fields: ['email'], message: 'Ya existe un usuario con ese correo.')]
 class User implements UserInterface
 {
     #[ORM\Id]
@@ -31,11 +33,13 @@ class User implements UserInterface
 
     #[ORM\Column(length: 180)]
     #[Assert\NotBlank]
+    #[Assert\Length(max: 180)]
     private string $fullName;
 
     #[ORM\Column(length: 180, unique: true)]
     #[Assert\NotBlank]
     #[Assert\Email]
+    #[Assert\Length(max: 180)]
     private string $email;
 
     #[ORM\Column]
@@ -104,7 +108,7 @@ class User implements UserInterface
         return $this->assignedRoles;
     }
 
-    public function addRole(Role $role): static
+    public function addAssignedRole(Role $role): static
     {
         if (!$this->assignedRoles->contains($role)) {
             $this->assignedRoles->add($role);
@@ -113,7 +117,7 @@ class User implements UserInterface
         return $this;
     }
 
-    public function removeRole(Role $role): static
+    public function removeAssignedRole(Role $role): static
     {
         $this->assignedRoles->removeElement($role);
 

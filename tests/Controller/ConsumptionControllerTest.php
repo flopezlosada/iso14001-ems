@@ -32,7 +32,7 @@ final class ConsumptionControllerTest extends WebTestCase
         $em->persist($role);
 
         $user = new User();
-        $user->setFullName('Tester')->setEmail('consumo-tester@example.test')->setActive(true)->addRole($role);
+        $user->setFullName('Tester')->setEmail('consumo-tester@example.test')->setActive(true)->addAssignedRole($role);
         $em->persist($user);
         $em->flush();
 

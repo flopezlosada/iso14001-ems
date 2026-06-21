@@ -27,7 +27,7 @@ final class SecurityControllerTest extends WebTestCase
             $role = new Role();
             $role->setCode('admin')->setName('Administrador');
             $em->persist($role);
-            $user->addRole($role);
+            $user->addAssignedRole($role);
         }
 
         $em->persist($user);
