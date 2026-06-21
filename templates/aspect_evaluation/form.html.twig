@@ -1,0 +1,33 @@
+{% extends 'app_shell.html.twig' %}
+
+{% block title %}{{ isNew ? 'Nueva evaluación' : 'Editar evaluación ' ~ evaluation.year }} · {{ aspect.name }}{% endblock %}
+
+{% block breadcrumb %}
+    <a href="{{ path('app_homepage') }}">Inicio</a><span class="sep">/</span>
+    <a href="{{ path('aspect_index') }}">Aspectos ambientales</a><span class="sep">/</span>
+    <a href="{{ path('aspect_show', { id: aspect.id }) }}">{{ aspect.name }}</a><span class="sep">/</span>
+    {{ isNew ? 'Nueva evaluación' : 'Evaluación ' ~ evaluation.year }}
+{% endblock %}
+
+{% block body %}
+    <div class="page-head">
+        <h1>{{ isNew ? 'Nueva evaluación' : 'Editar evaluación ' ~ evaluation.year }} · {{ aspect.name }}</h1>
+    </div>
+
+    <div class="card" style="max-width: 560px;">
+        {{ form_start(form, { 'attr': { 'novalidate': 'novalidate' } }) }}
+            {{ form_errors(form) }}
+            {% for field in [form.year, form.frequency, form.intensity, form.hazard, form.notes] %}
+                <div class="form-row">
+                    {{ form_label(field) }}
+                    {{ form_widget(field) }}
+                    {% if field.vars.help %}<p class="help">{{ field.vars.help }}</p>{% endif %}
+                    {{ form_errors(field) }}
+                </div>
+            {% endfor %}
+            <p class="help">La suma y el resultado (significativo / no significativo) se calculan automáticamente al guardar.</p>
+            <button class="btn" type="submit">Guardar</button>
+            <a class="btn secondary" href="{{ path('aspect_show', { id: aspect.id }) }}">Cancelar</a>
+        {{ form_end(form) }}
+    </div>
+{% endblock %}

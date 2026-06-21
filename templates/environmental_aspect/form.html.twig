@@ -1,0 +1,31 @@
+{% extends 'app_shell.html.twig' %}
+
+{% block title %}{{ isNew ? 'Registrar' : 'Editar' }} aspecto ambiental{% endblock %}
+
+{% block breadcrumb %}
+    <a href="{{ path('app_homepage') }}">Inicio</a><span class="sep">/</span>
+    <a href="{{ path('aspect_index') }}">Aspectos ambientales</a><span class="sep">/</span>
+    {{ isNew ? 'Registrar' : aspect.name }}
+{% endblock %}
+
+{% block body %}
+    <div class="page-head">
+        <h1>{{ isNew ? 'Registrar aspecto ambiental' : 'Editar ' ~ aspect.name }}</h1>
+    </div>
+
+    <div class="card" style="max-width: 560px;">
+        {{ form_start(form, { 'attr': { 'novalidate': 'novalidate' } }) }}
+            {{ form_errors(form) }}
+            {% for field in [form.name, form.category, form.unit, form.associatedImpact, form.active] %}
+                <div class="form-row">
+                    {{ form_label(field) }}
+                    {{ form_widget(field) }}
+                    {% if field.vars.help %}<p class="help">{{ field.vars.help }}</p>{% endif %}
+                    {{ form_errors(field) }}
+                </div>
+            {% endfor %}
+            <button class="btn" type="submit">Guardar</button>
+            <a class="btn secondary" href="{{ path('aspect_index') }}">Cancelar</a>
+        {{ form_end(form) }}
+    </div>
+{% endblock %}
