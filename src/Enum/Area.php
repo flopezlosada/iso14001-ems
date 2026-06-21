@@ -14,6 +14,7 @@ enum Area: string
 {
     case CONSUMPTION = 'consumption';
     case NONCONFORMITY = 'nonconformity';
+    case WASTE = 'waste';
 
     /**
      * Human-facing area name (Spanish), used in the permissions matrix.
@@ -23,6 +24,7 @@ enum Area: string
         return match ($this) {
             self::CONSUMPTION => 'Consumos',
             self::NONCONFORMITY => 'No conformidades',
+            self::WASTE => 'Residuos',
         };
     }
 }

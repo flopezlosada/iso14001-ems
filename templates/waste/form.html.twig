@@ -1,0 +1,38 @@
+{% extends 'app_shell.html.twig' %}
+
+{% block title %}{{ record.id ? 'Editar retirada' : 'Nueva retirada' }}{% endblock %}
+
+{% block breadcrumb %}
+    <a href="{{ path('app_homepage') }}">Inicio</a><span class="sep">/</span>
+    <a href="{{ path('waste_index') }}">Residuos</a><span class="sep">/</span>
+    {{ record.id ? 'Editar' : 'Nueva' }}
+{% endblock %}
+
+{% block body %}
+    <div class="page-head">
+        <h1>{{ record.id ? 'Editar retirada' : 'Nueva retirada' }}</h1>
+    </div>
+
+    <div class="card" style="max-width: 560px;">
+        {{ form_start(form, { 'attr': { 'novalidate': 'novalidate' } }) }}
+            {{ form_errors(form) }}
+            {% for field in [form.lerCode, form.description, form.quantityKg, form.pickupDate, form.manager] %}
+                <div class="form-row">
+                    {{ form_label(field) }}
+                    {{ form_widget(field) }}
+                    {% if field.vars.help %}<p class="help">{{ field.vars.help }}</p>{% endif %}
+                    {{ form_errors(field) }}
+                </div>
+            {% endfor %}
+            <div class="form-row">
+                {{ form_widget(form.hazardous) }} {{ form_label(form.hazardous) }}
+            </div>
+            <div class="form-row">
+                {{ form_label(form.notes) }}
+                {{ form_widget(form.notes) }}
+            </div>
+            <button class="btn" type="submit">Guardar</button>
+            <a class="btn secondary" href="{{ path('waste_index') }}">Cancelar</a>
+        {{ form_end(form) }}
+    </div>
+{% endblock %}
