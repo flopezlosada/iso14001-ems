@@ -1,0 +1,44 @@
+{% extends 'app_shell.html.twig' %}
+
+{% block title %}Procesos / Áreas{% endblock %}
+
+{% block breadcrumb %}
+    <a href="{{ path('app_homepage') }}">Inicio</a><span class="sep">/</span>
+    <a href="{{ path('risk_index') }}">Riesgos y oportunidades</a><span class="sep">/</span>
+    Procesos / Áreas
+{% endblock %}
+
+{% block body %}
+    <div class="page-head">
+        <div>
+            <h1>Procesos / Áreas</h1>
+            <p class="lead">Catálogo configurable de áreas usadas en los riesgos y oportunidades.</p>
+        </div>
+        <a class="btn" href="{{ path('risk_area_new') }}">+ Nueva área</a>
+    </div>
+
+    <div class="card">
+        {% if areas is empty %}
+            <div class="empty-state">
+                <h2>Aún no hay áreas</h2>
+                <p>Crea la primera área (p. ej. Formación, Secretaría, Dirección).</p>
+                <a class="btn" href="{{ path('risk_area_new') }}">Crear la primera</a>
+            </div>
+        {% else %}
+            <table>
+                <thead>
+                    <tr><th>Área</th><th>Estado</th><th></th></tr>
+                </thead>
+                <tbody>
+                    {% for area in areas %}
+                        <tr>
+                            <td>{{ area.name }}</td>
+                            <td>{{ area.active ? 'Activa' : 'Inactiva' }}</td>
+                            <td><a href="{{ path('risk_area_edit', { id: area.id }) }}">Editar</a></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    </div>
+{% endblock %}

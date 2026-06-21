@@ -1,0 +1,66 @@
+{% extends 'app_shell.html.twig' %}
+
+{% set month_names = ['', 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'] %}
+
+{% block title %}{{ indicator.name }}{% endblock %}
+
+{% block breadcrumb %}
+    <a href="{{ path('app_homepage') }}">Inicio</a><span class="sep">/</span>
+    <a href="{{ path('indicator_index') }}">Indicadores</a><span class="sep">/</span>
+    {{ indicator.name }}
+{% endblock %}
+
+{% block body %}
+    <div class="page-head">
+        <div>
+            <h1>{{ indicator.name }}</h1>
+            <p class="lead">{{ indicator.process.label }} · {{ indicator.periodicity.label }}{% if indicator.referenceValue %} · ref. {{ indicator.referenceValue }}{% endif %}</p>
+        </div>
+        <a class="btn secondary" href="{{ path('indicator_edit', { id: indicator.id }) }}">Editar indicador</a>
+    </div>
+
+    {% if indicator.measurementDescription %}
+        <div class="card">
+            <h2>Descripción de la medición</h2>
+            <p>{{ indicator.measurementDescription|nl2br }}</p>
+        </div>
+    {% endif %}
+
+    <div class="page-head">
+        <h2>Mediciones</h2>
+        <a class="btn" href="{{ path('indicator_measurement_new', { id: indicator.id }) }}">+ Añadir medición</a>
+    </div>
+
+    <div class="card">
+        {% if indicator.measurements is empty %}
+            <div class="empty-state">
+                <h2>Sin mediciones registradas</h2>
+                <p>Registra la primera medición del indicador.</p>
+            </div>
+        {% else %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Año</th><th>Mes</th><th>Valor</th><th>¿Transgrede?</th><th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for measurement in indicator.measurements %}
+                        <tr>
+                            <td>{{ measurement.year }}</td>
+                            <td>{{ month_names[measurement.month] }}</td>
+                            <td class="mono">{{ measurement.value }}</td>
+                            <td>
+                                {%- if measurement.breached -%}
+                                    Sí ·
+                                    <a href="{{ path('non_conformity_new', { origin: 'internal', description: 'Indicador fuera del valor de referencia: ' ~ indicator.name ~ ' (' ~ month_names[measurement.month] ~ ' ' ~ measurement.year ~ '), valor ' ~ measurement.value ~ ', referencia ' ~ (indicator.referenceValue ?? 'n/d') }) }}">Abrir NC</a>
+                                {%- else -%}No{%- endif -%}
+                            </td>
+                            <td><a href="{{ path('indicator_measurement_edit', { id: indicator.id, measurementId: measurement.id }) }}">Editar</a></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    </div>
+{% endblock %}

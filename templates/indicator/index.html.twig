@@ -1,0 +1,44 @@
+{% extends 'app_shell.html.twig' %}
+
+{% block title %}Indicadores{% endblock %}
+
+{% block breadcrumb %}<a href="{{ path('app_homepage') }}">Inicio</a><span class="sep">/</span>Indicadores{% endblock %}
+
+{% block body %}
+    <div class="page-head">
+        <div>
+            <h1>Indicadores</h1>
+            <p class="lead">Medición de indicadores del desempeño ambiental (F.09.0).</p>
+        </div>
+        <a class="btn" href="{{ path('indicator_new') }}">+ Registrar indicador</a>
+    </div>
+
+    <div class="card">
+        {% if indicators is empty %}
+            <div class="empty-state">
+                <h2>Aún no hay indicadores</h2>
+                <p>Registra el primer indicador del desempeño ambiental.</p>
+                <a class="btn" href="{{ path('indicator_new') }}">Registrar el primero</a>
+            </div>
+        {% else %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Indicador</th><th>Proceso</th><th>Periodicidad</th><th>Valor de referencia</th><th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for indicator in indicators %}
+                        <tr>
+                            <td>{{ indicator.name }}{% if not indicator.active %} <span class="muted">(inactivo)</span>{% endif %}</td>
+                            <td>{{ indicator.process.label }}</td>
+                            <td>{{ indicator.periodicity.label }}</td>
+                            <td class="muted">{{ indicator.referenceValue ?? '—' }}</td>
+                            <td><a href="{{ path('indicator_show', { id: indicator.id }) }}">Ver</a></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    </div>
+{% endblock %}
