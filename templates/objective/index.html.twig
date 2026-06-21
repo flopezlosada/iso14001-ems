@@ -1,0 +1,51 @@
+{% extends 'app_shell.html.twig' %}
+
+{% block title %}Objetivos{% endblock %}
+
+{% block breadcrumb %}<a href="{{ path('app_homepage') }}">Inicio</a><span class="sep">/</span>Objetivos{% endblock %}
+
+{% block body %}
+    <div class="page-head">
+        <div>
+            <h1>Objetivos</h1>
+            <p class="lead">Objetivos ambientales del ejercicio y su cumplimiento (PG-06.04 / F.07.01).</p>
+        </div>
+        <a class="btn" href="{{ path('objective_new') }}">+ Registrar objetivo</a>
+    </div>
+
+    <div class="card">
+        {% if objectives is empty %}
+            <div class="empty-state">
+                <h2>Aún no hay objetivos</h2>
+                <p>Registra el primer objetivo del ejercicio (normalmente a partir de los aspectos significativos).</p>
+                <a class="btn" href="{{ path('objective_new') }}">Registrar el primero</a>
+            </div>
+        {% else %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Ref.</th><th>Objetivo</th><th>Responsable</th><th>Aspecto</th><th>Periodo</th><th>Cumplimiento</th><th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for objective in objectives %}
+                        <tr>
+                            <td class="mono">{{ objective.reference }}</td>
+                            <td>{{ objective.description|length > 70 ? objective.description|slice(0, 70) ~ '…' : objective.description }}</td>
+                            <td>{{ objective.responsible ? objective.responsible.fullName : '—' }}</td>
+                            <td class="muted">{{ objective.relatedAspect ? objective.relatedAspect.name : '—' }}</td>
+                            <td class="muted">{{ objective.targetPeriod ?? '—' }}</td>
+                            <td>
+                                {{ objective.status.label }}
+                                {%- if objective.notAchieved %} ·
+                                    <a href="{{ path('non_conformity_new', { origin: 'internal', description: 'Objetivo no cumplido ' ~ objective.reference ~ ': ' ~ objective.description }) }}">Abrir NC</a>
+                                {%- endif -%}
+                            </td>
+                            <td><a href="{{ path('objective_edit', { id: objective.id }) }}">Editar</a></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    </div>
+{% endblock %}

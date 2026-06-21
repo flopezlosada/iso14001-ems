@@ -8,6 +8,7 @@ use App\Entity\EnvironmentalAspect;
 use App\Entity\Role;
 use App\Entity\User;
 use App\Enum\Area;
+use App\Enum\AspectType;
 use App\Enum\DirectAspectCategory;
 use App\Enum\PermissionLevel;
 use App\Repository\EnvironmentalAspectRepository;
@@ -93,5 +94,67 @@ final class AspectEvaluationControllerTest extends WebTestCase
         self::assertNotNull($latest);
         self::assertSame(8, $latest->getSignificanceScore());
         self::assertFalse($latest->isSignificant());
+    }
+
+    /**
+     * @return array{0: KernelBrowser, 1: int} [client, aspectId]
+     */
+    private function scenarioForType(AspectType $type): array
+    {
+        $client = static::createClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+
+        $role = (new Role())->setCode('aspectos')->setName('Gestión de aspectos')->setLevel(Area::ASPECT, PermissionLevel::WRITE);
+        $em->persist($role);
+        $user = (new User())->setFullName('Tester')->setEmail('atype-tester@example.test')->setActive(true)->addAssignedRole($role);
+        $em->persist($user);
+        $aspect = (new EnvironmentalAspect())->setName('Aspecto')->setType($type);
+        $em->persist($aspect);
+        $em->flush();
+        $client->loginUser($user);
+
+        return [$client, $aspect->getId()];
+    }
+
+    public function testAbnormalEvaluationSumsItsCriteria(): void
+    {
+        [$client, $aspectId] = $this->scenarioForType(AspectType::ABNORMAL);
+        $client->request('GET', '/aspects/'.$aspectId.'/evaluations/new');
+        // The form must expose the abnormal criteria, not the direct ones.
+        self::assertSelectorExists('select#aspect_evaluation_probability');
+
+        $client->submitForm('Guardar', [
+            'aspect_evaluation[year]' => '2026',
+            'aspect_evaluation[probability]' => '6',
+            'aspect_evaluation[control]' => '4',
+            'aspect_evaluation[severity]' => '4',
+        ]);
+
+        $aspect = static::getContainer()->get(EnvironmentalAspectRepository::class)->find($aspectId);
+        self::assertNotNull($aspect);
+        $latest = $aspect->getLatestEvaluation();
+        self::assertNotNull($latest);
+        self::assertSame(14, $latest->getSignificanceScore());
+        self::assertTrue($latest->isSignificant());
+    }
+
+    public function testIndirectEvaluationKeepsManualSignificance(): void
+    {
+        [$client, $aspectId] = $this->scenarioForType(AspectType::INDIRECT);
+        $client->request('GET', '/aspects/'.$aspectId.'/evaluations/new');
+        self::assertSelectorExists('select#aspect_evaluation_influence');
+
+        $client->submitForm('Guardar', [
+            'aspect_evaluation[year]' => '2026',
+            'aspect_evaluation[influence]' => '3',
+            'aspect_evaluation[significant]' => '1',
+        ]);
+
+        $aspect = static::getContainer()->get(EnvironmentalAspectRepository::class)->find($aspectId);
+        self::assertNotNull($aspect);
+        $latest = $aspect->getLatestEvaluation();
+        self::assertNotNull($latest);
+        self::assertSame(3, $latest->getSignificanceScore());
+        self::assertTrue($latest->isSignificant());
     }
 }

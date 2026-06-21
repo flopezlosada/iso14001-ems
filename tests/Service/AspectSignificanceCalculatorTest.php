@@ -6,7 +6,9 @@ namespace App\Tests\Service;
 
 use App\Entity\AspectEvaluation;
 use App\Entity\EnvironmentalAspect;
+use App\Enum\AspectType;
 use App\Enum\DirectAspectCategory;
+use App\Enum\InfluenceLevel;
 use App\Enum\ScoreLevel;
 use App\Service\AspectSignificanceCalculator;
 use PHPUnit\Framework\TestCase;
@@ -102,6 +104,34 @@ final class AspectSignificanceCalculatorTest extends TestCase
         self::assertFalse($evaluation->isSignificant());
 
         (new AspectSignificanceCalculator(6))->apply($evaluation);
+        self::assertTrue($evaluation->isSignificant());
+    }
+
+    public function testAbnormalAspectSumsProbabilityControlSeverity(): void
+    {
+        $aspect = (new EnvironmentalAspect())->setType(AspectType::ABNORMAL);
+        $evaluation = (new AspectEvaluation())->setAspect($aspect)
+            ->setProbability(ScoreLevel::HIGH)   // 6
+            ->setControl(ScoreLevel::MEDIUM)     // 4
+            ->setSeverity(ScoreLevel::HIGH);     // 6
+
+        (new AspectSignificanceCalculator(10))->apply($evaluation);
+
+        self::assertSame(16, $evaluation->getSignificanceScore());
+        self::assertTrue($evaluation->isSignificant());
+    }
+
+    public function testIndirectAspectRecordsInfluenceAndKeepsManualSignificance(): void
+    {
+        $aspect = (new EnvironmentalAspect())->setType(AspectType::INDIRECT);
+        $evaluation = (new AspectEvaluation())->setAspect($aspect)
+            ->setInfluence(InfluenceLevel::HIGH)
+            ->setSignificant(true); // manual decision (no threshold defined for indirect)
+
+        (new AspectSignificanceCalculator(10))->apply($evaluation);
+
+        // Score reflects the influence; the manual significant flag is preserved (not overwritten).
+        self::assertSame(3, $evaluation->getSignificanceScore());
         self::assertTrue($evaluation->isSignificant());
     }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Entity;
 
+use App\Enum\InfluenceLevel;
 use App\Enum\ScoreLevel;
 use App\Repository\AspectEvaluationRepository;
 use Doctrine\DBAL\Types\Types;
@@ -47,6 +48,23 @@ class AspectEvaluation
 
     #[ORM\Column(type: Types::SMALLINT, nullable: true, enumType: ScoreLevel::class)]
     private ?ScoreLevel $hazard = null;
+
+    // --- Criteria for abnormal aspects (PG-06.01 Anexo III), each scored 2/4/6 ---
+
+    #[ORM\Column(type: Types::SMALLINT, nullable: true, enumType: ScoreLevel::class)]
+    private ?ScoreLevel $probability = null;
+
+    #[ORM\Column(type: Types::SMALLINT, nullable: true, enumType: ScoreLevel::class)]
+    private ?ScoreLevel $control = null;
+
+    #[ORM\Column(type: Types::SMALLINT, nullable: true, enumType: ScoreLevel::class)]
+    private ?ScoreLevel $severity = null;
+
+    /**
+     * Capacity-of-influence score for indirect aspects (PG-06.01 Anexo II), 1/2/3.
+     */
+    #[ORM\Column(type: Types::SMALLINT, nullable: true, enumType: InfluenceLevel::class)]
+    private ?InfluenceLevel $influence = null;
 
     /**
      * Computed significance sum. Maintained by the calculator on save; not edited directly.
@@ -143,6 +161,54 @@ class AspectEvaluation
     public function setHazard(?ScoreLevel $hazard): static
     {
         $this->hazard = $hazard;
+
+        return $this;
+    }
+
+    public function getProbability(): ?ScoreLevel
+    {
+        return $this->probability;
+    }
+
+    public function setProbability(?ScoreLevel $probability): static
+    {
+        $this->probability = $probability;
+
+        return $this;
+    }
+
+    public function getControl(): ?ScoreLevel
+    {
+        return $this->control;
+    }
+
+    public function setControl(?ScoreLevel $control): static
+    {
+        $this->control = $control;
+
+        return $this;
+    }
+
+    public function getSeverity(): ?ScoreLevel
+    {
+        return $this->severity;
+    }
+
+    public function setSeverity(?ScoreLevel $severity): static
+    {
+        $this->severity = $severity;
+
+        return $this;
+    }
+
+    public function getInfluence(): ?InfluenceLevel
+    {
+        return $this->influence;
+    }
+
+    public function setInfluence(?InfluenceLevel $influence): static
+    {
+        $this->influence = $influence;
 
         return $this;
     }
