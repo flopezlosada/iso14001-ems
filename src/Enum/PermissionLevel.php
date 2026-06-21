@@ -26,6 +26,18 @@ enum PermissionLevel: string
         return $this->rank() >= $required->rank();
     }
 
+    /**
+     * Human-facing label (Spanish) for the access level.
+     */
+    public function label(): string
+    {
+        return match ($this) {
+            self::NONE => 'Sin acceso',
+            self::READ => 'Lectura',
+            self::WRITE => 'Escritura',
+        };
+    }
+
     private function rank(): int
     {
         return match ($this) {

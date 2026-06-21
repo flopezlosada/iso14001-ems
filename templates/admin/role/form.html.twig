@@ -1,0 +1,50 @@
+{% extends 'app_shell.html.twig' %}
+
+{% block title %}{{ role.id ? 'Editar rol' : 'Nuevo rol' }}{% endblock %}
+
+{% block breadcrumb %}
+    <a href="{{ path('app_homepage') }}">Inicio</a><span class="sep">/</span>
+    <a href="{{ path('admin_role_index') }}">Roles y permisos</a><span class="sep">/</span>
+    {{ role.id ? 'Editar' : 'Nuevo' }}
+{% endblock %}
+
+{% block body %}
+    <div class="page-head">
+        <h1>{{ role.id ? 'Editar rol' : 'Nuevo rol' }}</h1>
+    </div>
+
+    <div class="card" style="max-width: 560px;">
+        {{ form_start(form, { 'attr': { 'novalidate': 'novalidate' } }) }}
+            {{ form_errors(form) }}
+            <div class="form-row">
+                {{ form_label(form.code) }}
+                {{ form_widget(form.code) }}
+                {% if form.code.vars.help %}<p class="help">{{ form.code.vars.help }}</p>{% endif %}
+                {{ form_errors(form.code) }}
+            </div>
+            <div class="form-row">
+                {{ form_label(form.name) }}
+                {{ form_widget(form.name) }}
+                {{ form_errors(form.name) }}
+            </div>
+            <div class="form-row">
+                {{ form_label(form.description) }}
+                {{ form_widget(form.description) }}
+            </div>
+
+            <h2 style="font-size: 20px; margin: 24px 0 4px;">Permisos por área</h2>
+            <p class="muted" style="margin-top: 0;">Define el acceso de este rol a cada área. La escritura incluye la lectura.</p>
+            {% for child in form %}
+                {% if child.vars.name starts with 'perm_' %}
+                    <div class="form-row">
+                        {{ form_label(child) }}
+                        {{ form_widget(child) }}
+                    </div>
+                {% endif %}
+            {% endfor %}
+
+            <button class="btn" type="submit">Guardar</button>
+            <a class="btn secondary" href="{{ path('admin_role_index') }}">Cancelar</a>
+        {{ form_end(form) }}
+    </div>
+{% endblock %}

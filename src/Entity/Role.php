@@ -6,10 +6,12 @@ namespace App\Entity;
 
 use App\Enum\Area;
 use App\Enum\PermissionLevel;
+use App\Repository\RoleRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
@@ -21,7 +23,8 @@ use Symfony\Component\Validator\Constraints as Assert;
  * stable {@see $code} allows programmatic lookups (e.g. approval-by-type rules) independently
  * of the human-facing {@see $name}.
  */
-#[ORM\Entity]
+#[ORM\Entity(repositoryClass: RoleRepository::class)]
+#[UniqueEntity(fields: ['code'], message: 'Ya existe un rol con ese código.')]
 class Role
 {
     #[ORM\Id]
@@ -35,10 +38,12 @@ class Role
      */
     #[ORM\Column(length: 50, unique: true)]
     #[Assert\NotBlank]
+    #[Assert\Length(max: 50)]
     private string $code;
 
     #[ORM\Column(length: 120)]
     #[Assert\NotBlank]
+    #[Assert\Length(max: 120)]
     private string $name;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
@@ -46,7 +51,8 @@ class Role
 
     /**
      * Read/write access per area: a map of area value => level value. Areas absent from the map
-     * grant no access.
+     * grant no access. Stored as a JSON object in MySQL (e.g. {"consumption":"write"}); an empty
+     * map serialises as {} — keep that in mind for any future direct JSON queries.
      *
      * @var array<string, string>
      */
