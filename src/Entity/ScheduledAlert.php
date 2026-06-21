@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Entity;
 
 use App\Enum\AlertFrequency;
+use App\Repository\ScheduledAlertRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
@@ -16,7 +17,7 @@ use Doctrine\ORM\Mapping as ORM;
  *
  * This is the backbone of the system's value: making sure no review slips past an audit.
  */
-#[ORM\Entity]
+#[ORM\Entity(repositoryClass: ScheduledAlertRepository::class)]
 class ScheduledAlert
 {
     #[ORM\Id]
@@ -69,6 +70,29 @@ class ScheduledAlert
     public function isDue(\DateTimeImmutable $on): bool
     {
         return $this->nextDueDate <= $on;
+    }
+
+    /**
+     * Whether this alert should trigger a notification on the given date.
+     *
+     * Event-driven alerts have no scheduled reminder (they fire when the event happens, not on a
+     * date). A fixed-cadence alert needs notifying once it is due and has not yet been notified in
+     * the current cycle — i.e. it was never notified, or last notified before the current due date.
+     *
+     * @param \DateTimeImmutable $on reference date (today)
+     *
+     * @return bool true if a reminder e-mail is owed
+     */
+    public function needsNotification(\DateTimeImmutable $on): bool
+    {
+        if (AlertFrequency::ON_EVENT === $this->frequency) {
+            return false;
+        }
+        if (!$this->isDue($on)) {
+            return false;
+        }
+
+        return null === $this->lastNotifiedAt || $this->lastNotifiedAt < $this->nextDueDate;
     }
 
     /**
