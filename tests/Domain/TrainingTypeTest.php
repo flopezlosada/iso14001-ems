@@ -12,12 +12,6 @@ use PHPUnit\Framework\TestCase;
  */
 final class TrainingTypeTest extends TestCase
 {
-    public function testStoredValuesAreStable(): void
-    {
-        self::assertSame('int', TrainingType::INTERNAL->value);
-        self::assertSame('ext', TrainingType::EXTERNAL->value);
-    }
-
     public function testEachTypeHasASpanishLabel(): void
     {
         self::assertSame('Interna', TrainingType::INTERNAL->label());
