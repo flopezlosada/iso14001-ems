@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Domain;
 
+use App\DataFixtures\RoleFixtures;
 use App\Entity\Role;
 use App\Enum\Area;
 use App\Enum\PermissionLevel;
@@ -43,5 +44,19 @@ final class RoleTest extends TestCase
     {
         self::assertFalse((new Role())->isAdmin());
         self::assertTrue((new Role())->setAdmin(true)->isAdmin());
+    }
+
+    public function testSeededCatalogGrantsAdminOnlyToTheAdminRole(): void
+    {
+        $catalog = RoleFixtures::catalog();
+
+        self::assertArrayHasKey('admin', $catalog);
+        self::assertTrue($catalog['admin']->isAdmin(), 'The seeded admin role must carry ROLE_ADMIN on a fresh database');
+
+        foreach ($catalog as $code => $role) {
+            if ('admin' !== $code) {
+                self::assertFalse($role->isAdmin(), sprintf('Role "%s" must not be admin', $code));
+            }
+        }
     }
 }

@@ -24,7 +24,14 @@ final class RoleFixtures extends AbstractGoldenFixture
         return 'role-'.$code;
     }
 
-    public function load(ObjectManager $manager): void
+    /**
+     * The role catalog as domain objects, keyed by code. Kept separate from persistence so the
+     * backbone invariants — in particular which role carries the admin flag — can be asserted in
+     * isolation without spinning up the database.
+     *
+     * @return array<string, Role>
+     */
+    public static function catalog(): array
     {
         // code => [display name, area => level]. Areas absent from the map grant no access.
         $w = PermissionLevel::WRITE;
@@ -58,12 +65,25 @@ final class RoleFixtures extends AbstractGoldenFixture
             'cleaning' => ['Personal de Limpieza y Mantenimiento', []],
         ];
 
+        $catalog = [];
         foreach ($roles as $code => [$name, $permissions]) {
             $role = new Role();
-            $role->setCode($code)->setName($name);
+            // Only the 'admin' role carries the admin flag. The runtime migration backfills
+            // existing databases; a fresh fixtures load (local/CI/clean deploy) needs it set here
+            // or no user would ever obtain ROLE_ADMIN and /admin + /audit would be locked out.
+            $role->setCode($code)->setName($name)->setAdmin('admin' === $code);
             foreach ($permissions as $area => $level) {
                 $role->setLevel(Area::from($area), $level);
             }
+            $catalog[$code] = $role;
+        }
+
+        return $catalog;
+    }
+
+    public function load(ObjectManager $manager): void
+    {
+        foreach (self::catalog() as $code => $role) {
             $manager->persist($role);
             $this->addReference(self::ref($code), $role);
         }
