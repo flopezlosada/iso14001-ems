@@ -33,19 +33,36 @@
                 <p>Evalúa el aspecto para el año en curso (frecuencia, intensidad y peligrosidad).</p>
             </div>
         {% else %}
+            {% set type = aspect.type.value %}
             <table>
                 <thead>
                     <tr>
-                        <th>Año</th><th>Frecuencia</th><th>Intensidad</th><th>Peligrosidad</th><th>Suma</th><th>Resultado</th><th></th>
+                        <th>Año</th>
+                        {% if type == 'abnormal' %}
+                            <th>Probabilidad</th><th>Control</th><th>Severidad</th>
+                        {% elseif type == 'indirect' %}
+                            <th>Influencia</th>
+                        {% else %}
+                            <th>Frecuencia</th><th>Intensidad</th><th>Peligrosidad</th>
+                        {% endif %}
+                        <th>Suma</th><th>Resultado</th><th></th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for evaluation in aspect.evaluations %}
                         <tr>
                             <td>{{ evaluation.year }}</td>
-                            <td>{{ evaluation.frequency ? evaluation.frequency.value : '—' }}</td>
-                            <td>{{ evaluation.intensity ? evaluation.intensity.value : '—' }}</td>
-                            <td>{{ evaluation.hazard ? evaluation.hazard.value : '—' }}</td>
+                            {% if type == 'abnormal' %}
+                                <td>{{ evaluation.probability ? evaluation.probability.value : '—' }}</td>
+                                <td>{{ evaluation.control ? evaluation.control.value : '—' }}</td>
+                                <td>{{ evaluation.severity ? evaluation.severity.value : '—' }}</td>
+                            {% elseif type == 'indirect' %}
+                                <td>{{ evaluation.influence ? evaluation.influence.value : '—' }}</td>
+                            {% else %}
+                                <td>{{ evaluation.frequency ? evaluation.frequency.value : '—' }}</td>
+                                <td>{{ evaluation.intensity ? evaluation.intensity.value : '—' }}</td>
+                                <td>{{ evaluation.hazard ? evaluation.hazard.value : '—' }}</td>
+                            {% endif %}
                             <td class="mono">{{ evaluation.significanceScore }}</td>
                             <td>{{ evaluation.significant ? 'Significativo' : 'No significativo' }}</td>
                             <td><a href="{{ path('aspect_evaluation_edit', { id: aspect.id, evaluationId: evaluation.id }) }}">Editar</a></td>

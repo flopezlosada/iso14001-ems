@@ -17,15 +17,18 @@
     <div class="card" style="max-width: 560px;">
         {{ form_start(form, { 'attr': { 'novalidate': 'novalidate' } }) }}
             {{ form_errors(form) }}
-            {% for field in [form.year, form.frequency, form.intensity, form.hazard, form.notes] %}
-                <div class="form-row">
-                    {{ form_label(field) }}
-                    {{ form_widget(field) }}
-                    {% if field.vars.help %}<p class="help">{{ field.vars.help }}</p>{% endif %}
-                    {{ form_errors(field) }}
-                </div>
+            {# The criteria fields depend on the aspect type, so render them dynamically. #}
+            {% for child in form %}
+                {% if child.vars.name != '_token' %}
+                    <div class="form-row">
+                        {{ form_label(child) }}
+                        {{ form_widget(child) }}
+                        {% if child.vars.help %}<p class="help">{{ child.vars.help }}</p>{% endif %}
+                        {{ form_errors(child) }}
+                    </div>
+                {% endif %}
             {% endfor %}
-            <p class="help">La suma y el resultado (significativo / no significativo) se calculan automáticamente al guardar.</p>
+            <p class="help">La suma y el resultado se calculan automáticamente al guardar (salvo en indirectos, sin umbral definido).</p>
             <button class="btn" type="submit">Guardar</button>
             <a class="btn secondary" href="{{ path('aspect_show', { id: aspect.id }) }}">Cancelar</a>
         {{ form_end(form) }}

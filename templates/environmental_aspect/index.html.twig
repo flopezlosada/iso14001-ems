@@ -32,7 +32,7 @@
                         {% set latest = aspect.latestEvaluation %}
                         <tr>
                             <td>{{ aspect.name }}{% if not aspect.active %} <span class="muted">(inactivo)</span>{% endif %}</td>
-                            <td>{{ aspect.category ? aspect.category.label : '—' }}</td>
+                            <td>{{ aspect.category ? aspect.category.label : aspect.type.label }}</td>
                             <td class="muted">{{ aspect.unit ?? '—' }}</td>
                             <td>
                                 {%- if latest -%}
