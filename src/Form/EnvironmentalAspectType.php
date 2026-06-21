@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Form;
 
 use App\Entity\EnvironmentalAspect;
+use App\Enum\AspectType;
 use App\Enum\DirectAspectCategory;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
@@ -27,9 +28,16 @@ class EnvironmentalAspectType extends AbstractType
             ->add('name', TextType::class, [
                 'label' => 'Aspecto ambiental',
             ])
+            ->add('type', EnumType::class, [
+                'class' => AspectType::class,
+                'label' => 'Tipo',
+                'choice_label' => static fn (AspectType $t): string => $t->label(),
+            ])
             ->add('category', EnumType::class, [
                 'class' => DirectAspectCategory::class,
-                'label' => 'Categoría',
+                'label' => 'Categoría (solo aspectos directos)',
+                'required' => false,
+                'placeholder' => 'No aplica',
                 'choice_label' => static fn (DirectAspectCategory $c): string => $c->label(),
             ])
             ->add('unit', TextType::class, [
