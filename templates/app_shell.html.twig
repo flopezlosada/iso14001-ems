@@ -20,9 +20,15 @@
             </div>
 
             <nav id="main-nav" class="nav" aria-label="Navegación principal">
+                {# El día a día: por aquí entra el trabajo, no por la lista de módulos. #}
+                <a href="{{ path('obligation_index') }}" class="{{ route starts with 'obligation_index' ? 'is-active' }}">Qué toca</a>
+                <a href="{{ path('obligation_structure') }}" class="{{ route starts with 'obligation_structure' ? 'is-active' }}">Estructura del SGA</a>
+                <a href="{{ path('non_conformity_index') }}" class="{{ route starts with 'non_conformity' ? 'is-active' }}">No conformidades</a>
+
+                {# Módulos: normalmente se llega a ellos desde cada obligación; aquí como acceso directo. #}
+                <p class="nav-label">Registros y módulos</p>
                 <a href="{{ path('consumption_index') }}" class="{{ route starts with 'consumption' ? 'is-active' }}">Registro de consumo</a>
                 <a href="{{ path('waste_index') }}" class="{{ route starts with 'waste' ? 'is-active' }}">Residuos</a>
-                <a href="{{ path('non_conformity_index') }}" class="{{ route starts with 'non_conformity' ? 'is-active' }}">No conformidades</a>
                 <a href="{{ path('supplier_index') }}" class="{{ route starts with 'supplier' ? 'is-active' }}">Proveedores</a>
                 <a href="{{ path('training_index') }}" class="{{ route starts with 'training' ? 'is-active' }}">Formación</a>
                 <a href="{{ path('legal_requirement_index') }}" class="{{ route starts with 'legal_requirement' ? 'is-active' }}">Requisitos legales</a>
@@ -32,6 +38,7 @@
                 <a href="{{ path('objective_index') }}" class="{{ route starts with 'objective' ? 'is-active' }}">Objetivos</a>
                 <a href="{{ path('indicator_index') }}" class="{{ route starts with 'indicator' ? 'is-active' }}">Indicadores</a>
                 {% if is_granted('ROLE_ADMIN') %}
+                    <p class="nav-label">Administración</p>
                     <a href="{{ path('audit_index') }}" class="{{ route starts with 'audit' ? 'is-active' }}">Registro de actividad</a>
                     <a href="{{ path('admin_user_index') }}" class="{{ route starts with 'admin_user' ? 'is-active' }}">Usuarios</a>
                     <a href="{{ path('admin_role_index') }}" class="{{ route starts with 'admin_role' ? 'is-active' }}">Roles y permisos</a>

@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace App\Entity;
 
+use App\Enum\AlertFrequency;
 use App\Enum\Area;
 use App\Enum\DocumentType;
 use App\Enum\IsoChapter;
 use App\Enum\ObligationStatus;
+use App\Enum\ObligationUrgency;
 use App\Enum\PdcaPhase;
+use App\Repository\DocumentRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
@@ -24,7 +27,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  * inconsistent (duplicates, collisions, several codes for the same document). Inherited codes
  * are kept in {@see $legacyCodes} for traceability.
  */
-#[ORM\Entity]
+#[ORM\Entity(repositoryClass: DocumentRepository::class)]
 #[ORM\HasLifecycleCallbacks]
 class Document
 {
@@ -171,6 +174,75 @@ class Document
         }
 
         return $current;
+    }
+
+    /**
+     * The date-derived urgency of this obligation on the given date: the most urgent of all its
+     * review cadences. Event-driven alerts never count as overdue; an obligation with no fixed
+     * cadence is {@see ObligationUrgency::EVENT_DRIVEN}, and one with no alerts at all is on track.
+     *
+     * NOTE: iterates the alerts collection. To classify many obligations at once, eager-load the
+     * alerts with a JOIN (see {@see \App\Repository\DocumentRepository::findObligations()}) to
+     * avoid an N+1 query.
+     *
+     * @param \DateTimeImmutable $on       reference date (today)
+     * @param int                $soonDays how many days ahead still count as "due soon"
+     *
+     * @return ObligationUrgency the worst-case urgency across the obligation's cadences
+     */
+    public function dueStatus(\DateTimeImmutable $on, int $soonDays = 30): ObligationUrgency
+    {
+        $soonLimit = $on->modify(sprintf('+%d days', $soonDays));
+
+        $worst = null;
+        foreach ($this->alerts as $alert) {
+            $urgency = $this->urgencyOf($alert, $on, $soonLimit);
+            if (null === $worst || $urgency->isMoreUrgentThan($worst)) {
+                $worst = $urgency;
+            }
+        }
+
+        return $worst ?? ObligationUrgency::ON_TRACK;
+    }
+
+    /**
+     * Urgency contributed by a single alert: event-driven alerts have no due date, the rest are
+     * classified against today and the "due soon" window.
+     */
+    private function urgencyOf(ScheduledAlert $alert, \DateTimeImmutable $on, \DateTimeImmutable $soonLimit): ObligationUrgency
+    {
+        if (AlertFrequency::ON_EVENT === $alert->getFrequency()) {
+            return ObligationUrgency::EVENT_DRIVEN;
+        }
+
+        $due = $alert->getNextDueDate();
+        if ($due < $on) {
+            return ObligationUrgency::OVERDUE;
+        }
+
+        return $due <= $soonLimit ? ObligationUrgency::DUE_SOON : ObligationUrgency::ON_TRACK;
+    }
+
+    /**
+     * The earliest fixed-cadence review due date among this obligation's alerts, or null when it
+     * is purely event-driven (no scheduled date). Used to show "next review" in the day-to-day view.
+     *
+     * @return \DateTimeImmutable|null the soonest due date, or null if none is scheduled
+     */
+    public function nextReviewDate(): ?\DateTimeImmutable
+    {
+        $earliest = null;
+        foreach ($this->alerts as $alert) {
+            if (AlertFrequency::ON_EVENT === $alert->getFrequency()) {
+                continue;
+            }
+            $due = $alert->getNextDueDate();
+            if (null === $earliest || $due < $earliest) {
+                $earliest = $due;
+            }
+        }
+
+        return $earliest;
     }
 
     public function getId(): ?int
