@@ -9,7 +9,7 @@
             <p class="form-error">{{ error }}</p>
         {% endif %}
         <p class="muted">Introduce tu correo y te enviaremos un enlace para entrar, sin contraseña.</p>
-        <form method="post" action="{{ path('login') }}" novalidate>
+        <form id="login-form" method="post" action="{{ path('login') }}" novalidate>
             <div class="form-row">
                 <label for="email">Correo electrónico</label>
                 <input type="email" id="email" name="email" required autofocus inputmode="email" autocomplete="email">
@@ -26,4 +26,36 @@
             <p class="help">El acceso con Educamadrid estará disponible próximamente.</p>
         {% endif %}
     </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    {# Client-side validation with our own styled, Spanish message (the native browser UI is
+       disabled). The server still validates: this is a UX layer, not the security boundary. #}
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var form = document.getElementById('login-form');
+            if (!form) {
+                return;
+            }
+            var email = document.getElementById('email');
+            var emailPattern = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+
+            form.addEventListener('submit', function (event) {
+                var value = (email.value || '').trim();
+                if (value === '' || !emailPattern.test(value)) {
+                    event.preventDefault();
+                    var card = form.closest('.card');
+                    var error = card.querySelector('.js-form-error');
+                    if (!error) {
+                        error = document.createElement('p');
+                        error.className = 'form-error js-form-error';
+                        card.insertBefore(error, card.firstChild);
+                    }
+                    error.textContent = 'Introduce un correo electrónico válido.';
+                    email.focus();
+                }
+            });
+        });
+    </script>
 {% endblock %}
