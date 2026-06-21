@@ -1,0 +1,8 @@
+framework:
+    # La UI es en español; el locale ya se fija en framework.yaml. Lo repetimos aquí
+    # para no depender del orden de carga, y caemos a 'es' ante cualquier traducción ausente.
+    default_locale: es
+    translator:
+        default_path: '%kernel.project_dir%/translations'
+        fallbacks:
+            - es
