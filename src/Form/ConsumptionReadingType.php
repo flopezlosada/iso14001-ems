@@ -9,9 +9,11 @@ use App\Enum\ConsumptionType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\EnumType;
+use Symfony\Component\Form\Extension\Core\Type\FileType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Validator\Constraints\File;
 
 /**
  * Form to capture or edit a single monthly {@see ConsumptionReading}. The period year is set by
@@ -52,6 +54,21 @@ class ConsumptionReadingType extends AbstractType
             ->add('notes', TextType::class, [
                 'label' => 'Observaciones',
                 'required' => false,
+            ])
+            // Not mapped: the entity stores the path, not the uploaded file. The controller moves
+            // the file via FileUploader and fills the path. Validation lives here (KISS, idiomatic).
+            ->add('invoiceFile', FileType::class, [
+                'label' => 'Factura (PDF o imagen)',
+                'mapped' => false,
+                'required' => false,
+                'help' => 'Opcional. Adjunta la factura como evidencia de la lectura. Máx. 8 MB.',
+                'constraints' => [
+                    new File(
+                        maxSize: '8M',
+                        mimeTypes: ['application/pdf', 'image/jpeg', 'image/png'],
+                        mimeTypesMessage: 'Sube un PDF o una imagen (JPG/PNG).',
+                    ),
+                ],
             ]);
     }
 
