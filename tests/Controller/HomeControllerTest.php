@@ -104,7 +104,7 @@ final class HomeControllerTest extends WebTestCase
     public function testAdminSeesPlatformManagementConsumptionAndActivity(): void
     {
         $client = static::createClient();
-        $role = (new Role())->setCode('admin')->setName('Administrador');
+        $role = (new Role())->setCode('admin')->setName('Administrador')->setAdmin(true);
         $user = (new User())->setFullName('Admin Plataforma')->setEmail('admin@example.test')->setActive(true);
         $this->persist($user, $role);
         $client->loginUser($user);
@@ -121,7 +121,7 @@ final class HomeControllerTest extends WebTestCase
     public function testAdminActivityListRendersEntryWithNullFields(): void
     {
         $client = static::createClient();
-        $role = (new Role())->setCode('admin')->setName('Administrador');
+        $role = (new Role())->setCode('admin')->setName('Administrador')->setAdmin(true);
         $user = (new User())->setFullName('Admin Log')->setEmail('adminlog@example.test')->setActive(true);
         $this->persist($user, $role);
 
