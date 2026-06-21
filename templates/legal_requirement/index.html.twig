@@ -1,0 +1,51 @@
+{% extends 'app_shell.html.twig' %}
+
+{% block title %}Requisitos legales{% endblock %}
+
+{% block breadcrumb %}<a href="{{ path('app_homepage') }}">Inicio</a><span class="sep">/</span>Requisitos legales{% endblock %}
+
+{% block body %}
+    <div class="page-head">
+        <div>
+            <h1>Requisitos legales</h1>
+            <p class="lead">Lista de requisitos legales aplicables y evaluación de su cumplimiento (PC-06.03).</p>
+        </div>
+        <a class="btn" href="{{ path('legal_requirement_new') }}">+ Registrar requisito</a>
+    </div>
+
+    <div class="card">
+        {% if requirements is empty %}
+            <div class="empty-state">
+                <h2>Aún no hay requisitos legales</h2>
+                <p>Registra el primer requisito aplicable al centro.</p>
+                <a class="btn" href="{{ path('legal_requirement_new') }}">Registrar el primero</a>
+            </div>
+        {% else %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Ref.</th><th>Disposición legal</th><th>Ámbito</th><th>Vector</th><th>Cumplimiento</th><th>Próx. revisión</th><th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for requirement in requirements %}
+                        <tr>
+                            <td class="mono">{{ requirement.reference }}</td>
+                            <td>{{ requirement.legalProvision|length > 70 ? requirement.legalProvision|slice(0, 70) ~ '…' : requirement.legalProvision }}</td>
+                            <td>{{ requirement.scope.label }}</td>
+                            <td class="muted">{{ requirement.environmentalVector ?? '—' }}</td>
+                            <td>
+                                {{ requirement.complianceStatus.label }}
+                                {%- if requirement.nonCompliant %} ·
+                                    <a href="{{ path('non_conformity_new', { origin: 'internal', description: 'Incumplimiento del requisito legal ' ~ requirement.reference ~ ' (' ~ requirement.legalProvision ~ '): ' ~ requirement.specificRequirement }) }}">Abrir NC</a>
+                                {%- endif -%}
+                            </td>
+                            <td>{{ requirement.nextReviewOn ? requirement.nextReviewOn|date('d/m/Y') : '—' }}</td>
+                            <td><a href="{{ path('legal_requirement_edit', { id: requirement.id }) }}">Editar</a></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    </div>
+{% endblock %}
