@@ -1,23 +1,34 @@
-{% extends 'base.html.twig' %}
+{% extends 'app_shell.html.twig' %}
 
 {% set month_names = ['', 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'] %}
 
 {% block title %}Consumos {{ year }}{% endblock %}
 
+{% block breadcrumb %}<a href="{{ path('app_homepage') }}">Inicio</a><span class="sep">/</span>Registro de consumo{% endblock %}
+
 {% block body %}
-    <h1>Consumos {{ year }}</h1>
+    <div class="page-head">
+        <div>
+            <h1>Consumos {{ year }}</h1>
+            <p class="lead">Lecturas de agua, electricidad y demás consumos del centro, registradas mes a mes.</p>
+        </div>
+        <a class="btn" href="{{ path('consumption_new', { year: year }) }}">+ Añadir lectura</a>
+    </div>
 
     <div class="toolbar">
-        <span class="muted">
+        <span class="mono muted">
             <a class="btn secondary" href="{{ path('consumption_year', { year: year - 1 }) }}">← {{ year - 1 }}</a>
             <a class="btn secondary" href="{{ path('consumption_year', { year: year + 1 }) }}">{{ year + 1 }} →</a>
         </span>
-        <a class="btn" href="{{ path('consumption_new', { year: year }) }}">+ Añadir lectura</a>
     </div>
 
     <div class="card">
         {% if readings is empty %}
-            <p class="muted">Todavía no hay lecturas registradas en {{ year }}.</p>
+            <div class="empty-state">
+                <h2>Aún no hay lecturas en {{ year }}</h2>
+                <p>Empieza registrando la primera lectura del contador.</p>
+                <a class="btn" href="{{ path('consumption_new', { year: year }) }}">Registrar primera lectura</a>
+            </div>
         {% else %}
             <table>
                 <thead>
@@ -30,8 +41,8 @@
                         <tr>
                             <td>{{ month_names[reading.periodMonth] }}</td>
                             <td>{{ reading.type.label }}</td>
-                            <td>{{ reading.quantity }} {{ reading.type.unit }}</td>
-                            <td>{{ reading.cost is null ? '—' : reading.cost ~ ' €' }}</td>
+                            <td class="mono">{{ reading.quantity }} {{ reading.type.unit }}</td>
+                            <td class="mono">{{ reading.cost is null ? '—' : reading.cost ~ ' €' }}</td>
                             <td class="muted">{{ reading.notes ?? '' }}</td>
                             <td><a href="{{ path('consumption_edit', { year: year, id: reading.id }) }}">Editar</a></td>
                         </tr>

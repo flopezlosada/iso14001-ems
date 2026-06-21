@@ -2,10 +2,18 @@
 
 {% block title %}Revisa tu correo{% endblock %}
 
-{% block body %}
-    <h1>Revisa tu correo</h1>
-    <div class="card">
-        <p>Si <strong>{{ email }}</strong> corresponde a un usuario registrado, te hemos enviado un enlace para entrar. Es válido durante 10 minutos.</p>
-        <a class="btn secondary" href="{{ path('login') }}">Volver</a>
+{% block shell %}
+    <div class="auth">
+        <div class="auth-card">
+            <div class="seal seal--sm" aria-hidden="true">
+                <span class="seal-top">Gestión</span>
+                <span class="seal-main">SGA</span>
+                <span class="seal-bottom">ISO 14001</span>
+            </div>
+
+            <h1>Revisa tu correo</h1>
+            <p class="auth-lead">Si <strong>{{ email }}</strong> corresponde a un usuario registrado, te hemos enviado un enlace para entrar. Es válido durante 10 minutos.</p>
+            <a class="btn secondary" href="{{ path('login') }}">Volver</a>
+        </div>
     </div>
 {% endblock %}

@@ -1,12 +1,23 @@
-{% extends 'base.html.twig' %}
+{% extends 'app_shell.html.twig' %}
 
 {% block title %}Registro de actividad{% endblock %}
 
+{% block breadcrumb %}<a href="{{ path('app_homepage') }}">Inicio</a><span class="sep">/</span>Registro de actividad{% endblock %}
+
 {% block body %}
-    <h1>Registro de actividad</h1>
+    <div class="page-head">
+        <div>
+            <h1>Registro de actividad</h1>
+            <p class="lead">Traza de todo lo que ocurre en el sistema: quién hizo qué y cuándo. Solo lectura.</p>
+        </div>
+    </div>
+
     <div class="card">
         {% if entries is empty %}
-            <p class="muted">Todavía no hay eventos registrados.</p>
+            <div class="empty-state">
+                <h2>Todavía no hay eventos registrados</h2>
+                <p>Cada acción (accesos, cambios, aprobaciones) aparecerá aquí en cuanto ocurra.</p>
+            </div>
         {% else %}
             <table>
                 <thead>
@@ -15,9 +26,9 @@
                 <tbody>
                     {% for entry in entries %}
                         <tr>
-                            <td>{{ entry.occurredAt|date('d/m/Y H:i') }}</td>
+                            <td class="mono">{{ entry.occurredAt|date('d/m/Y H:i') }}</td>
                             <td>{{ entry.actor ?? 'sistema' }}</td>
-                            <td>{{ entry.action }}</td>
+                            <td><span class="mono">{{ entry.action }}</span></td>
                             <td class="muted">{{ entry.summary ?? '' }}</td>
                         </tr>
                     {% endfor %}

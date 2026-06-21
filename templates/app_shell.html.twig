@@ -1,0 +1,65 @@
+{% extends 'base.html.twig' %}
+
+{# Layout principal de la aplicación: barra lateral + cabecera + contenido.
+   Las plantillas de pantalla extienden ESTE archivo y rellenan {% block body %}.
+   El login y demás vistas sin sesión extienden 'base.html.twig' directamente. #}
+
+{% set route = app.request.attributes.get('_route') %}
+
+{% block shell %}
+    <div class="layout">
+        <aside class="sidebar">
+            <a class="brand" href="{{ path('app_homepage') }}">
+                <span class="brand-mark">SGA</span>
+                <span class="brand-name">Gestión ambiental</span>
+            </a>
+
+            <nav class="nav" aria-label="Navegación principal">
+                <a href="{{ path('consumption_index') }}" class="{{ route starts with 'consumption' ? 'is-active' }}">Registro de consumo</a>
+                {% if is_granted('ROLE_ADMIN') %}
+                    <a href="{{ path('audit_index') }}" class="{{ route starts with 'audit' ? 'is-active' }}">Registro de actividad</a>
+                    <a href="{{ path('admin_user_index') }}" class="{{ route starts with 'admin_user' ? 'is-active' }}">Usuarios</a>
+                    <a href="{{ path('admin_role_index') }}" class="{{ route starts with 'admin_role' ? 'is-active' }}">Roles y permisos</a>
+                {% endif %}
+            </nav>
+
+            <div class="sidebar-foot">
+                SGA · ISO 14001<br>
+                Sistema de gestión ambiental
+            </div>
+        </aside>
+
+        <div class="main">
+            <header class="topbar">
+                <nav class="breadcrumb" aria-label="Ruta">
+                    {% block breadcrumb %}<a href="{{ path('app_homepage') }}">Inicio</a>{% endblock %}
+                </nav>
+                <div class="topbar-right">
+                    <div class="theme-toggle" role="group" aria-label="Tema de color">
+                        <button type="button" data-theme-value="light" aria-pressed="true">Claro</button>
+                        <button type="button" data-theme-value="dark" aria-pressed="false">Oscuro</button>
+                    </div>
+                    {% if app.user %}
+                        <span class="user">
+                            <span class="avatar">{{ app.user.fullName|split(' ')|map(w => w|first)|join|slice(0, 2)|upper }}</span>
+                            <span>{{ app.user.fullName }}</span>
+                            <span aria-hidden="true">·</span>
+                            <a href="{{ path('app_logout') }}">Salir</a>
+                        </span>
+                    {% endif %}
+                </div>
+            </header>
+
+            <main class="page">
+                {% for message in app.flashes('success') %}
+                    <div class="flash success">{{ message }}</div>
+                {% endfor %}
+                {% for message in app.flashes('error') %}
+                    <div class="flash error">{{ message }}</div>
+                {% endfor %}
+
+                {% block body %}{% endblock %}
+            </main>
+        </div>
+    </div>
+{% endblock %}

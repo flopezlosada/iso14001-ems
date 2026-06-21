@@ -1,0 +1,552 @@
+/* =============================================================================
+   Sistema de diseño "Registro" — App de Gestión Ambiental ISO 14001
+   Traducción del handoff de claude.design (dirección elegida: "Registro").
+   Todos los colores son TOKENS SEMÁNTICOS: un único juego de nombres cambia de
+   valor entre tema claro (:root) y oscuro ([data-theme="dark"]). Nunca hex
+   sueltos repetidos por el CSS.
+   ============================================================================= */
+
+/* ---- Tokens: tema claro ------------------------------------------------- */
+:root {
+    --canvas: #D9D8D1;          /* lienzo exterior, detrás del contenido */
+    --bg: #FFFFFF;              /* fondo de aplicación */
+    --surface: #FFFFFF;        /* tarjetas y paneles */
+    --surface-sunken: #F4F6F2; /* cabeceras de tabla, inputs, hover suave */
+    --surface-sidebar: #E3E8DF;/* barra lateral (verde salvia) */
+    --border: #E4E6E0;         /* filete / hairline */
+    --border-strong: #CDD2C8;  /* borde marcado (inputs, controles) */
+    --text: #20231E;           /* texto principal */
+    --text-muted: #5C6159;     /* texto secundario */
+    --text-faint: #8A8F86;     /* texto terciario / placeholder */
+    --on-accent: #FFFFFF;      /* texto sobre relleno de acento */
+    --accent: #2F6B43;         /* acción primaria / sello / nav activo */
+    --accent-hover: #275B38;
+    --accent-weak: #E8F0E9;    /* fondo tenue de acento (hover/seleccionado) */
+    --success: #2F6B43;
+    --success-weak: #E8F0E9;
+    --success-text: #235335;
+    --warning: #9A6310;
+    --warning-weak: #F5ECD7;
+    --warning-text: #7A4D0C;
+    --danger: #A23A2D;
+    --danger-weak: #F5E2DE;
+    --danger-text: #8A2E23;
+    --review: #3F6079;
+    --review-weak: #E5EBF0;
+    --review-text: #2F4A60;
+    --focus: #2F6B43;
+
+    /* Tipografía */
+    --font-display: 'Newsreader', Georgia, 'Times New Roman', serif;
+    --font-body: 'Hanken Grotesk', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    --font-mono: 'Spline Sans Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+
+    /* Sombras (claro). En oscuro se neutralizan más abajo. */
+    --shadow-card: 0 12px 36px rgba(40, 38, 30, .12);
+    --shadow-mobile: 0 16px 48px rgba(20, 30, 24, .18);
+
+    /* Radios */
+    --radius-sm: 4px;   /* badges, inputs internos */
+    --radius: 5px;      /* botones, items de nav */
+    --radius-lg: 8px;   /* tarjetas, paneles */
+}
+
+/* ---- Tokens: tema oscuro ------------------------------------------------ */
+/* No es un claro invertido: verde-tinta sobrio que mantiene contraste AA. */
+[data-theme="dark"] {
+    --canvas: #0C140F;
+    --bg: #141E18;
+    --surface: #1A2620;
+    --surface-sunken: #121B15;
+    --surface-sidebar: #17221C;
+    --border: #2B3830;
+    --border-strong: #3A4A40;
+    --text: #E9ECE6;
+    --text-muted: #A4ADA3;
+    --text-faint: #757D74;
+    --on-accent: #0E1A12;
+    --accent: #5BA978;
+    --accent-hover: #6FB98A;
+    --accent-weak: #1E3127;
+    --success: #5BA978;
+    --success-weak: #1E3127;
+    --success-text: #9BD2AE;
+    --warning: #D6A24E;
+    --warning-weak: #332915;
+    --warning-text: #E8C588;
+    --danger: #D77C6E;
+    --danger-weak: #34211D;
+    --danger-text: #ECA99E;
+    --review: #88A3C6;
+    --review-weak: #1F2A39;
+    --review-text: #B3C5DE;
+    --focus: #6FB98A;
+    color-scheme: dark;
+
+    /* En oscuro las sombras son casi imperceptibles: la separación la dan los bordes. */
+    --shadow-card: 0 12px 36px rgba(0, 0, 0, .35);
+    --shadow-mobile: 0 16px 48px rgba(0, 0, 0, .45);
+}
+
+/* ---- Reset y base ------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+/* color-scheme atado a NUESTRO tema (no a la preferencia del SO), para que los
+   controles nativos —incluida la lista del <select>— se pinten claros u oscuros
+   en sintonía con la app y no por su cuenta. */
+html { color-scheme: light; }
+
+body {
+    margin: 0;
+    background: var(--canvas);
+    color: var(--text);
+    font: 400 14px/1.5 var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+}
+
+a { color: var(--accent); }
+
+h1, h2, h3 { font-family: var(--font-display); font-weight: 500; color: var(--text); }
+
+/* Foco de teclado visible (accesibilidad). */
+:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+    border-radius: 2px;
+}
+
+/* Respeta la preferencia de movimiento reducido. */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition: none !important; animation: none !important; }
+}
+
+/* Etiqueta tipo "eyebrow"/dato en mono mayúsculas. */
+.eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .16em;
+    color: var(--text-muted);
+}
+.mono { font-family: var(--font-mono); }
+.muted { color: var(--text-muted); }
+
+/* =============================================================================
+   Shell de aplicación: barra lateral + cabecera + contenido
+   ============================================================================= */
+.layout {
+    display: grid;
+    grid-template-columns: 230px 1fr;
+    min-height: 100vh;
+    background: var(--canvas);
+}
+
+/* ---- Barra lateral ------------------------------------------------------ */
+.sidebar {
+    background: var(--surface-sidebar);
+    border-right: 1px solid var(--border);
+    padding: 18px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+}
+.sidebar .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    color: var(--text);
+    padding: 4px 6px;
+}
+.sidebar .brand .brand-mark {
+    width: 30px; height: 30px;
+    display: grid; place-items: center;
+    background: var(--accent);
+    color: var(--on-accent);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: .04em;
+}
+.sidebar .brand .brand-name { font-family: var(--font-display); font-size: 17px; }
+
+.nav { display: flex; flex-direction: column; gap: 2px; }
+.nav a {
+    display: block;
+    padding: 8px 12px;
+    border-radius: var(--radius);
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 14px;
+    transition: background .12s ease, color .12s ease;
+}
+.nav a:hover { background: var(--accent-weak); color: var(--text); }
+.nav a.is-active { background: var(--accent); color: var(--on-accent); }
+
+.sidebar .sidebar-foot {
+    margin-top: auto;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-faint);
+    line-height: 1.7;
+    padding: 0 6px;
+}
+
+/* ---- Cabecera ----------------------------------------------------------- */
+.main { display: flex; flex-direction: column; min-width: 0; }
+.topbar {
+    height: 62px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 0 36px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+}
+.breadcrumb {
+    font-size: 13px;
+    color: var(--text-muted);
+}
+.breadcrumb a { color: var(--text-muted); text-decoration: none; }
+.breadcrumb a:hover { color: var(--text); text-decoration: underline; }
+.breadcrumb .sep { color: var(--text-faint); margin: 0 6px; }
+
+.topbar-right { display: flex; align-items: center; gap: 16px; }
+.user {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text-muted);
+}
+.user .avatar {
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: var(--on-accent);
+    display: grid; place-items: center;
+    font-family: var(--font-mono);
+    font-size: 10px;
+}
+.user a { color: var(--text-muted); }
+
+/* Conmutador de tema (segmentado claro/oscuro). */
+.theme-toggle {
+    display: inline-flex;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--surface-sunken);
+}
+.theme-toggle button {
+    border: 0;
+    background: transparent;
+    color: var(--text-muted);
+    font: 500 12px var(--font-body);
+    padding: 5px 12px;
+    cursor: pointer;
+}
+.theme-toggle button[aria-pressed="true"] {
+    background: var(--accent);
+    color: var(--on-accent);
+}
+
+/* ---- Contenido ---------------------------------------------------------- */
+.page {
+    flex: 1;
+    background: var(--bg);
+    padding: 42px 56px;
+    min-width: 0;
+}
+.page-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 26px;
+}
+.page-head h1 { font-size: 30px; margin: 0 0 4px; line-height: 1.12; letter-spacing: -.01em; }
+.page-head .lead { color: var(--text-muted); margin: 0; max-width: 60ch; }
+
+/* Compat: encabezado simple usado por plantillas sin page-head. */
+.page > h1 { font-size: 28px; margin: 0 0 18px; }
+
+/* =============================================================================
+   Componentes
+   ============================================================================= */
+
+/* ---- Tarjetas / paneles ------------------------------------------------- */
+.card, .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 22px;
+    margin-bottom: 18px;
+}
+
+/* ---- Botones ------------------------------------------------------------ */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: var(--accent);
+    color: var(--on-accent);
+    border: 1px solid var(--accent);
+    padding: 10px 16px;
+    border-radius: var(--radius);
+    font: 500 14px var(--font-body);
+    text-decoration: none;
+    cursor: pointer;
+    transition: background .12s ease, border-color .12s ease;
+}
+.btn:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+.btn.secondary, .btn-secondary {
+    background: transparent;
+    color: var(--accent);
+    border-color: var(--border-strong);
+}
+.btn.secondary:hover, .btn-secondary:hover { background: var(--surface-sunken); }
+.btn.danger, .btn-danger {
+    background: var(--danger);
+    border-color: var(--danger);
+    color: #fff;
+}
+.btn[disabled] { opacity: .5; cursor: not-allowed; }
+
+/* ---- Barra de herramientas / acciones ----------------------------------- */
+.toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+}
+
+/* ---- Tablas ------------------------------------------------------------- */
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+thead th {
+    text-align: left;
+    background: var(--surface-sunken);
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+}
+tbody td {
+    padding: 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+}
+tbody tr:hover { background: var(--accent-weak); }
+td .doc-code { font-family: var(--font-mono); font-size: 10.5px; color: var(--text-faint); display: block; }
+td .doc-title { font-family: var(--font-display); font-size: 16.5px; }
+
+/* ---- Badges de estado --------------------------------------------------- */
+.badge {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    padding: 4px 8px;
+    border-radius: var(--radius-sm);
+    border: 1px solid transparent;
+}
+.badge--draft   { background: var(--surface-sunken); color: var(--text-muted); border-color: var(--border-strong); }
+.badge--review  { background: var(--review-weak);  color: var(--review-text);  border-color: var(--review); }
+.badge--success { background: var(--success-weak); color: var(--success-text); border-color: var(--success); }
+.badge--warning { background: var(--warning-weak); color: var(--warning-text); border-color: var(--warning); }
+.badge--danger  { background: var(--danger-weak);  color: var(--danger-text);  border-color: var(--danger); }
+.badge--void    { color: var(--text-faint); text-decoration: line-through; }
+
+/* ---- Formularios -------------------------------------------------------- */
+.form-row { margin-bottom: 16px; }
+.form-row > label, label.required { display: block; font-weight: 500; margin-bottom: 6px; color: var(--text); }
+.form-row input[type="text"],
+.form-row input[type="email"],
+.form-row input[type="number"],
+.form-row input[type="date"],
+.form-row select,
+.form-row textarea,
+input[type="email"], input[type="text"], select, textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    font: 400 14px var(--font-body);
+    background: var(--surface);
+    color: var(--text);
+}
+.form-row textarea { min-height: 84px; resize: vertical; }
+/* Select: ocultamos el chrome nativo del control cerrado y ponemos nuestra flecha.
+   (La lista desplegada la pinta el SO; color-scheme la alinea al tema.) */
+.form-row select, select {
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='none' stroke='%235C6159' stroke-width='1.5' d='M1 1.5 6 6.5l5-5'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 38px;
+}
+.form-row input:focus, .form-row select:focus, .form-row textarea:focus {
+    border-color: var(--accent);
+    outline-offset: 0;
+}
+.form-row input[type="checkbox"] { width: auto; margin-right: 8px; }
+.help { color: var(--text-muted); font-size: 12.5px; margin: 6px 0 0; }
+
+/* Errores de formulario de Symfony: se renderizan como <ul><li>. Los estilamos
+   nosotros (los tests dependen del selector .form-row ul li / ul li). */
+.form-row ul, form > ul { list-style: none; margin: 6px 0 0; padding: 0; }
+.form-row ul li, form > ul li { color: var(--danger-text); font-size: 13px; }
+.form-row input[aria-invalid="true"], .form-row select[aria-invalid="true"] { border-color: var(--danger); }
+
+/* Bloque de error global del formulario (también usado en login). */
+.form-error {
+    background: var(--danger-weak);
+    color: var(--danger-text);
+    border: 1px solid var(--danger);
+    padding: 10px 14px;
+    border-radius: var(--radius);
+    margin-bottom: 14px;
+    font-size: 13.5px;
+}
+
+/* ---- Mensajes flash ----------------------------------------------------- */
+.flash {
+    padding: 12px 16px;
+    border-radius: var(--radius);
+    margin-bottom: 16px;
+    border: 1px solid transparent;
+    font-size: 14px;
+}
+.flash.success { background: var(--success-weak); color: var(--success-text); border-color: var(--success); }
+.flash.error   { background: var(--danger-weak);  color: var(--danger-text);  border-color: var(--danger); }
+
+/* ---- Estado vacío (invitación a actuar) --------------------------------- */
+.empty-state {
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--radius-lg);
+    padding: 36px;
+    text-align: center;
+    color: var(--text-muted);
+}
+.empty-state h2 { font-size: 20px; margin: 0 0 8px; }
+.empty-state p { margin: 0 0 16px; }
+
+/* ---- Paginación --------------------------------------------------------- */
+.pagination {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-top: 18px;
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+/* ---- Sello tipográfico (elemento de firma) ------------------------------ */
+.seal {
+    width: 96px; height: 96px;
+    border-radius: 50%;
+    border: 1.5px solid var(--accent);
+    box-shadow: inset 0 0 0 4px var(--bg), inset 0 0 0 5.5px var(--accent);
+    display: grid;
+    place-items: center;
+    text-align: center;
+    color: var(--accent);
+    line-height: 1.1;
+}
+.seal .seal-top, .seal .seal-bottom {
+    font-family: var(--font-mono);
+    font-size: 7px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+}
+.seal .seal-main { font-family: var(--font-display); font-size: 22px; font-weight: 500; }
+.seal--tilt { transform: rotate(-5deg); }
+.seal--sm { width: 72px; height: 72px; }
+.seal--sm .seal-main { font-size: 16px; }
+
+/* =============================================================================
+   Layout de autenticación (login / enlace enviado): sin shell, centrado
+   ============================================================================= */
+.auth {
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    background: var(--canvas);
+    position: relative;
+    overflow: hidden;
+}
+/* Marca de agua: círculo grande de acento a baja opacidad. */
+.auth::after {
+    content: "";
+    position: absolute;
+    right: -120px; bottom: -120px;
+    width: 340px; height: 340px;
+    border-radius: 50%;
+    background: var(--accent);
+    opacity: .05;
+    pointer-events: none;
+}
+.auth-card {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 392px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    padding: 40px 36px;
+    text-align: center;
+}
+.auth-card .seal { margin: 0 auto 18px; }
+.auth-card h1 { font-size: 28px; margin: 8px 0 10px; }
+.auth-card .auth-lead { color: var(--text-muted); font-size: 14.5px; margin: 0 0 24px; }
+.auth-card .btn { width: 100%; padding: 13px; }
+.auth-card .auth-secondary { display: inline-block; margin-top: 14px; color: var(--text-muted); font-size: 14px; }
+.auth-card .auth-foot {
+    margin-top: 26px;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+}
+.auth-card .form-row { text-align: left; }
+.auth-card hr { border: 0; border-top: 1px solid var(--border); margin: 20px 0; }
+
+/* =============================================================================
+   Responsive: la barra lateral colapsa a una nav horizontal en móvil
+   ============================================================================= */
+@media (max-width: 760px) {
+    .layout { grid-template-columns: 1fr; }
+    .sidebar {
+        flex-direction: row;
+        align-items: center;
+        gap: 12px;
+        overflow-x: auto;
+        padding: 10px 14px;
+    }
+    .sidebar .brand .brand-name { display: none; }
+    .nav { flex-direction: row; gap: 4px; }
+    .nav a { white-space: nowrap; padding: 6px 10px; }
+    .sidebar .sidebar-foot { display: none; }
+    .topbar { padding: 0 16px; height: auto; min-height: 56px; flex-wrap: wrap; padding-top: 8px; padding-bottom: 8px; }
+    .page { padding: 22px 16px; }
+    .page-head { flex-direction: column; }
+    .page-head h1 { font-size: 24px; }
+}

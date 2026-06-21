@@ -1,11 +1,19 @@
-{% extends 'base.html.twig' %}
+{% extends 'app_shell.html.twig' %}
 
 {% block title %}{{ user.id ? 'Editar usuario' : 'Nuevo usuario' }}{% endblock %}
 
-{% block body %}
-    <h1>{{ user.id ? 'Editar usuario' : 'Nuevo usuario' }}</h1>
+{% block breadcrumb %}
+    <a href="{{ path('app_homepage') }}">Inicio</a><span class="sep">/</span>
+    <a href="{{ path('admin_user_index') }}">Usuarios</a><span class="sep">/</span>
+    {{ user.id ? 'Editar' : 'Nuevo' }}
+{% endblock %}
 
-    <div class="card">
+{% block body %}
+    <div class="page-head">
+        <h1>{{ user.id ? 'Editar usuario' : 'Nuevo usuario' }}</h1>
+    </div>
+
+    <div class="card" style="max-width: 520px;">
         {{ form_start(form, { 'attr': { 'novalidate': 'novalidate' } }) }}
             {{ form_errors(form) }}
             <div class="form-row">

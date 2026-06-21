@@ -1,11 +1,19 @@
-{% extends 'base.html.twig' %}
+{% extends 'app_shell.html.twig' %}
 
 {% block title %}{{ reading.id ? 'Editar' : 'Nueva' }} lectura · {{ year }}{% endblock %}
 
-{% block body %}
-    <h1>{{ reading.id ? 'Editar lectura' : 'Nueva lectura' }} · {{ year }}</h1>
+{% block breadcrumb %}
+    <a href="{{ path('app_homepage') }}">Inicio</a><span class="sep">/</span>
+    <a href="{{ path('consumption_year', { year: year }) }}">Consumos {{ year }}</a><span class="sep">/</span>
+    {{ reading.id ? 'Editar' : 'Nueva' }} lectura
+{% endblock %}
 
-    <div class="card">
+{% block body %}
+    <div class="page-head">
+        <h1>{{ reading.id ? 'Editar lectura' : 'Nueva lectura' }} · {{ year }}</h1>
+    </div>
+
+    <div class="card" style="max-width: 520px;">
         {{ form_start(form, { 'attr': { 'novalidate': 'novalidate' } }) }}
             {{ form_errors(form) }}
             {% for field in [form.type, form.periodMonth, form.quantity, form.cost, form.notes] %}
