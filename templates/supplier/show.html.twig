@@ -1,0 +1,59 @@
+{% extends 'app_shell.html.twig' %}
+
+{% block title %}{{ supplier.name }}{% endblock %}
+
+{% block breadcrumb %}
+    <a href="{{ path('app_homepage') }}">Inicio</a><span class="sep">/</span>
+    <a href="{{ path('supplier_index') }}">Proveedores</a><span class="sep">/</span>
+    {{ supplier.name }}
+{% endblock %}
+
+{% block body %}
+    <div class="page-head">
+        <div>
+            <h1>{{ supplier.name }}</h1>
+            <p class="lead">{{ supplier.productOrService }}</p>
+        </div>
+        <a class="btn secondary" href="{{ path('supplier_edit', { id: supplier.id }) }}">Editar proveedor</a>
+    </div>
+
+    {% if supplier.notes %}
+        <div class="card">
+            <h2>Observaciones</h2>
+            <p>{{ supplier.notes|nl2br }}</p>
+        </div>
+    {% endif %}
+
+    <div class="page-head">
+        <h2>Evaluaciones anuales</h2>
+        <a class="btn" href="{{ path('supplier_evaluation_new', { id: supplier.id }) }}">+ Añadir evaluación</a>
+    </div>
+
+    <div class="card">
+        {% if supplier.evaluations is empty %}
+            <div class="empty-state">
+                <h2>Aún no hay evaluaciones</h2>
+                <p>Registra la evaluación del proveedor para el año en curso.</p>
+            </div>
+        {% else %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Año</th><th>Estado</th><th>Criterio</th><th>Observaciones</th><th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for evaluation in supplier.evaluations %}
+                        <tr>
+                            <td>{{ evaluation.year }}</td>
+                            <td>{{ evaluation.criterion.statusLabel }}</td>
+                            <td>{{ evaluation.criterion.label }}</td>
+                            <td class="muted">{{ evaluation.notes ?? '—' }}</td>
+                            <td><a href="{{ path('supplier_evaluation_edit', { id: supplier.id, evaluationId: evaluation.id }) }}">Editar</a></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    </div>
+{% endblock %}
