@@ -126,9 +126,7 @@ class RiskOpportunity
 
     public function removeAssessment(RiskAssessment $assessment): static
     {
-        if ($this->assessments->removeElement($assessment) && $assessment->getRiskOpportunity() === $this) {
-            $assessment->setRiskOpportunity(null);
-        }
+        $this->assessments->removeElement($assessment);
 
         return $this;
     }

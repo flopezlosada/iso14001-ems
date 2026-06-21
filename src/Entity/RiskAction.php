@@ -26,7 +26,7 @@ class RiskAction
 
     #[ORM\ManyToOne(targetEntity: RiskAssessment::class, inversedBy: 'actions')]
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
-    private ?RiskAssessment $assessment = null;
+    private RiskAssessment $assessment;
 
     #[ORM\Column(type: Types::TEXT)]
     #[Assert\NotBlank]
@@ -63,12 +63,12 @@ class RiskAction
         return $this->id;
     }
 
-    public function getAssessment(): ?RiskAssessment
+    public function getAssessment(): RiskAssessment
     {
         return $this->assessment;
     }
 
-    public function setAssessment(?RiskAssessment $assessment): static
+    public function setAssessment(RiskAssessment $assessment): static
     {
         $this->assessment = $assessment;
 

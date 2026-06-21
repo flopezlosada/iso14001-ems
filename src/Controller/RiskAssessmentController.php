@@ -61,7 +61,7 @@ class RiskAssessmentController extends AbstractController
     ): Response {
         $this->denyAccessUnlessGranted(AreaVoter::WRITE, Area::RISK_OPPORTUNITY);
 
-        if ($assessment->getRiskOpportunity()?->getId() !== $item->getId()) {
+        if ($assessment->getRiskOpportunity()->getId() !== $item->getId()) {
             throw $this->createNotFoundException('The assessment does not belong to the given item.');
         }
 

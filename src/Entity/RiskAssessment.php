@@ -34,7 +34,7 @@ class RiskAssessment
 
     #[ORM\ManyToOne(targetEntity: RiskOpportunity::class, inversedBy: 'assessments')]
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
-    private ?RiskOpportunity $riskOpportunity = null;
+    private RiskOpportunity $riskOpportunity;
 
     /**
      * School year this valuation belongs to, e.g. "2025-2026" (the F.08.0 is kept per course).
@@ -119,12 +119,12 @@ class RiskAssessment
         return $this->id;
     }
 
-    public function getRiskOpportunity(): ?RiskOpportunity
+    public function getRiskOpportunity(): RiskOpportunity
     {
         return $this->riskOpportunity;
     }
 
-    public function setRiskOpportunity(?RiskOpportunity $riskOpportunity): static
+    public function setRiskOpportunity(RiskOpportunity $riskOpportunity): static
     {
         $this->riskOpportunity = $riskOpportunity;
 
@@ -259,9 +259,7 @@ class RiskAssessment
 
     public function removeAction(RiskAction $action): static
     {
-        if ($this->actions->removeElement($action) && $action->getAssessment() === $this) {
-            $action->setAssessment(null);
-        }
+        $this->actions->removeElement($action);
 
         return $this;
     }
