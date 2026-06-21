@@ -64,4 +64,37 @@ final class ScheduledAlertTest extends TestCase
 
         self::assertSame('2026-01-01', $alert->getNextDueDate()->format('Y-m-d'));
     }
+
+    public function testNeedsNotificationWhenDueAndNeverNotified(): void
+    {
+        $alert = $this->makeAlert(AlertFrequency::MONTHLY, '2026-06-01');
+
+        self::assertFalse($alert->needsNotification(new \DateTimeImmutable('2026-05-31')));
+        self::assertTrue($alert->needsNotification(new \DateTimeImmutable('2026-06-01')));
+    }
+
+    public function testDoesNotNotifyTwiceInTheSameCycle(): void
+    {
+        $alert = $this->makeAlert(AlertFrequency::MONTHLY, '2026-06-01');
+        // Already notified after the due date → no second reminder this cycle.
+        $alert->setLastNotifiedAt(new \DateTimeImmutable('2026-06-02 09:00:00'));
+
+        self::assertFalse($alert->needsNotification(new \DateTimeImmutable('2026-06-03')));
+    }
+
+    public function testNotifiesAgainWhenLastNotificationPredatesNewCycle(): void
+    {
+        $alert = $this->makeAlert(AlertFrequency::MONTHLY, '2026-06-01');
+        // Last notified during the previous cycle (before the current due date) → owed again.
+        $alert->setLastNotifiedAt(new \DateTimeImmutable('2026-05-02 09:00:00'));
+
+        self::assertTrue($alert->needsNotification(new \DateTimeImmutable('2026-06-01')));
+    }
+
+    public function testEventDrivenAlertsNeverNeedScheduledNotification(): void
+    {
+        $alert = $this->makeAlert(AlertFrequency::ON_EVENT, '2020-01-01');
+
+        self::assertFalse($alert->needsNotification(new \DateTimeImmutable('2026-06-21')));
+    }
 }

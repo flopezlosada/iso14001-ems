@@ -10,9 +10,14 @@ parameters:
     # Private, persistent storage for uploaded files (outside public/, survives deploys).
     # Built on the project's APP_SHARE_DIR convention.
     app.uploads_dir: '%kernel.project_dir%/%env(APP_SHARE_DIR)%'
-    # Significance threshold for environmental aspects (PG-06.01): an aspect is significant when
-    # its score exceeds this. Set to 10 by the directora; centralised here so it is easy to change.
+    # Significance threshold for ABNORMAL environmental aspects (PG-06.01 Anexo III): significant
+    # when the score exceeds this. NOTE: direct aspects (Anexo I) do NOT use this — their threshold
+    # is per-category (consumos/emisiones 12, residuos 10, vertidos 8), see
+    # DirectAspectCategory::significanceThreshold(). This value is also the fallback for a direct
+    # aspect with no category. Centralised here so it is easy to change.
     app.aspect_significance_threshold: 10
+    # "From" address for the obligation reminder e-mails. Override per environment via MAILER_FROM.
+    app.mailer_from: '%env(MAILER_FROM)%'
 
 services:
     # default configuration for services in *this* file

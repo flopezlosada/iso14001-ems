@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Repository;
 
+use App\Entity\Role;
 use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -30,4 +31,24 @@ class UserRepository extends ServiceEntityRepository
     {
         return $this->findOneBy(['email' => strtolower(trim($email)), 'active' => true]);
     }
+
+    /**
+     * The active users who hold the given role — the people behind a responsibility, who receive
+     * its obligation reminders (several co-responsibles are allowed).
+     *
+     * @param Role $role the responsibility
+     *
+     * @return User[] the active holders of the role
+     */
+    public function findActiveByRole(Role $role): array
+    {
+        return $this->createQueryBuilder('u')
+            ->join('u.assignedRoles', 'r')
+            ->where('r = :role')
+            ->andWhere('u.active = true')
+            ->setParameter('role', $role)
+            ->getQuery()
+            ->getResult();
+    }
 }
+
