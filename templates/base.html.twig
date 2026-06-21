@@ -19,8 +19,11 @@
                 }
                 header.app {
                     background: var(--accent); color: #fff; padding: .9rem 1rem;
+                    display: flex; justify-content: space-between; align-items: center; gap: 1rem;
                 }
                 header.app a { color: #fff; text-decoration: none; font-weight: 600; }
+                header.app .user-box { font-size: .85rem; font-weight: 400; }
+                header.app .user-box a { text-decoration: underline; }
                 main { max-width: 880px; margin: 0 auto; padding: 1rem; }
                 h1 { font-size: 1.35rem; margin: .2rem 0 1rem; }
                 .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; margin-bottom: 1rem; }
@@ -43,6 +46,9 @@
                 }
                 .form-row .help { color: var(--muted); font-size: .85rem; margin-top: .25rem; }
                 .errors { color: var(--danger); font-size: .9rem; margin: .25rem 0 0; padding-left: 1rem; }
+                /* Symfony form errors: style them ourselves, never the browser default. */
+                .form-row ul, form > ul { list-style: none; margin: .35rem 0 0; padding: 0; }
+                .form-row ul li, form > ul li { color: var(--danger); font-size: .9rem; }
                 .muted { color: var(--muted); }
                 .toolbar { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
             </style>
@@ -51,7 +57,10 @@
     </head>
     <body>
         <header class="app">
-            <a href="{{ path('consumption_index') }}">🌱 Gestión ISO 14001</a>
+            <a href="{{ path('app_homepage') }}">🌱 Gestión ISO 14001</a>
+            {% if app.user %}
+                <span class="user-box">{{ app.user.userIdentifier }} · <a href="{{ path('app_logout') }}">Salir</a></span>
+            {% endif %}
         </header>
         <main>
             {% for message in app.flashes('success') %}

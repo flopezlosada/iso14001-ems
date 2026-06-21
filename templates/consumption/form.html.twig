@@ -6,7 +6,7 @@
     <h1>{{ reading.id ? 'Editar lectura' : 'Nueva lectura' }} · {{ year }}</h1>
 
     <div class="card">
-        {{ form_start(form) }}
+        {{ form_start(form, { 'attr': { 'novalidate': 'novalidate' } }) }}
             {{ form_errors(form) }}
             {% for field in [form.type, form.periodMonth, form.quantity, form.cost, form.notes] %}
                 <div class="form-row">

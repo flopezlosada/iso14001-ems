@@ -4,20 +4,38 @@ declare(strict_types=1);
 
 namespace App\Tests\Controller;
 
+use App\Entity\User;
 use App\Enum\ConsumptionType;
 use App\Repository\ConsumptionReadingRepository;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 /**
- * Functional (FE + BE) smoke tests for the consumption capture UI.
- *
- * Database writes are rolled back automatically after each test by DAMA DoctrineTestBundle.
+ * Functional (FE + BE) smoke tests for the consumption capture UI. Routes require an
+ * authenticated user; each test logs one in. Database writes are rolled back after each test
+ * by DAMA DoctrineTestBundle.
  */
 final class ConsumptionControllerTest extends WebTestCase
 {
-    public function testYearPageRenders(): void
+    private function loggedInClient(): KernelBrowser
     {
         $client = static::createClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+
+        $user = new User();
+        $user->setFullName('Tester')->setEmail('consumo-tester@example.test')->setActive(true);
+        $em->persist($user);
+        $em->flush();
+
+        $client->loginUser($user);
+
+        return $client;
+    }
+
+    public function testYearPageRenders(): void
+    {
+        $client = $this->loggedInClient();
         $client->request('GET', '/consumption/2026');
 
         self::assertResponseIsSuccessful();
@@ -26,7 +44,7 @@ final class ConsumptionControllerTest extends WebTestCase
 
     public function testNewReadingFormRenders(): void
     {
-        $client = static::createClient();
+        $client = $this->loggedInClient();
         $client->request('GET', '/consumption/2026/new');
 
         self::assertResponseIsSuccessful();
@@ -36,7 +54,7 @@ final class ConsumptionControllerTest extends WebTestCase
 
     public function testSubmittingValidReadingPersistsItAndRedirects(): void
     {
-        $client = static::createClient();
+        $client = $this->loggedInClient();
         $client->request('GET', '/consumption/2026/new');
         $client->submitForm('Guardar', [
             'consumption_reading[type]' => 'water',
@@ -60,7 +78,7 @@ final class ConsumptionControllerTest extends WebTestCase
 
     public function testSubmittingInvalidReadingRedisplaysFormWithErrors(): void
     {
-        $client = static::createClient();
+        $client = $this->loggedInClient();
         $client->request('GET', '/consumption/2026/new');
         $client->submitForm('Guardar', [
             'consumption_reading[type]' => 'electricity',

@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Entity;
 
+use App\Repository\UserRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
@@ -18,9 +20,9 @@ use Symfony\Component\Validator\Constraints as Assert;
  * the name getRoles() is reserved for Symfony's UserInterface contract (which returns string[]),
  * to avoid a signature clash once this entity implements it.
  */
-#[ORM\Entity]
+#[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: 'app_user')]
-class User
+class User implements UserInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -73,7 +75,8 @@ class User
 
     public function setEmail(string $email): static
     {
-        $this->email = $email;
+        // Store normalised so lookups and the unique index are consistent.
+        $this->email = strtolower(trim($email));
 
         return $this;
     }
@@ -115,5 +118,37 @@ class User
         $this->assignedRoles->removeElement($role);
 
         return $this;
+    }
+
+    /**
+     * Unique identifier used by the security system (the e-mail address).
+     */
+    public function getUserIdentifier(): string
+    {
+        return $this->email;
+    }
+
+    /**
+     * Security roles derived from the assigned responsibilities. Every authenticated user has
+     * ROLE_USER; each assigned {@see Role} adds ROLE_<CODE>.
+     *
+     * @return string[]
+     */
+    public function getRoles(): array
+    {
+        $roles = ['ROLE_USER'];
+        foreach ($this->assignedRoles as $role) {
+            $roles[] = 'ROLE_'.strtoupper($role->getCode());
+        }
+
+        return array_values(array_unique($roles));
+    }
+
+    /**
+     * No-op: this is a passwordless system (magic link / SSO), so there are no sensitive
+     * credentials to erase.
+     */
+    public function eraseCredentials(): void
+    {
     }
 }

@@ -1,0 +1,26 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Acceso{% endblock %}
+
+{% block body %}
+    <h1>Acceso</h1>
+    <div class="card">
+        <p class="muted">Introduce tu correo y te enviaremos un enlace para entrar, sin contraseña.</p>
+        <form method="post" action="{{ path('login') }}" novalidate>
+            <div class="form-row">
+                <label for="email">Correo electrónico</label>
+                <input type="email" id="email" name="email" required autofocus inputmode="email" autocomplete="email">
+            </div>
+            <button class="btn" type="submit">Enviar enlace de acceso</button>
+        </form>
+
+        <hr>
+
+        {% if google_sso_enabled %}
+            <a class="btn secondary" href="{{ path('connect_google') }}">Entrar con Educamadrid</a>
+        {% else %}
+            <button class="btn secondary" type="button" disabled title="Disponible cuando se configuren las credenciales de acceso">Entrar con Educamadrid</button>
+            <p class="help">El acceso con Educamadrid estará disponible próximamente.</p>
+        {% endif %}
+    </div>
+{% endblock %}

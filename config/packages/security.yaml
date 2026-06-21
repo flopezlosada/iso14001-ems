@@ -1,0 +1,33 @@
+security:
+    # Passwordless system: users authenticate with a magic link sent by e-mail (and, later,
+    # Google/Educamadrid SSO). No password hashers are configured on purpose.
+    providers:
+        app_user_provider:
+            entity:
+                class: App\Entity\User
+                property: email
+
+    firewalls:
+        dev:
+            pattern: ^/(_profiler|_wdt|assets|build)/
+            security: false
+        main:
+            lazy: true
+            provider: app_user_provider
+            entry_point: App\Security\LoginEntryPoint
+            login_throttling:
+                max_attempts: 5 # per IP + identifier, before the login check is throttled
+                interval: '15 minutes'
+            login_link:
+                check_route: login_check
+                signature_properties: ['id']
+                lifetime: 600 # the link is valid for 10 minutes
+                max_uses: 1 # single-use: the link is invalidated after the first successful use
+            logout:
+                path: app_logout
+                target: login
+
+    # Only the first matching rule applies.
+    access_control:
+        - { path: ^/login, roles: PUBLIC_ACCESS }
+        - { path: ^/, roles: ROLE_USER }
