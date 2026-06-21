@@ -10,7 +10,7 @@
     <div class="layout">
         <aside class="sidebar">
             <a class="brand" href="{{ path('app_homepage') }}">
-                <span class="brand-mark">SGA</span>
+                <span class="brand-mark">{{ include('partials/_brand_mark.html.twig', { size: 30 }) }}</span>
                 <span class="brand-name">Gestión ambiental</span>
             </a>
 
