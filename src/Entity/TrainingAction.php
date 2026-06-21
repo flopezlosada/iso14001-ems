@@ -62,16 +62,12 @@ class TrainingAction
     private string $objectives;
 
     /**
-     * Planned execution date ("Fecha prevista de ejecución"). Provisional calendar date; see the
-     * class-level note.
-     *
-     * The column is NOT NULL (a planned date is mandatory) and {@see Assert\NotNull} enforces it,
-     * but the PHP property is nullable so an empty form field surfaces a validation error instead
-     * of a type error during hydration.
+     * Planned execution date ("Fecha prevista de ejecución"). Mandatory (NOT NULL). Provisional
+     * calendar date; see the class-level note.
      */
     #[ORM\Column(name: 'planned_date', type: Types::DATE_IMMUTABLE)]
     #[Assert\NotNull]
-    private ?\DateTimeImmutable $plannedDate = null;
+    private \DateTimeImmutable $plannedDate;
 
     /**
      * Training methodology ("Metodología de formación").
@@ -178,12 +174,12 @@ class TrainingAction
         return $this;
     }
 
-    public function getPlannedDate(): ?\DateTimeImmutable
+    public function getPlannedDate(): \DateTimeImmutable
     {
         return $this->plannedDate;
     }
 
-    public function setPlannedDate(?\DateTimeImmutable $plannedDate): static
+    public function setPlannedDate(\DateTimeImmutable $plannedDate): static
     {
         $this->plannedDate = $plannedDate;
 

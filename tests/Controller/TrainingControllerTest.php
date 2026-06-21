@@ -103,13 +103,14 @@ final class TrainingControllerTest extends WebTestCase
         $client = $this->loggedInClient();
         $client->request('GET', '/training/2026/new');
 
-        // Blank required fields: the form must be re-rendered with errors, not persisted.
+        // Blank required text fields (planned date kept valid, like the other modules' tests):
+        // the form must be re-rendered with errors, not persisted.
         $client->submitForm('Guardar', [
             'training_action[description]' => '',
             'training_action[type]' => 'int',
             'training_action[targetAudience]' => '',
             'training_action[objectives]' => '',
-            'training_action[plannedDate]' => '',
+            'training_action[plannedDate]' => '2026-10-30',
             'training_action[methodology]' => '',
         ]);
 
