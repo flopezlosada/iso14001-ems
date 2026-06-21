@@ -119,7 +119,10 @@ final class WasteControllerTest extends WebTestCase
             'waste_record[manager]' => '',
         ]);
 
-        self::assertResponseIsSuccessful();
+        // An invalid submission re-renders the form (Symfony returns HTTP 422, not a redirect)
+        // and surfaces the field errors, instead of persisting the record.
+        self::assertFalse($client->getResponse()->isRedirect());
+        self::assertSelectorExists('.form-row ul li');
         self::assertNull(
             static::getContainer()->get(WasteRecordRepository::class)->findOneBy(['lerCode' => 'ABC'])
         );
