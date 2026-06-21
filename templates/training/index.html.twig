@@ -1,0 +1,53 @@
+{% extends 'app_shell.html.twig' %}
+
+{% block title %}Formación {{ year }}{% endblock %}
+
+{% block breadcrumb %}<a href="{{ path('app_homepage') }}">Inicio</a><span class="sep">/</span>Plan anual de formación{% endblock %}
+
+{% block body %}
+    <div class="page-head">
+        <div>
+            <h1>Plan de formación {{ year }}</h1>
+            <p class="lead">Acciones formativas previstas para el centro durante el año, con su ejecución y evaluación de eficacia.</p>
+        </div>
+        <a class="btn" href="{{ path('training_new', { year: year }) }}">+ Añadir acción formativa</a>
+    </div>
+
+    <div class="toolbar">
+        <span class="mono muted">
+            <a class="btn secondary" href="{{ path('training_year', { year: year - 1 }) }}">← {{ year - 1 }}</a>
+            <a class="btn secondary" href="{{ path('training_year', { year: year + 1 }) }}">{{ year + 1 }} →</a>
+        </span>
+    </div>
+
+    <div class="card">
+        {% if actions is empty %}
+            <div class="empty-state">
+                <h2>Aún no hay acciones formativas en {{ year }}</h2>
+                <p>Empieza registrando la primera acción del plan de formación.</p>
+                <a class="btn" href="{{ path('training_new', { year: year }) }}">Registrar primera acción</a>
+            </div>
+        {% else %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Curso</th><th>Tipo</th><th>Dirigido a</th><th>Fecha prevista</th><th>Fecha real</th><th>Eficacia</th><th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for action in actions %}
+                        <tr>
+                            <td>{{ action.description }}</td>
+                            <td>{{ action.type.label }}</td>
+                            <td>{{ action.targetAudience }}</td>
+                            <td class="mono">{{ action.plannedDate|date('d/m/Y') }}</td>
+                            <td class="mono">{{ action.actualDate is null ? '—' : action.actualDate|date('d/m/Y') }}</td>
+                            <td class="muted">{{ action.efficacyEvaluation ?? '—' }}</td>
+                            <td><a href="{{ path('training_edit', { year: year, id: action.id }) }}">Editar</a></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    </div>
+{% endblock %}
