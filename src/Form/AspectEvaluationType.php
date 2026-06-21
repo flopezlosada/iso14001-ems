@@ -6,6 +6,7 @@ namespace App\Form;
 
 use App\Entity\AspectEvaluation;
 use App\Enum\AspectType;
+use App\Enum\DirectAspectCategory;
 use App\Enum\InfluenceLevel;
 use App\Enum\ScoreLevel;
 use Symfony\Component\Form\AbstractType;
@@ -61,6 +62,11 @@ class AspectEvaluationType extends AbstractType
                     'help' => 'El procedimiento no define un umbral para aspectos indirectos: márcalo manualmente.',
                 ]);
         } else {
+            // Discharges (vertidos) only define BAJA/ALTA for hazard (PG-06.01 Anexo I); the rest
+            // use the full scale. With no category yet, offer all levels.
+            $category = $options['category'];
+            $hazardChoices = $category instanceof DirectAspectCategory ? $category->hazardLevels() : ScoreLevel::cases();
+
             $builder
                 ->add('frequency', EnumType::class, [
                     'class' => ScoreLevel::class, 'label' => 'Frecuencia',
@@ -74,6 +80,7 @@ class AspectEvaluationType extends AbstractType
                 ->add('hazard', EnumType::class, [
                     'class' => ScoreLevel::class, 'label' => 'Peligrosidad',
                     'required' => false, 'placeholder' => 'Sin evaluar', 'choice_label' => $scoreLabel,
+                    'choices' => $hazardChoices,
                 ]);
         }
 
@@ -85,7 +92,9 @@ class AspectEvaluationType extends AbstractType
         $resolver->setDefaults([
             'data_class' => AspectEvaluation::class,
             'aspect_type' => AspectType::DIRECT,
+            'category' => null,
         ]);
         $resolver->setAllowedTypes('aspect_type', AspectType::class);
+        $resolver->setAllowedTypes('category', [DirectAspectCategory::class, 'null']);
     }
 }

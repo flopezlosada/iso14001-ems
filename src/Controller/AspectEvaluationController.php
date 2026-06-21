@@ -79,6 +79,7 @@ class AspectEvaluationController extends AbstractController
 
         $form = $this->createForm(AspectEvaluationType::class, $evaluation, [
             'aspect_type' => $aspect->getType(),
+            'category' => $aspect->getCategory(),
         ]);
         $form->handleRequest($request);
 
