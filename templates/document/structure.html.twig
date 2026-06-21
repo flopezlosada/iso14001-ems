@@ -1,0 +1,39 @@
+{% extends 'app_shell.html.twig' %}
+{% import 'document/_macros.html.twig' as m %}
+
+{% block title %}Estructura del SGA{% endblock %}
+
+{% block breadcrumb %}<a href="{{ path('app_homepage') }}">Inicio</a><span class="sep">/</span>Estructura del SGA{% endblock %}
+
+{% block body %}
+    <div class="page-head">
+        <div>
+            <h1>Estructura del SGA</h1>
+            <p class="lead">Las obligaciones bajo el ciclo de mejora (PDCA), tal y como se organizan las carpetas del centro. Esta es la vista que se enseña al auditor.</p>
+        </div>
+        <a class="btn secondary" href="{{ path('obligation_index') }}">Ver qué toca</a>
+    </div>
+
+    {% for phase in structure %}
+        <section class="sga-phase">
+            <h2 class="sga-phase-head">
+                <span class="sga-phase-code mono">{{ phase.phase.folderCode }}</span>
+                {{ phase.phase.label }}
+            </h2>
+
+            {% for chapter in phase.chapters %}
+                <div class="sga-chapter">
+                    <p class="eyebrow">Punto {{ chapter.chapter.value }} · {{ chapter.chapter.label }}</p>
+                    <div class="card">
+                        {{ m.obligation_table(chapter.items, moduleRoutes) }}
+                    </div>
+                </div>
+            {% endfor %}
+        </section>
+    {% else %}
+        <div class="empty-state">
+            <h2>No hay obligaciones registradas</h2>
+            <p>Cuando se cargue el catálogo de obligaciones, aquí verás la estructura del sistema.</p>
+        </div>
+    {% endfor %}
+{% endblock %}

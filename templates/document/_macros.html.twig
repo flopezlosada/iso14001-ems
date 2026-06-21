@@ -1,0 +1,47 @@
+{# Reusable rendering of one obligation row, shared by the "Qué toca" and "Estructura SGA" views.
+   `moduleRoutes` maps a linked Area value to its module index route; an obligation with no module
+   yet shows a "pending module" hint instead of a deep link. #}
+
+{% macro obligation_row(obl, moduleRoutes) %}
+    {% set area = obl.linkedArea %}
+    <tr>
+        <td>
+            <span class="mono">{{ obl.code }}</span>
+            <div>{{ obl.title }}</div>
+            {% if obl.instructions %}<div class="muted obligation-help">{{ obl.instructions }}</div>{% endif %}
+        </td>
+        <td>{{ obl.responsibleRole ? obl.responsibleRole.name : '—' }}</td>
+        <td>
+            {% if obl.nextReviewDate %}
+                {{ obl.nextReviewDate|date('d/m/Y') }}
+            {% else %}
+                <span class="muted">Según evento</span>
+            {% endif %}
+        </td>
+        <td>{{ obl.status.label }}{% if obl.statusNote %}<div class="muted">{{ obl.statusNote }}</div>{% endif %}</td>
+        <td class="row-actions">
+            {% if area and moduleRoutes[area.value] is defined %}
+                <a class="btn secondary" href="{{ path(moduleRoutes[area.value]) }}">Cumplimentar</a>
+            {% else %}
+                <span class="badge">Pendiente de módulo</span>
+            {% endif %}
+        </td>
+    </tr>
+{% endmacro %}
+
+{# Table wrapper around a list of obligation rows, with a shared header. #}
+{% macro obligation_table(obligations, moduleRoutes) %}
+    {% import _self as m %}
+    <table>
+        <thead>
+            <tr>
+                <th>Documento</th><th>Responsable</th><th>Próxima revisión</th><th>Estado</th><th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for obl in obligations %}
+                {{ m.obligation_row(obl, moduleRoutes) }}
+            {% endfor %}
+        </tbody>
+    </table>
+{% endmacro %}
