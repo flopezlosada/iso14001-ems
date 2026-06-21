@@ -7,6 +7,9 @@ namespace App\Tests\Domain;
 use App\Entity\Document;
 use App\Entity\DocumentVersion;
 use App\Enum\DocumentType;
+use App\Enum\IsoChapter;
+use App\Enum\ObligationStatus;
+use App\Enum\PdcaPhase;
 use App\Enum\VersionStatus;
 use PHPUnit\Framework\TestCase;
 
@@ -51,5 +54,26 @@ final class DocumentTest extends TestCase
         self::assertTrue(DocumentType::FORM->isSystemGenerated());
         self::assertTrue(DocumentType::RECORD->isSystemGenerated());
         self::assertFalse(DocumentType::EXTERNAL_EVIDENCE->isSystemGenerated());
+    }
+
+    public function testPhaseIsDerivedFromTheIsoChapter(): void
+    {
+        $document = new Document();
+        $document->setIsoChapter(IsoChapter::IMPROVEMENT);
+
+        self::assertSame(PdcaPhase::ACT, $document->getPhase());
+    }
+
+    public function testPhaseIsNullForNonObligationDocuments(): void
+    {
+        $document = new Document();
+
+        self::assertNull($document->getIsoChapter());
+        self::assertNull($document->getPhase());
+    }
+
+    public function testStatusDefaultsToPending(): void
+    {
+        self::assertSame(ObligationStatus::PENDING, (new Document())->getStatus());
     }
 }
