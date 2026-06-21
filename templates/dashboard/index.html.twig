@@ -1,0 +1,116 @@
+{% extends 'app_shell.html.twig' %}
+
+{% set day_names = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'] %}
+{% set month_names = ['', 'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'] %}
+
+{% block title %}Inicio{% endblock %}
+
+{% block breadcrumb %}Inicio{% endblock %}
+
+{% block body %}
+    {# --- Saludo: la cara amable de la pantalla; resume el rol del usuario --- #}
+    <section class="dash-greeting">
+        <div>
+            <p class="eyebrow">{{ day_names[today|date('w')] }} · {{ today|date('j') }} de {{ month_names[today|date('n')] }}</p>
+            <h1>{{ greeting }}, {{ firstName }}.</h1>
+            <p class="lead">
+                {% if isAdmin %}
+                    Administras la plataforma del sistema de gestión ambiental.
+                {% elseif canConsumption %}
+                    Tu responsabilidad es el registro de consumos del centro.
+                {% else %}
+                    Bienvenida al sistema de gestión ambiental.
+                {% endif %}
+            </p>
+        </div>
+        <div class="seal seal--tilt" aria-hidden="true">
+            <span class="seal-top">Gestión</span>
+            <span class="seal-main">SGA</span>
+            <span class="seal-bottom">ISO 14001</span>
+        </div>
+    </section>
+
+    {# --- Accesos rápidos a las gestiones que el usuario puede abrir --- #}
+    {% if canConsumption or isAdmin %}
+        <p class="eyebrow dash-section-label">Accesos rápidos</p>
+        <div class="quick-links">
+            {% if canConsumption %}
+                <a class="quick-link" href="{{ path('consumption_index') }}">
+                    <span class="quick-link-title">Registrar consumo</span>
+                    <span class="quick-link-desc">Lecturas de agua, luz, gasoil, papel y tóner.</span>
+                </a>
+            {% endif %}
+            {% if isAdmin %}
+                <a class="quick-link" href="{{ path('admin_user_index') }}">
+                    <span class="quick-link-title">Usuarios</span>
+                    <span class="quick-link-desc">Quién tiene acceso al sistema.</span>
+                </a>
+                <a class="quick-link" href="{{ path('admin_role_index') }}">
+                    <span class="quick-link-title">Roles y permisos</span>
+                    <span class="quick-link-desc">Qué puede hacer cada rol en cada área.</span>
+                </a>
+                <a class="quick-link" href="{{ path('audit_index') }}">
+                    <span class="quick-link-title">Registro de actividad</span>
+                    <span class="quick-link-desc">Todo lo que ocurre en la plataforma.</span>
+                </a>
+            {% endif %}
+        </div>
+    {% endif %}
+
+    <div class="dash-grid">
+        {# --- Situación de consumos (datos reales del año en curso) --- #}
+        {% if canConsumption %}
+            <section class="panel">
+                <p class="eyebrow">Consumos {{ consumption.year }}</p>
+                <p class="dash-figure">{{ consumption.total }} <span>lectura{{ consumption.total == 1 ? '' : 's' }} este año</span></p>
+                <p class="muted">{{ consumption.monthsCovered }} mes{{ consumption.monthsCovered == 1 ? '' : 'es' }} con datos registrados.</p>
+
+                {% if consumption.currentMonthCount == 0 %}
+                    <p class="dash-note">
+                        <span class="badge badge--warning">Pendiente</span>
+                        Este mes aún no has registrado ninguna lectura.
+                    </p>
+                    <a class="btn" href="{{ path('consumption_index') }}">Registrar lectura</a>
+                {% else %}
+                    <p class="dash-note">
+                        <span class="badge badge--success">Al día</span>
+                        Este mes ya tienes {{ consumption.currentMonthCount }} lectura{{ consumption.currentMonthCount == 1 ? '' : 's' }}.
+                    </p>
+                    <a class="btn secondary" href="{{ path('consumption_index') }}">Ver consumos</a>
+                {% endif %}
+            </section>
+        {% endif %}
+
+        {# --- Estado de la plataforma + actividad reciente (solo admin) --- #}
+        {% if isAdmin %}
+            <section class="panel">
+                <p class="eyebrow">La plataforma</p>
+                <p class="muted">{{ admin.userCount }} usuario{{ admin.userCount == 1 ? '' : 's' }} con acceso · {{ admin.roleCount }} rol{{ admin.roleCount == 1 ? '' : 'es' }} definido{{ admin.roleCount == 1 ? '' : 's' }}.</p>
+
+                <p class="eyebrow dash-subhead">Actividad reciente</p>
+                {% if admin.recent is empty %}
+                    <p class="muted">Todavía no hay eventos registrados.</p>
+                {% else %}
+                    <ul class="activity">
+                        {% for entry in admin.recent %}
+                            <li>
+                                <span class="activity-when mono">{{ entry.occurredAt|date('d/m H:i') }}</span>
+                                <span class="activity-what">{{ entry.summary ?? entry.action }}</span>
+                                <span class="activity-who muted">{{ entry.actor ?? 'sistema' }}</span>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                    <a class="activity-more" href="{{ path('audit_index') }}">Ver todo el registro →</a>
+                {% endif %}
+            </section>
+        {% endif %}
+    </div>
+
+    {# --- Usuario sin gestiones asignadas todavía --- #}
+    {% if hasNothing %}
+        <div class="empty-state">
+            <h2>Aún no tienes gestiones asignadas</h2>
+            <p>Cuando administración te asigne un rol, aquí verás tus tareas y avisos.</p>
+        </div>
+    {% endif %}
+{% endblock %}
