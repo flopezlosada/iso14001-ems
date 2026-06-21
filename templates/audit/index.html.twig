@@ -1,0 +1,28 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Registro de actividad{% endblock %}
+
+{% block body %}
+    <h1>Registro de actividad</h1>
+    <div class="card">
+        {% if entries is empty %}
+            <p class="muted">Todavía no hay eventos registrados.</p>
+        {% else %}
+            <table>
+                <thead>
+                    <tr><th>Fecha</th><th>Quién</th><th>Acción</th><th>Detalle</th></tr>
+                </thead>
+                <tbody>
+                    {% for entry in entries %}
+                        <tr>
+                            <td>{{ entry.occurredAt|date('d/m/Y H:i') }}</td>
+                            <td>{{ entry.actor ?? 'sistema' }}</td>
+                            <td>{{ entry.action }}</td>
+                            <td class="muted">{{ entry.summary ?? '' }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    </div>
+{% endblock %}

@@ -6,6 +6,7 @@ namespace App\Tests\Controller;
 
 use App\Entity\User;
 use App\Enum\ConsumptionType;
+use App\Repository\AuditLogRepository;
 use App\Repository\ConsumptionReadingRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
@@ -69,6 +70,11 @@ final class ConsumptionControllerTest extends WebTestCase
             ->findOneByPeriod(ConsumptionType::WATER, 2026, 5);
         self::assertNotNull($reading);
         self::assertSame('250.00', $reading->getCost());
+
+        // The creation is recorded in the activity trail.
+        self::assertNotNull(
+            static::getContainer()->get(AuditLogRepository::class)->findOneBy(['action' => 'consumption.created'])
+        );
 
         // Following the redirect, the new reading is listed in the year's table.
         $client->followRedirect();

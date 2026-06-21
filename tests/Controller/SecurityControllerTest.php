@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Controller;
 
 use App\Entity\User;
+use App\Repository\AuditLogRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\Security\Http\LoginLink\LoginLinkHandlerInterface;
@@ -60,6 +61,11 @@ final class SecurityControllerTest extends WebTestCase
 
         $client->request('GET', '/consumption/2026');
         self::assertResponseIsSuccessful();
+
+        // The successful sign-in is recorded in the activity trail.
+        self::assertNotNull(
+            static::getContainer()->get(AuditLogRepository::class)->findOneBy(['action' => 'user.login'])
+        );
     }
 
     public function testRequestingLinkEmailsAKnownUser(): void

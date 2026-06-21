@@ -7,6 +7,7 @@ namespace App\Controller;
 use App\Entity\ConsumptionReading;
 use App\Form\ConsumptionReadingType;
 use App\Repository\ConsumptionReadingRepository;
+use App\Service\AuditLogger;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -16,11 +17,16 @@ use Symfony\Component\Routing\Attribute\Route;
 /**
  * Monthly consumption capture (form F-6.1.2): list a year's readings and add/edit one.
  *
- * Access control will be added with authentication; for now the routes are open.
+ * Requires an authenticated user (ROLE_USER). Fine-grained per-role read/write permissions
+ * will come with the permissions module.
  */
 #[Route('/consumption')]
 class ConsumptionController extends AbstractController
 {
+    public function __construct(private readonly AuditLogger $auditLogger)
+    {
+    }
+
     /**
      * Redirects to the current year's consumption page.
      */
@@ -76,8 +82,16 @@ class ConsumptionController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            $isNew = null === $reading->getId();
             $em->persist($reading);
             $em->flush();
+
+            $this->auditLogger->log(
+                $isNew ? 'consumption.created' : 'consumption.updated',
+                'ConsumptionReading',
+                (string) $reading->getId(),
+                sprintf('Consumo %s · %02d/%d', $reading->getType()->label(), $reading->getPeriodMonth(), $reading->getPeriodYear()),
+            );
             $this->addFlash('success', 'Lectura de consumo guardada.');
 
             return $this->redirectToRoute('consumption_year', ['year' => $year]);
