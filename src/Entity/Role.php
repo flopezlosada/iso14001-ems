@@ -59,6 +59,15 @@ class Role
     #[ORM\Column(type: Types::JSON)]
     private array $permissions = [];
 
+    /**
+     * Superuser flag: when true this role grants full access to every {@see Area}, bypassing the
+     * {@see $permissions} matrix entirely (see {@see \App\Security\Voter\AreaVoter}). It also makes
+     * its holders ROLE_ADMIN — so it gates the /admin and /audit sections too. Explicit on purpose:
+     * admin power is an auditable checkbox, not a side effect of naming a role "admin".
+     */
+    #[ORM\Column]
+    private bool $admin = false;
+
     /** @var Collection<int, User> */
     #[ORM\ManyToMany(targetEntity: User::class, mappedBy: 'assignedRoles')]
     private Collection $users;
@@ -105,6 +114,18 @@ class Role
     public function setDescription(?string $description): static
     {
         $this->description = $description;
+
+        return $this;
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->admin;
+    }
+
+    public function setAdmin(bool $admin): static
+    {
+        $this->admin = $admin;
 
         return $this;
     }

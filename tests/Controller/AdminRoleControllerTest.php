@@ -20,7 +20,7 @@ final class AdminRoleControllerTest extends WebTestCase
     {
         $em = static::getContainer()->get(EntityManagerInterface::class);
         $role = new Role();
-        $role->setCode('admin')->setName('Administrador');
+        $role->setCode('admin')->setName('Administrador')->setAdmin(true);
         $em->persist($role);
         $user = new User();
         $user->setFullName('Admin')->setEmail('roleadmin@example.test')->setActive(true)->addAssignedRole($role);

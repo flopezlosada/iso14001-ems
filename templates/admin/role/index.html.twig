@@ -34,7 +34,12 @@
                         <tr>
                             <td>{{ role.name }}</td>
                             <td class="mono muted">{{ role.code }}</td>
-                            {% for area in areas %}<td class="muted">{{ role.getLevel(area).label }}</td>{% endfor %}
+                            {% if role.isAdmin %}
+                                {# Un rol admin ignora la matriz: mostrar su acceso real, no columnas de "Sin acceso". #}
+                                <td colspan="{{ areas|length }}"><span class="badge badge--success">Acceso total (administrador)</span></td>
+                            {% else %}
+                                {% for area in areas %}<td class="muted">{{ role.getLevel(area).label }}</td>{% endfor %}
+                            {% endif %}
                             <td><a href="{{ path('admin_role_edit', { id: role.id }) }}">Editar</a></td>
                         </tr>
                     {% endfor %}

@@ -38,4 +38,10 @@ final class RoleTest extends TestCase
         self::assertSame(PermissionLevel::NONE, $role->getLevel(Area::CONSUMPTION));
         self::assertFalse($role->allows(Area::CONSUMPTION, PermissionLevel::READ));
     }
+
+    public function testIsAdminDefaultsToFalseAndToggles(): void
+    {
+        self::assertFalse((new Role())->isAdmin());
+        self::assertTrue((new Role())->setAdmin(true)->isAdmin());
+    }
 }

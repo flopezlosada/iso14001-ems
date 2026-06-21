@@ -8,6 +8,7 @@ use App\Entity\Role;
 use App\Enum\Area;
 use App\Enum\PermissionLevel;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\EnumType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
@@ -34,10 +35,16 @@ class RoleType extends AbstractType
                 'help' => 'Identificador corto y estable, p. ej. "rsgma" o "secretaria".',
             ])
             ->add('name', TextType::class, ['label' => 'Nombre'])
-            ->add('description', TextareaType::class, ['label' => 'Descripción', 'required' => false]);
+            ->add('description', TextareaType::class, ['label' => 'Descripción', 'required' => false])
+            ->add('admin', CheckboxType::class, [
+                'label' => 'Administrador',
+                'required' => false,
+                'help' => 'Acceso total a todas las áreas; ignora los niveles de abajo.',
+            ]);
 
         // One permission selector per area, pre-filled with the role's current level. Unmapped:
-        // the controller reads them and calls Role::setLevel().
+        // the controller reads them and calls Role::setLevel(). Rendered expanded (radios) so the
+        // template can paint a segmented control instead of a native <select>.
         $builder->addEventListener(FormEvents::PRE_SET_DATA, static function (FormEvent $event): void {
             $form = $event->getForm();
             $role = $event->getData();
@@ -47,6 +54,7 @@ class RoleType extends AbstractType
                     'class' => PermissionLevel::class,
                     'label' => $area->label(),
                     'mapped' => false,
+                    'expanded' => true,
                     'data' => $role instanceof Role ? $role->getLevel($area) : PermissionLevel::NONE,
                     'choice_label' => static fn (PermissionLevel $level): string => $level->label(),
                 ]);

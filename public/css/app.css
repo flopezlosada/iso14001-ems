@@ -745,3 +745,58 @@ input[type="email"], input[type="text"], select, textarea {
     .activity li { grid-template-columns: 56px 1fr; }
     .activity-who { grid-column: 2; }
 }
+
+/* ---- Permisos por rol: toggle de administrador + matriz segmentada -------
+   El toggle de admin concede acceso total e ignora la matriz; cuando está activo
+   la matriz se atenúa (.is-disabled) vía JS. Cada área es un control segmentado
+   (radios ocultos + labels-botón), coloreado por nivel para escanear de un vistazo:
+   gris = sin acceso, ámbar = lectura, verde = edición. */
+.perm-admin { display: flex; align-items: center; gap: 12px; cursor: pointer; padding: 12px 0; }
+.perm-admin__input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.perm-admin__track {
+    position: relative; flex-shrink: 0; width: 42px; height: 24px;
+    background: var(--border-strong); border-radius: 999px; transition: background var(--t-fast, .15s) ease;
+}
+.perm-admin__thumb {
+    position: absolute; top: 2px; left: 2px; width: 20px; height: 20px;
+    background: var(--surface); border-radius: 50%; box-shadow: 0 1px 2px rgba(0,0,0,.25);
+    transition: transform var(--t-fast, .15s) ease;
+}
+.perm-admin__input:checked + .perm-admin__track { background: var(--accent); }
+.perm-admin__input:checked + .perm-admin__track .perm-admin__thumb { transform: translateX(18px); }
+.perm-admin__input:focus-visible + .perm-admin__track { outline: 2px solid var(--focus); outline-offset: 2px; }
+.perm-admin__text { font-weight: 500; color: var(--text); line-height: 1.3; }
+.perm-admin__text small { display: block; font-weight: 400; font-size: 12.5px; color: var(--text-muted); }
+
+.perm-rows { display: flex; flex-direction: column; margin-top: 8px; }
+.perm-rows.is-disabled { opacity: .45; pointer-events: none; }
+.perm-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    padding: 10px 0; border-bottom: 1px solid var(--border);
+}
+.perm-row:last-child { border-bottom: 0; }
+.perm-row__label { font-size: 14px; font-weight: 500; color: var(--text); }
+
+/* Ancho fijo e idéntico en todas las filas para que las cajas cuadren. */
+.seg {
+    display: flex; flex-shrink: 0; width: 300px; gap: 2px; padding: 2px;
+    background: var(--surface-sunken); border: 1px solid var(--border-strong); border-radius: 999px;
+}
+.seg__input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.seg__btn {
+    flex: 1 1 0; margin: 0; padding: 6px 8px; text-align: center; white-space: nowrap;
+    font-size: 12.5px; font-weight: 500; line-height: 1.2; color: var(--text-muted);
+    cursor: pointer; user-select: none; border-radius: 999px;
+    transition: background var(--t-fast, .15s) ease, color var(--t-fast, .15s) ease;
+}
+.seg__btn:hover { color: var(--text); }
+.seg__input:checked + .seg__btn { color: var(--on-accent); box-shadow: 0 1px 2px rgba(0,0,0,.18); }
+.seg__input[value="none"]:checked + .seg__btn  { background: var(--text-muted); }
+.seg__input[value="read"]:checked + .seg__btn  { background: var(--warning); }
+.seg__input[value="write"]:checked + .seg__btn { background: var(--accent); }
+.seg__input:focus-visible + .seg__btn { outline: 2px solid var(--focus); outline-offset: 1px; }
+
+@media (max-width: 560px) {
+    .perm-row { flex-direction: column; align-items: stretch; gap: 6px; }
+    .seg { width: 100%; }
+}
