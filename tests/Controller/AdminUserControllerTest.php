@@ -23,7 +23,7 @@ final class AdminUserControllerTest extends WebTestCase
 
         if ($admin) {
             $role = new Role();
-            $role->setCode('admin')->setName('Administrador');
+            $role->setCode('admin')->setName('Administrador')->setAdmin(true);
             $em->persist($role);
             $user->addAssignedRole($role);
         }

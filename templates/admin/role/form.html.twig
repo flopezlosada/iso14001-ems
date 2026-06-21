@@ -34,17 +34,46 @@
 
             <h2 style="font-size: 20px; margin: 24px 0 4px;">Permisos por área</h2>
             <p class="muted" style="margin-top: 0;">Define el acceso de este rol a cada área. La escritura incluye la lectura.</p>
-            {% for child in form %}
-                {% if child.vars.name starts with 'perm_' %}
-                    <div class="form-row">
-                        {{ form_label(child) }}
-                        {{ form_widget(child) }}
-                    </div>
-                {% endif %}
-            {% endfor %}
 
-            <button class="btn" type="submit">Guardar</button>
-            <a class="btn secondary" href="{{ path('admin_role_index') }}">Cancelar</a>
+            {# Administrador: acceso total que ignora la matriz de abajo (atenuada vía JS cuando está activo). #}
+            <label class="perm-admin">
+                {{ form_widget(form.admin, { attr: { class: 'perm-admin__input' } }) }}
+                <span class="perm-admin__track"><span class="perm-admin__thumb"></span></span>
+                <span class="perm-admin__text">{{ form.admin.vars.label }}<small>{{ form.admin.vars.help }}</small></span>
+            </label>
+
+            <div class="perm-rows" data-perm-matrix>
+                {% for child in form %}
+                    {% if child.vars.name starts with 'perm_' %}
+                        <div class="perm-row">
+                            <span class="perm-row__label">{{ child.vars.label }}</span>
+                            <div class="seg">
+                                {% for opt in child %}
+                                    {{ form_widget(opt, { attr: { class: 'seg__input' } }) }}
+                                    <label class="seg__btn" for="{{ opt.vars.id }}">{{ opt.vars.label }}</label>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+
+            <div style="margin-top: 24px;">
+                <button class="btn" type="submit">Guardar</button>
+                <a class="btn secondary" href="{{ path('admin_role_index') }}">Cancelar</a>
+            </div>
         {{ form_end(form) }}
     </div>
+
+    {# Atenúa la matriz cuando el rol es administrador: sus niveles no se aplican. #}
+    <script>
+        (function () {
+            var admin = document.querySelector('.perm-admin__input');
+            var matrix = document.querySelector('[data-perm-matrix]');
+            if (!admin || !matrix) return;
+            var sync = function () { matrix.classList.toggle('is-disabled', admin.checked); };
+            admin.addEventListener('change', sync);
+            sync();
+        })();
+    </script>
 {% endblock %}

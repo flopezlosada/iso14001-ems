@@ -134,7 +134,10 @@ class User implements UserInterface
 
     /**
      * Security roles derived from the assigned responsibilities. Every authenticated user has
-     * ROLE_USER; each assigned {@see Role} adds ROLE_<CODE>.
+     * ROLE_USER; holding any role flagged as admin (see {@see Role::isAdmin()}) adds ROLE_ADMIN,
+     * which gates the /admin and /audit sections and bypasses the per-area matrix in
+     * {@see \App\Security\Voter\AreaVoter}. Admin power is therefore an explicit flag, not a side
+     * effect of a role's code.
      *
      * @return string[]
      */
@@ -142,7 +145,9 @@ class User implements UserInterface
     {
         $roles = ['ROLE_USER'];
         foreach ($this->assignedRoles as $role) {
-            $roles[] = 'ROLE_'.strtoupper($role->getCode());
+            if ($role->isAdmin()) {
+                $roles[] = 'ROLE_ADMIN';
+            }
         }
 
         return array_values(array_unique($roles));
