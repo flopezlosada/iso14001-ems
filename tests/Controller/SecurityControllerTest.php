@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Controller;
 
+use App\Entity\Role;
 use App\Entity\User;
 use App\Repository\AuditLogRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -16,11 +17,19 @@ use Symfony\Component\Security\Http\LoginLink\LoginLinkHandlerInterface;
  */
 final class SecurityControllerTest extends WebTestCase
 {
-    private function persistUser(string $email): User
+    private function persistUser(string $email, bool $admin = false): User
     {
         $em = static::getContainer()->get(EntityManagerInterface::class);
         $user = new User();
         $user->setFullName('Tester')->setEmail($email)->setActive(true);
+
+        if ($admin) {
+            $role = new Role();
+            $role->setCode('admin')->setName('Administrador');
+            $em->persist($role);
+            $user->addRole($role);
+        }
+
         $em->persist($user);
         $em->flush();
 
@@ -49,7 +58,7 @@ final class SecurityControllerTest extends WebTestCase
     public function testMagicLinkAuthenticatesAndGrantsAccess(): void
     {
         $client = static::createClient();
-        $user = $this->persistUser('linker@example.test');
+        $user = $this->persistUser('linker@example.test', admin: true);
 
         // Use the firewall-specific handler: the generic one needs an active request to
         // resolve the firewall.

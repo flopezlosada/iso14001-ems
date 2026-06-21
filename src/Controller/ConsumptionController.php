@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Entity\ConsumptionReading;
+use App\Enum\Area;
 use App\Form\ConsumptionReadingType;
 use App\Repository\ConsumptionReadingRepository;
+use App\Security\Voter\AreaVoter;
 use App\Service\AuditLogger;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -33,6 +35,8 @@ class ConsumptionController extends AbstractController
     #[Route('', name: 'consumption_index', methods: ['GET'])]
     public function index(): Response
     {
+        $this->denyAccessUnlessGranted(AreaVoter::READ, Area::CONSUMPTION);
+
         return $this->redirectToRoute('consumption_year', ['year' => (int) date('Y')]);
     }
 
@@ -42,6 +46,8 @@ class ConsumptionController extends AbstractController
     #[Route('/{year}', name: 'consumption_year', requirements: ['year' => '\d{4}'], methods: ['GET'])]
     public function year(int $year, ConsumptionReadingRepository $readings): Response
     {
+        $this->denyAccessUnlessGranted(AreaVoter::READ, Area::CONSUMPTION);
+
         return $this->render('consumption/index.html.twig', [
             'year' => $year,
             'readings' => $readings->findForYear($year),
@@ -54,6 +60,8 @@ class ConsumptionController extends AbstractController
     #[Route('/{year}/new', name: 'consumption_new', requirements: ['year' => '\d{4}'], methods: ['GET', 'POST'])]
     public function new(int $year, Request $request, EntityManagerInterface $em): Response
     {
+        $this->denyAccessUnlessGranted(AreaVoter::WRITE, Area::CONSUMPTION);
+
         $reading = (new ConsumptionReading())->setPeriodYear($year);
 
         return $this->handleForm($reading, $year, $request, $em);
@@ -66,6 +74,8 @@ class ConsumptionController extends AbstractController
     #[Route('/{year}/{id}/edit', name: 'consumption_edit', requirements: ['year' => '\d{4}', 'id' => '\d+'], methods: ['GET', 'POST'])]
     public function edit(int $year, ConsumptionReading $reading, Request $request, EntityManagerInterface $em): Response
     {
+        $this->denyAccessUnlessGranted(AreaVoter::WRITE, Area::CONSUMPTION);
+
         if ($reading->getPeriodYear() !== $year) {
             throw $this->createNotFoundException('The reading does not belong to the given year.');
         }

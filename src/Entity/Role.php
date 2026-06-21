@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Entity;
 
+use App\Enum\Area;
+use App\Enum\PermissionLevel;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
@@ -41,6 +43,15 @@ class Role
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $description = null;
+
+    /**
+     * Read/write access per area: a map of area value => level value. Areas absent from the map
+     * grant no access.
+     *
+     * @var array<string, string>
+     */
+    #[ORM\Column(type: Types::JSON)]
+    private array $permissions = [];
 
     /** @var Collection<int, User> */
     #[ORM\ManyToMany(targetEntity: User::class, mappedBy: 'assignedRoles')]
@@ -90,6 +101,37 @@ class Role
         $this->description = $description;
 
         return $this;
+    }
+
+    /**
+     * Access level this role grants over the given area (NONE if unset).
+     */
+    public function getLevel(Area $area): PermissionLevel
+    {
+        $value = $this->permissions[$area->value] ?? null;
+
+        // tryFrom (not from): an unknown/corrupt stored value degrades to NONE rather than
+        // throwing and turning every protected request into a 500.
+        return null !== $value ? (PermissionLevel::tryFrom($value) ?? PermissionLevel::NONE) : PermissionLevel::NONE;
+    }
+
+    public function setLevel(Area $area, PermissionLevel $level): static
+    {
+        if (PermissionLevel::NONE === $level) {
+            unset($this->permissions[$area->value]);
+        } else {
+            $this->permissions[$area->value] = $level->value;
+        }
+
+        return $this;
+    }
+
+    /**
+     * Whether this role grants at least the required level over the area.
+     */
+    public function allows(Area $area, PermissionLevel $required): bool
+    {
+        return $this->getLevel($area)->satisfies($required);
     }
 
     /**

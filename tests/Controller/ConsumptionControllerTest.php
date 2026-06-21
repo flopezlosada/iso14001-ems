@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace App\Tests\Controller;
 
+use App\Entity\Role;
 use App\Entity\User;
+use App\Enum\Area;
 use App\Enum\ConsumptionType;
+use App\Enum\PermissionLevel;
 use App\Repository\AuditLogRepository;
 use App\Repository\ConsumptionReadingRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -24,8 +27,12 @@ final class ConsumptionControllerTest extends WebTestCase
         $client = static::createClient();
         $em = static::getContainer()->get(EntityManagerInterface::class);
 
+        $role = new Role();
+        $role->setCode('consumos')->setName('Gestión de consumos')->setLevel(Area::CONSUMPTION, PermissionLevel::WRITE);
+        $em->persist($role);
+
         $user = new User();
-        $user->setFullName('Tester')->setEmail('consumo-tester@example.test')->setActive(true);
+        $user->setFullName('Tester')->setEmail('consumo-tester@example.test')->setActive(true)->addRole($role);
         $em->persist($user);
         $em->flush();
 
