@@ -10,8 +10,10 @@ use App\Form\ConsumptionReadingType;
 use App\Repository\ConsumptionReadingRepository;
 use App\Security\Voter\AreaVoter;
 use App\Service\AuditLogger;
+use App\Service\FileUploader;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -25,8 +27,10 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/consumption')]
 class ConsumptionController extends AbstractController
 {
-    public function __construct(private readonly AuditLogger $auditLogger)
-    {
+    public function __construct(
+        private readonly AuditLogger $auditLogger,
+        private readonly FileUploader $fileUploader,
+    ) {
     }
 
     /**
@@ -84,6 +88,25 @@ class ConsumptionController extends AbstractController
     }
 
     /**
+     * Serves the invoice attached to a reading as a download. Requires read access; 404 when the
+     * reading has no invoice or does not belong to the given year.
+     */
+    #[Route('/{year}/{id}/invoice', name: 'consumption_invoice', requirements: ['year' => '\d{4}', 'id' => '\d+'], methods: ['GET'])]
+    public function invoice(int $year, ConsumptionReading $reading): Response
+    {
+        $this->denyAccessUnlessGranted(AreaVoter::READ, Area::CONSUMPTION);
+
+        if ($reading->getPeriodYear() !== $year || !$reading->hasInvoice()) {
+            throw $this->createNotFoundException('No invoice for this reading.');
+        }
+
+        return $this->file(
+            $this->fileUploader->absolutePath($reading->getInvoicePath()),
+            $reading->getInvoiceOriginalName() ?? 'factura',
+        );
+    }
+
+    /**
      * Builds and processes the reading form, persisting on a valid submission.
      */
     private function handleForm(ConsumptionReading $reading, int $year, Request $request, EntityManagerInterface $em): Response
@@ -93,6 +116,21 @@ class ConsumptionController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             $isNew = null === $reading->getId();
+
+            $invoiceFile = $form->get('invoiceFile')->getData();
+            if ($invoiceFile instanceof UploadedFile) {
+                $previousInvoice = $reading->getInvoicePath();
+                $reading
+                    ->setInvoicePath($this->fileUploader->upload($invoiceFile, 'consumption-invoices'))
+                    ->setInvoiceOriginalName($invoiceFile->getClientOriginalName());
+
+                // Drop the replaced file so attachments don't pile up (the host's inode budget
+                // is tight on shared hosting).
+                if (null !== $previousInvoice) {
+                    $this->fileUploader->remove($previousInvoice);
+                }
+            }
+
             $em->persist($reading);
             $em->flush();
 

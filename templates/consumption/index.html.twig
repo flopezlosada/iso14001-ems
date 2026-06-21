@@ -33,7 +33,7 @@
             <table>
                 <thead>
                     <tr>
-                        <th>Mes</th><th>Tipo</th><th>Cantidad</th><th>Coste</th><th>Observaciones</th><th></th>
+                        <th>Mes</th><th>Tipo</th><th>Cantidad</th><th>Coste</th><th>Observaciones</th><th>Factura</th><th></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -44,6 +44,7 @@
                             <td class="mono">{{ reading.quantity }} {{ reading.type.unit }}</td>
                             <td class="mono">{{ reading.cost is null ? '—' : reading.cost ~ ' €' }}</td>
                             <td class="muted">{{ reading.notes ?? '' }}</td>
+                            <td>{% if reading.hasInvoice %}<a href="{{ path('consumption_invoice', { year: year, id: reading.id }) }}">Ver</a>{% else %}—{% endif %}</td>
                             <td><a href="{{ path('consumption_edit', { year: year, id: reading.id }) }}">Editar</a></td>
                         </tr>
                     {% endfor %}

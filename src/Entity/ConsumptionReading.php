@@ -62,6 +62,19 @@ class ConsumptionReading
     #[Assert\Length(max: 255)]
     private ?string $notes = null;
 
+    /**
+     * Storage-relative path of the attached invoice ("factura"), or null when none is attached.
+     * The invoice is the source evidence of the reading (kept for audit traceability).
+     */
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $invoicePath = null;
+
+    /**
+     * Original client filename of the invoice, used when serving it back for download.
+     */
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $invoiceOriginalName = null;
+
     #[ORM\Column]
     private \DateTimeImmutable $createdAt;
 
@@ -169,6 +182,38 @@ class ConsumptionReading
     public function setNotes(?string $notes): static
     {
         $this->notes = $notes;
+
+        return $this;
+    }
+
+    /**
+     * Whether an invoice file is attached to this reading.
+     */
+    public function hasInvoice(): bool
+    {
+        return null !== $this->invoicePath;
+    }
+
+    public function getInvoicePath(): ?string
+    {
+        return $this->invoicePath;
+    }
+
+    public function setInvoicePath(?string $invoicePath): static
+    {
+        $this->invoicePath = $invoicePath;
+
+        return $this;
+    }
+
+    public function getInvoiceOriginalName(): ?string
+    {
+        return $this->invoiceOriginalName;
+    }
+
+    public function setInvoiceOriginalName(?string $invoiceOriginalName): static
+    {
+        $this->invoiceOriginalName = $invoiceOriginalName;
 
         return $this;
     }

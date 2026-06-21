@@ -16,7 +16,7 @@
     <div class="card" style="max-width: 520px;">
         {{ form_start(form, { 'attr': { 'novalidate': 'novalidate' } }) }}
             {{ form_errors(form) }}
-            {% for field in [form.type, form.periodMonth, form.quantity, form.cost, form.notes] %}
+            {% for field in [form.type, form.periodMonth, form.quantity, form.cost, form.notes, form.invoiceFile] %}
                 <div class="form-row">
                     {{ form_label(field) }}
                     {{ form_widget(field) }}
@@ -24,6 +24,13 @@
                     {{ form_errors(field) }}
                 </div>
             {% endfor %}
+            {% if reading.hasInvoice %}
+                <p class="help">
+                    Factura actual:
+                    <a href="{{ path('consumption_invoice', { year: year, id: reading.id }) }}">{{ reading.invoiceOriginalName }}</a>.
+                    Si subes otra, la reemplaza.
+                </p>
+            {% endif %}
             <button class="btn" type="submit">Guardar</button>
             <a class="btn secondary" href="{{ path('consumption_year', { year: year }) }}">Cancelar</a>
         {{ form_end(form) }}
