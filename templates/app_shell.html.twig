@@ -28,6 +28,7 @@
                 <a href="{{ path('legal_requirement_index') }}" class="{{ route starts with 'legal_requirement' ? 'is-active' }}">Requisitos legales</a>
                 <a href="{{ path('emergency_drill_index') }}" class="{{ route starts with 'emergency_drill' ? 'is-active' }}">Simulacros</a>
                 <a href="{{ path('aspect_index') }}" class="{{ route starts with 'aspect' ? 'is-active' }}">Aspectos ambientales</a>
+                <a href="{{ path('risk_index') }}" class="{{ route starts with 'risk' ? 'is-active' }}">Riesgos y oportunidades</a>
                 <a href="{{ path('objective_index') }}" class="{{ route starts with 'objective' ? 'is-active' }}">Objetivos</a>
                 <a href="{{ path('indicator_index') }}" class="{{ route starts with 'indicator' ? 'is-active' }}">Indicadores</a>
                 {% if is_granted('ROLE_ADMIN') %}

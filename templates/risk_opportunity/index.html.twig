@@ -1,0 +1,55 @@
+{% extends 'app_shell.html.twig' %}
+
+{% block title %}Riesgos y oportunidades{% endblock %}
+
+{% block breadcrumb %}<a href="{{ path('app_homepage') }}">Inicio</a><span class="sep">/</span>Riesgos y oportunidades{% endblock %}
+
+{% block body %}
+    <div class="page-head">
+        <div>
+            <h1>Riesgos y oportunidades</h1>
+            <p class="lead">Identificación, valoración y planes de acción (PC.03.0 / F.08.0).</p>
+        </div>
+        <div>
+            <a class="btn secondary" href="{{ path('risk_area_index') }}">Gestionar áreas</a>
+            <a class="btn" href="{{ path('risk_new') }}">+ Registrar</a>
+        </div>
+    </div>
+
+    <div class="card">
+        {% if items is empty %}
+            <div class="empty-state">
+                <h2>Aún no hay registros</h2>
+                <p>Registra el primer riesgo u oportunidad del centro.</p>
+                <a class="btn" href="{{ path('risk_new') }}">Registrar el primero</a>
+            </div>
+        {% else %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tipo</th><th>Descripción</th><th>Proceso / Área</th><th>Valoración actual</th><th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                        {% set latest = item.latestAssessment %}
+                        <tr>
+                            <td>{{ item.type.label }}</td>
+                            <td>{{ item.description }}</td>
+                            <td class="muted">{{ item.processArea.name }}</td>
+                            <td>
+                                {%- if latest -%}
+                                    {{ latest.category ? latest.category.label(item.type) : '—' }}
+                                    <span class="muted">· {{ latest.score }} ({{ latest.exercise }})</span>
+                                {%- else -%}
+                                    <span class="muted">Sin valorar</span>
+                                {%- endif -%}
+                            </td>
+                            <td><a href="{{ path('risk_show', { id: item.id }) }}">Ver</a></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    </div>
+{% endblock %}
