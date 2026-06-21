@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace App\Entity;
 
+use App\Enum\Area;
 use App\Enum\DocumentType;
+use App\Enum\IsoChapter;
+use App\Enum\ObligationStatus;
+use App\Enum\PdcaPhase;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
@@ -59,6 +63,44 @@ class Document
      */
     #[ORM\Column(length: 120, nullable: true)]
     private ?string $process = null;
+
+    /**
+     * ISO 14001 clause (chapters 4-10) this obligation lives under. Drives the supra-structure
+     * navigation (its {@see PdcaPhase} is derived from here). Null for documents that are not part
+     * of the periodic obligations register.
+     */
+    #[ORM\Column(nullable: true, enumType: IsoChapter::class)]
+    private ?IsoChapter $isoChapter = null;
+
+    /**
+     * Manual review state of the obligation (the "¿REVISADO?" column). Complementary to the
+     * date-derived urgency traffic-light, never a substitute for it.
+     */
+    #[ORM\Column(length: 20, enumType: ObligationStatus::class)]
+    private ObligationStatus $status = ObligationStatus::PENDING;
+
+    /**
+     * Free-text nuance for the status (e.g. "hecho, falta firma de dirección"), as the register
+     * carries in its review column.
+     */
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $statusNote = null;
+
+    /**
+     * The built module where this obligation is actually filled in (consumos, NC, formación…).
+     * Null means "pending module": the obligation is handled by uploading a file / marking it done
+     * until its module is built. Reuses {@see Area} (the catalog of existing modules) on purpose.
+     */
+    #[ORM\Column(length: 30, nullable: true, enumType: Area::class)]
+    private ?Area $linkedArea = null;
+
+    /**
+     * What the responsible has to do for this obligation, in plain language. Sourced from the
+     * consultant's guide ("Tareas IES La Cabrera"); now that there is no consultant, this is how
+     * the app guides the staff. Shown as on-screen help on the obligation.
+     */
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $instructions = null;
 
     /**
      * Role responsible for keeping this document up to date. The actual people are the users
@@ -198,6 +240,76 @@ class Document
     public function setProcess(?string $process): static
     {
         $this->process = $process;
+
+        return $this;
+    }
+
+    public function getIsoChapter(): ?IsoChapter
+    {
+        return $this->isoChapter;
+    }
+
+    public function setIsoChapter(?IsoChapter $isoChapter): static
+    {
+        $this->isoChapter = $isoChapter;
+
+        return $this;
+    }
+
+    /**
+     * The PDCA phase of this obligation, derived from its ISO chapter (null when no chapter is set).
+     *
+     * @return PdcaPhase|null the phase, or null for non-obligation documents
+     */
+    public function getPhase(): ?PdcaPhase
+    {
+        return $this->isoChapter?->phase();
+    }
+
+    public function getStatus(): ObligationStatus
+    {
+        return $this->status;
+    }
+
+    public function setStatus(ObligationStatus $status): static
+    {
+        $this->status = $status;
+
+        return $this;
+    }
+
+    public function getStatusNote(): ?string
+    {
+        return $this->statusNote;
+    }
+
+    public function setStatusNote(?string $statusNote): static
+    {
+        $this->statusNote = $statusNote;
+
+        return $this;
+    }
+
+    public function getLinkedArea(): ?Area
+    {
+        return $this->linkedArea;
+    }
+
+    public function setLinkedArea(?Area $linkedArea): static
+    {
+        $this->linkedArea = $linkedArea;
+
+        return $this;
+    }
+
+    public function getInstructions(): ?string
+    {
+        return $this->instructions;
+    }
+
+    public function setInstructions(?string $instructions): static
+    {
+        $this->instructions = $instructions;
 
         return $this;
     }

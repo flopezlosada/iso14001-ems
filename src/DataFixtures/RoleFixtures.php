@@ -51,6 +51,11 @@ final class RoleFixtures extends AbstractGoldenFixture
                 Area::SUPPLIER->value => $w,
                 Area::LEGAL_REQUIREMENT->value => $r,
             ]],
+            // Responsibles that appear in the document register but have no module yet: they own
+            // "pending-module" obligations (upload a file / mark done). No area grants until their
+            // module exists — consistent with Area only listing modules that are actually built.
+            'cfpg' => ['Resp. Mantenimiento (CFGS Jardinería)', []],
+            'cleaning' => ['Personal de Limpieza y Mantenimiento', []],
         ];
 
         foreach ($roles as $code => [$name, $permissions]) {
