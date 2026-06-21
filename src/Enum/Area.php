@@ -21,6 +21,7 @@ enum Area: string
     case EMERGENCY = 'emergency';
     case ASPECT = 'aspect';
     case OBJECTIVE = 'objective';
+    case INDICATOR = 'indicator';
 
     /**
      * Human-facing area name (Spanish), used in the permissions matrix.
@@ -37,6 +38,7 @@ enum Area: string
             self::EMERGENCY => 'Simulacros',
             self::ASPECT => 'Aspectos ambientales',
             self::OBJECTIVE => 'Objetivos',
+            self::INDICATOR => 'Indicadores',
         };
     }
 }
