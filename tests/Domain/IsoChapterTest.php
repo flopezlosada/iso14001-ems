@@ -6,6 +6,7 @@ namespace App\Tests\Domain;
 
 use App\Enum\IsoChapter;
 use App\Enum\PdcaPhase;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -29,9 +30,7 @@ final class IsoChapterTest extends TestCase
         yield 'Mejora → Act (03)' => [IsoChapter::IMPROVEMENT, PdcaPhase::ACT, '03'];
     }
 
-    /**
-     * @dataProvider chapterPhaseProvider
-     */
+    #[DataProvider('chapterPhaseProvider')]
     public function testChapterDerivesPhaseAndFolder(IsoChapter $chapter, PdcaPhase $expectedPhase, string $expectedFolder): void
     {
         self::assertSame($expectedPhase, $chapter->phase());
