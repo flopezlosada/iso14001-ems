@@ -398,15 +398,17 @@ input[type="email"], input[type="text"], select, textarea {
     color: var(--text);
 }
 .form-row textarea { min-height: 84px; resize: vertical; }
-/* Select: ocultamos el chrome nativo del control cerrado y ponemos nuestra flecha.
-   (La lista desplegada la pinta el SO; color-scheme la alinea al tema.) */
+/* Select cerrado: chevron propio (como csa-vega). OJO: la lista DESPLEGADA es nativa del
+   SO; en macOS con el SO en oscuro se pinta oscura y el CSS no la fuerza. Para control
+   total habría que un dropdown propio en JS (componente, como csa-dropdown de csa-vega). */
 .form-row select, select {
     appearance: none;
     -webkit-appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='none' stroke='%235C6159' stroke-width='1.5' d='M1 1.5 6 6.5l5-5'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none' stroke='%235C6159' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='1 1.5 6 6.5 11 1.5'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 14px center;
-    padding-right: 38px;
+    padding-right: 36px;
+    cursor: pointer;
 }
 .form-row input:focus, .form-row select:focus, .form-row textarea:focus {
     border-color: var(--accent);
@@ -414,6 +416,62 @@ input[type="email"], input[type="text"], select, textarea {
 }
 .form-row input[type="checkbox"] { width: auto; margin-right: 8px; }
 .help { color: var(--text-muted); font-size: 12.5px; margin: 6px 0 0; }
+
+/* ---- Select "enhanced" (selectmenu.js) -----------------------------------
+   El desplegable nativo del <select> lo pinta el SO y no se puede estilar (sale oscuro
+   en macOS dark). Lo reemplazamos por un menú propio, manteniendo el <select> oculto y
+   funcional. Portado de csa-vega. La flecha usa currentColor (sigue el tema). */
+.selectmenu { position: relative; }
+.selectmenu__native {
+    position: absolute; opacity: 0; width: 1px; height: 1px;
+    margin: -1px; padding: 0; border: 0; overflow: hidden;
+    clip: rect(0 0 0 0); pointer-events: none;
+}
+.selectmenu__trigger {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    width: 100%; box-sizing: border-box;
+    padding: 10px 12px;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    font: 400 14px var(--font-body);
+    color: var(--text);
+    text-align: left; cursor: pointer;
+    transition: border-color .12s ease, background .12s ease;
+}
+.selectmenu__trigger:hover { border-color: var(--text-muted); }
+.selectmenu__trigger:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.selectmenu--open .selectmenu__trigger { border-color: var(--accent); }
+.selectmenu__trigger:disabled { opacity: .55; cursor: not-allowed; }
+.selectmenu__value { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.selectmenu__value--placeholder { color: var(--text-faint); }
+.selectmenu__trigger::after {
+    content: ''; flex-shrink: 0; width: 12px; height: 8px;
+    background-color: var(--text-muted);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpolyline points='1 1.5 6 6.5 11 1.5' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat center / contain;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpolyline points='1 1.5 6 6.5 11 1.5' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat center / contain;
+    transition: transform .12s ease;
+}
+.selectmenu--open .selectmenu__trigger::after { transform: rotate(180deg); }
+.selectmenu__menu {
+    position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 50;
+    max-height: 280px; overflow-y: auto;
+    margin: 0; padding: 4px 0; list-style: none;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-card);
+}
+.selectmenu__menu[hidden] { display: none; }
+.selectmenu__option {
+    padding: 9px 12px; font-size: 14px; line-height: 1.4; color: var(--text);
+    cursor: pointer; user-select: none;
+    transition: background .12s ease, color .12s ease;
+}
+.selectmenu__option:hover, .selectmenu__option--active { background: var(--accent-weak); color: var(--text); }
+.selectmenu__option[aria-selected="true"] { font-weight: 500; color: var(--accent); }
+.selectmenu__option--disabled { color: var(--text-faint); cursor: default; }
+.selectmenu__option--disabled:hover { background: transparent; }
 
 /* Errores de formulario de Symfony: se renderizan como <ul><li>. Los estilamos
    nosotros (los tests dependen del selector .form-row ul li / ul li). */
