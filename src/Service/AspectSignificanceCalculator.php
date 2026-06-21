@@ -14,15 +14,19 @@ use App\Enum\ScoreLevel;
  *
  * - DIRECT (Anexo I): frequency + intensity + hazard (each 2/4/6); discharges have no intensity;
  *   a missing intensity counts as 4 ("Media") per the no-prior-year-data default. Significant when
- *   the sum exceeds the threshold (default 10, set by the directora).
- * - ABNORMAL (Anexo III): probability + control + severity (each 2/4/6). Same threshold.
+ *   the sum exceeds the PER-CATEGORY threshold (consumos/emisiones 12, residuos 10, vertidos 8),
+ *   see {@see DirectAspectCategory::significanceThreshold()}.
+ * - ABNORMAL (Anexo III): probability + control + severity (each 2/4/6). Threshold is the single
+ *   bound default (10).
  * - INDIRECT (Anexo II): only "capacity of influence" (1/2/3) is recorded; the procedure defines
  *   no threshold, so significance is left as a manual decision (not overwritten here).
  */
 final class AspectSignificanceCalculator
 {
     /**
-     * @param int $threshold significance threshold (bound from %app.aspect_significance_threshold%)
+     * @param int $threshold significance threshold for abnormal aspects, and fallback for a direct
+     *                        aspect with no category set (bound from
+     *                        %app.aspect_significance_threshold%)
      */
     public function __construct(private readonly int $threshold)
     {
@@ -36,7 +40,9 @@ final class AspectSignificanceCalculator
      */
     public function apply(AspectEvaluation $evaluation): void
     {
-        if (AspectType::INDIRECT === $evaluation->getAspect()->getType()) {
+        $aspect = $evaluation->getAspect();
+
+        if (AspectType::INDIRECT === $aspect->getType()) {
             // No defined threshold for indirect aspects: record the influence as the score and
             // leave the significant flag to the manual decision captured in the form.
             $influence = $evaluation->getInfluence();
@@ -45,13 +51,19 @@ final class AspectSignificanceCalculator
             return;
         }
 
-        $score = AspectType::ABNORMAL === $evaluation->getAspect()->getType()
-            ? $this->abnormalScore($evaluation)
-            : $this->directScore($evaluation);
+        if (AspectType::ABNORMAL === $aspect->getType()) {
+            // Abnormal aspects (Anexo III) share a single threshold, the bound default (10).
+            $score = $this->abnormalScore($evaluation);
+            $evaluation->setSignificanceScore($score)->setSignificant($score > $this->threshold);
 
-        $evaluation
-            ->setSignificanceScore($score)
-            ->setSignificant($score > $this->threshold);
+            return;
+        }
+
+        // Direct aspects (Anexo I): the threshold is per-category (consumos/emisiones 12, residuos
+        // 10, vertidos 8). A direct aspect with no category falls back to the bound default.
+        $score = $this->directScore($evaluation);
+        $threshold = $aspect->getCategory()?->significanceThreshold() ?? $this->threshold;
+        $evaluation->setSignificanceScore($score)->setSignificant($score > $threshold);
     }
 
     /**

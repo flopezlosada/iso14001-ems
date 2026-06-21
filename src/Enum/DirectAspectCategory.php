@@ -7,7 +7,8 @@ namespace App\Enum;
 /**
  * Category of a direct environmental aspect (PG-06.01 Anexo I). The significance of all four is
  * the sum of frequency + intensity + hazard, except discharges (vertidos), which have no
- * intensity criterion.
+ * intensity criterion. Each category has its own significance threshold (see
+ * {@see significanceThreshold()}).
  */
 enum DirectAspectCategory: string
 {
@@ -24,6 +25,35 @@ enum DirectAspectCategory: string
     public function usesIntensity(): bool
     {
         return self::DISCHARGE !== $this;
+    }
+
+    /**
+     * Significance threshold for this category (PG-06.01 Anexo I, "Límite de significancia"): an
+     * aspect is significant when its score strictly exceeds this value. The four categories do NOT
+     * share a single threshold — consumos and emisiones use 12, residuos 10 and vertidos 8.
+     *
+     * @return int the per-category significance threshold
+     */
+    public function significanceThreshold(): int
+    {
+        return match ($this) {
+            self::CONSUMPTION, self::EMISSION => 12,
+            self::WASTE => 10,
+            self::DISCHARGE => 8,
+        };
+    }
+
+    /**
+     * Hazard levels offered for this category (PG-06.01 Anexo I, criterio "Peligrosidad").
+     * Discharges (vertidos) only define BAJA/ALTA; the rest use the full Baja/Media/Alta scale.
+     *
+     * @return list<ScoreLevel> the selectable hazard levels
+     */
+    public function hazardLevels(): array
+    {
+        return self::DISCHARGE === $this
+            ? [ScoreLevel::LOW, ScoreLevel::HIGH]
+            : ScoreLevel::cases();
     }
 
     /**
