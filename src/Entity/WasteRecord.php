@@ -26,13 +26,14 @@ class WasteRecord
     private ?int $id = null;
 
     /**
-     * European Waste Catalogue (LER/EWC) code, e.g. "200121".
+     * European Waste Catalogue (LER/EWC) code, e.g. "200121". Nullable because the real historical
+     * register holds entries whose code was lost (mangled by Excel into a date serial) and cannot
+     * be reconstructed automatically; the original illegible value is preserved in {@see $notes}.
      */
-    #[ORM\Column(length: 20)]
-    #[Assert\NotBlank]
+    #[ORM\Column(length: 20, nullable: true)]
     #[Assert\Length(max: 20)]
     #[Assert\Regex(pattern: '/^\d{2}\s?\d{2}\s?\d{2}\*?$/', message: 'El código LER debe tener 6 dígitos (p. ej. 200121 o 20 01 21), con * si es peligroso.')]
-    private string $lerCode;
+    private ?string $lerCode = null;
 
     #[ORM\Column(length: 255)]
     #[Assert\NotBlank]
@@ -40,31 +41,44 @@ class WasteRecord
     private string $description;
 
     /**
-     * Amount removed, in kilograms. Doctrine decimal mapped as string to keep precision.
+     * Amount removed, in kilograms. Doctrine decimal mapped as string to keep precision. Nullable
+     * because some real entries record the amount in non-weight units (e.g. "43 bolsones"); the
+     * kilograms are then unknown and the original wording is kept in {@see $notes}.
      */
-    #[ORM\Column(type: Types::DECIMAL, precision: 12, scale: 3)]
-    #[Assert\NotNull]
+    #[ORM\Column(type: Types::DECIMAL, precision: 12, scale: 3, nullable: true)]
     #[Assert\PositiveOrZero]
     #[Assert\Regex(pattern: '/^\d{1,9}(\.\d{1,3})?$/', message: 'Introduce una cantidad válida (usa el punto, máx. 3 decimales).')]
-    private string $quantityKg;
-
-    #[ORM\Column(type: Types::DATE_IMMUTABLE)]
-    #[Assert\NotNull]
-    private \DateTimeImmutable $pickupDate;
+    private ?string $quantityKg = null;
 
     /**
-     * Authorised waste manager (gestor) that collected the waste.
+     * Pick-up date. Nullable because some real entries date the removal in free text (a month or a
+     * range); the original wording is then preserved in {@see $notes}.
      */
-    #[ORM\Column(length: 255)]
-    #[Assert\NotBlank]
+    #[ORM\Column(type: Types::DATE_IMMUTABLE, nullable: true)]
+    private ?\DateTimeImmutable $pickupDate = null;
+
+    /**
+     * Authorised waste manager (gestor) that collected the waste. Nullable because most real entries
+     * (internal composting, municipal clean point) have no formal manager.
+     */
+    #[ORM\Column(length: 255, nullable: true)]
     #[Assert\Length(max: 255)]
-    private string $manager;
+    private ?string $manager = null;
 
     #[ORM\Column]
     private bool $hazardous = false;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $notes = null;
+
+    /**
+     * Deterministic hash of the source row when this record was imported from the historical
+     * register; null for records created manually. Lets the importer upsert idempotently, since
+     * the chronological register has no reliable natural key (compost entries share description and
+     * carry a free-text date).
+     */
+    #[ORM\Column(length: 64, nullable: true, unique: true)]
+    private ?string $sourceHash = null;
 
     #[ORM\Column]
     private \DateTimeImmutable $createdAt;
@@ -74,7 +88,6 @@ class WasteRecord
 
     public function __construct()
     {
-        $this->pickupDate = new \DateTimeImmutable();
         $this->createdAt = new \DateTimeImmutable();
         $this->updatedAt = $this->createdAt;
     }
@@ -91,12 +104,12 @@ class WasteRecord
         return $this->id;
     }
 
-    public function getLerCode(): string
+    public function getLerCode(): ?string
     {
         return $this->lerCode;
     }
 
-    public function setLerCode(string $lerCode): static
+    public function setLerCode(?string $lerCode): static
     {
         $this->lerCode = $lerCode;
 
@@ -115,36 +128,36 @@ class WasteRecord
         return $this;
     }
 
-    public function getQuantityKg(): string
+    public function getQuantityKg(): ?string
     {
         return $this->quantityKg;
     }
 
-    public function setQuantityKg(string $quantityKg): static
+    public function setQuantityKg(?string $quantityKg): static
     {
         $this->quantityKg = $quantityKg;
 
         return $this;
     }
 
-    public function getPickupDate(): \DateTimeImmutable
+    public function getPickupDate(): ?\DateTimeImmutable
     {
         return $this->pickupDate;
     }
 
-    public function setPickupDate(\DateTimeImmutable $pickupDate): static
+    public function setPickupDate(?\DateTimeImmutable $pickupDate): static
     {
         $this->pickupDate = $pickupDate;
 
         return $this;
     }
 
-    public function getManager(): string
+    public function getManager(): ?string
     {
         return $this->manager;
     }
 
-    public function setManager(string $manager): static
+    public function setManager(?string $manager): static
     {
         $this->manager = $manager;
 
@@ -171,6 +184,18 @@ class WasteRecord
     public function setNotes(?string $notes): static
     {
         $this->notes = $notes;
+
+        return $this;
+    }
+
+    public function getSourceHash(): ?string
+    {
+        return $this->sourceHash;
+    }
+
+    public function setSourceHash(?string $sourceHash): static
+    {
+        $this->sourceHash = $sourceHash;
 
         return $this;
     }

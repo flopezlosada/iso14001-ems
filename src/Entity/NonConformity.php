@@ -119,6 +119,7 @@ class NonConformity
      */
     #[ORM\OneToMany(targetEntity: CorrectiveAction::class, mappedBy: 'nonConformity', cascade: ['persist', 'remove'], orphanRemoval: true)]
     #[ORM\OrderBy(['sequence' => 'ASC'])]
+    #[Assert\Valid]
     private Collection $correctiveActions;
 
     public function __construct()
