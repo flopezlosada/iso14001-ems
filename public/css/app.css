@@ -358,8 +358,50 @@ tbody td {
     vertical-align: middle;
 }
 tbody tr:hover { background: var(--accent-weak); }
+/* Enlace del identificador de fila: el nombre actúa como acceso directo al
+   detalle. Sin subrayado en reposo (como .nav a / breadcrumb), se revela al
+   pasar el cursor para no ensuciar la tabla. */
+td a.cell-link { color: var(--accent); text-decoration: none; font-weight: 500; }
+td a.cell-link:hover { text-decoration: underline; }
 td .doc-code { font-family: var(--font-mono); font-size: 10.5px; color: var(--text-faint); display: block; }
 td .doc-title { font-family: var(--font-display); font-size: 16.5px; }
+
+/* ---- Herramientas de listado (table-tools.js): búsqueda, filtros, orden ---- */
+.table-tools {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+.table-tools__search { flex: 1 1 240px; min-width: 200px; }
+.table-tools__search input[type="search"] {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    font: 400 14px var(--font-body);
+    background: var(--surface);
+    color: var(--text);
+}
+.table-tools__search input[type="search"]:focus { border-color: var(--accent); outline-offset: 0; }
+/* El filtro reusa .form-row (para que selectmenu.js lo "enhance"), pero aquí va en línea. */
+.table-tools__filter { margin-bottom: 0; flex: 0 1 200px; min-width: 160px; }
+
+/* Cabeceras ordenables: afordancia clicable + flecha según aria-sort. */
+thead th.is-sortable { cursor: pointer; user-select: none; }
+thead th.is-sortable:hover { color: var(--text); }
+thead th.is-sortable::after {
+    content: '↕';
+    margin-left: 5px;
+    font-size: 9px;
+    opacity: .35;
+}
+thead th.is-sortable[aria-sort="ascending"]::after  { content: '↑'; opacity: .9; }
+thead th.is-sortable[aria-sort="descending"]::after { content: '↓'; opacity: .9; }
+thead th.is-sortable:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
+
+.table-tools__empty td { text-align: center; padding: 28px 12px; }
 
 /* ---- Badges de estado --------------------------------------------------- */
 .badge {
@@ -648,6 +690,9 @@ input[type="email"], input[type="text"], select, textarea {
     .card table { min-width: 0; }
     .card thead { display: none; }
     .card table, .card tbody, .card tbody tr { display: block; }
+    /* El filtro de table-tools.js oculta filas con [hidden]; aquí .card tbody tr (clase)
+       gana en especificidad al UA stylesheet, así que hay que re-ocultarlas explícitamente. */
+    .card tbody tr[hidden] { display: none; }
     .card tbody tr {
         border: 1px solid var(--border);
         border-radius: var(--radius-lg);

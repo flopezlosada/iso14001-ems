@@ -21,22 +21,21 @@
                 <a class="btn" href="{{ path('non_conformity_new') }}">Registrar la primera</a>
             </div>
         {% else %}
-            <table>
+            <table data-list-tools>
                 <thead>
                     <tr>
-                        <th>Referencia</th><th>Apertura</th><th>Origen</th><th>Responsable</th><th>Descripción</th><th>Estado</th><th></th>
+                        <th>Referencia</th><th>Apertura</th><th>Origen</th><th>Responsable</th><th>Descripción</th><th data-filter>Estado</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for nc in nonConformities %}
                         <tr>
-                            <td class="mono">{{ nc.reference }}</td>
+                            <td class="mono"><a class="cell-link" href="{{ path('non_conformity_show', { id: nc.id }) }}">{{ nc.reference }}</a></td>
                             <td>{{ nc.openedAt|date('d/m/Y') }}</td>
                             <td>{{ nc.origin.label }}{% if nc.originDetail %} <span class="muted">· {{ nc.originDetail }}</span>{% endif %}</td>
                             <td>{{ nc.responsible ? nc.responsible.fullName : '—' }}</td>
                             <td class="muted">{{ nc.description|length > 80 ? nc.description|slice(0, 80) ~ '…' : nc.description }}</td>
                             <td>{{ nc.status.label }}</td>
-                            <td><a href="{{ path('non_conformity_show', { id: nc.id }) }}">Ver</a></td>
                         </tr>
                     {% endfor %}
                 </tbody>

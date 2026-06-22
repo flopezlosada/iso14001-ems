@@ -19,14 +19,14 @@
                 <p>Cada acción (accesos, cambios, aprobaciones) aparecerá aquí en cuanto ocurra.</p>
             </div>
         {% else %}
-            <table>
+            <table data-list-tools>
                 <thead>
-                    <tr><th>Fecha</th><th>Quién</th><th>Acción</th><th>Detalle</th></tr>
+                    <tr><th>Fecha</th><th data-filter>Quién</th><th data-filter>Acción</th><th>Detalle</th></tr>
                 </thead>
                 <tbody>
                     {% for entry in entries %}
                         <tr>
-                            <td class="mono">{{ entry.occurredAt|date('d/m/Y H:i') }}</td>
+                            <td class="mono" data-sort="{{ entry.occurredAt|date('YmdHis') }}">{{ entry.occurredAt|date('d/m/Y H:i') }}</td>
                             <td>{{ entry.actor ?? 'sistema' }}</td>
                             <td><span class="mono">{{ entry.action }}</span></td>
                             <td class="muted">{{ entry.summary ?? '' }}</td>

@@ -30,16 +30,16 @@
                 <a class="btn" href="{{ path('consumption_new', { year: year }) }}">Registrar primera lectura</a>
             </div>
         {% else %}
-            <table>
+            <table data-list-tools>
                 <thead>
                     <tr>
-                        <th>Mes</th><th>Tipo</th><th>Cantidad</th><th>Coste</th><th>Observaciones</th><th>Factura</th><th></th>
+                        <th>Mes</th><th data-filter>Tipo</th><th>Cantidad</th><th>Coste</th><th>Observaciones</th><th data-nosort>Factura</th><th></th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for reading in readings %}
                         <tr>
-                            <td>{{ month_names[reading.periodMonth] }}</td>
+                            <td data-sort="{{ reading.periodMonth }}">{{ month_names[reading.periodMonth] }}</td>
                             <td>{{ reading.type.label }}</td>
                             <td class="mono">{{ reading.quantity }} {{ reading.type.unit }}</td>
                             <td class="mono">{{ reading.cost is null ? '—' : reading.cost ~ ' €' }}</td>

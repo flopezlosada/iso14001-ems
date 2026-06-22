@@ -21,10 +21,10 @@
                 <a class="btn" href="{{ path('objective_new') }}">Registrar el primero</a>
             </div>
         {% else %}
-            <table>
+            <table data-list-tools>
                 <thead>
                     <tr>
-                        <th>Ref.</th><th>Objetivo</th><th>Responsable</th><th>Aspecto</th><th>Periodo</th><th>Cumplimiento</th><th></th>
+                        <th>Ref.</th><th>Objetivo</th><th data-filter>Responsable</th><th data-filter>Aspecto</th><th>Periodo</th><th>Cumplimiento</th><th></th>
                     </tr>
                 </thead>
                 <tbody>

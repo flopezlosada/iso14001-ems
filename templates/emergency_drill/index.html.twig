@@ -22,9 +22,9 @@
                 {% if can_write %}<a class="btn" href="{{ path('emergency_drill_new') }}">Nuevo simulacro</a>{% endif %}
             </div>
         {% else %}
-            <table>
+            <table data-list-tools>
                 <thead>
-                    <tr><th>Fecha</th><th>Tipo de emergencia</th><th>Lugar</th><th>Realizado por</th><th></th></tr>
+                    <tr><th>Fecha</th><th data-filter>Tipo de emergencia</th><th>Lugar</th><th>Realizado por</th><th></th></tr>
                 </thead>
                 <tbody>
                     {% for drill in drills %}

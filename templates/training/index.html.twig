@@ -28,10 +28,10 @@
                 <a class="btn" href="{{ path('training_new', { year: year }) }}">Registrar primera acción</a>
             </div>
         {% else %}
-            <table>
+            <table data-list-tools>
                 <thead>
                     <tr>
-                        <th>Curso</th><th>Tipo</th><th>Dirigido a</th><th>Fecha prevista</th><th>Fecha real</th><th>Eficacia</th><th></th>
+                        <th>Curso</th><th data-filter>Tipo</th><th>Dirigido a</th><th>Fecha prevista</th><th>Fecha real</th><th>Eficacia</th><th></th>
                     </tr>
                 </thead>
                 <tbody>
