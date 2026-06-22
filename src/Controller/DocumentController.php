@@ -29,24 +29,21 @@ use Symfony\Component\Routing\Attribute\Route;
 final class DocumentController extends AbstractController
 {
     /**
-     * Maps a linked module ({@see Area}) to its module index route, so an obligation can deep-link
-     * to where it is actually filled in. Areas absent here have no destination yet.
+     * Maps each area value to its module index route, so an obligation can deep-link to where it is
+     * filled in. Derived from {@see Area::indexRoute()} (single source of truth, shared with the
+     * dashboard worklist) so adding a module only touches the enum.
      *
-     * @var array<string, string>
+     * @return array<string, string> area value => index route name
      */
-    private const array MODULE_ROUTES = [
-        Area::CONSUMPTION->value => 'consumption_index',
-        Area::WASTE->value => 'waste_index',
-        Area::NONCONFORMITY->value => 'non_conformity_index',
-        Area::SUPPLIER->value => 'supplier_index',
-        Area::TRAINING->value => 'training_index',
-        Area::LEGAL_REQUIREMENT->value => 'legal_requirement_index',
-        Area::EMERGENCY->value => 'emergency_drill_index',
-        Area::ASPECT->value => 'aspect_index',
-        Area::RISK_OPPORTUNITY->value => 'risk_index',
-        Area::OBJECTIVE->value => 'objective_index',
-        Area::INDICATOR->value => 'indicator_index',
-    ];
+    private static function moduleRoutes(): array
+    {
+        $routes = [];
+        foreach (Area::cases() as $area) {
+            $routes[$area->value] = $area->indexRoute();
+        }
+
+        return $routes;
+    }
 
     /**
      * "Qué toca": the obligations grouped by urgency (overdue / due soon / on track / event-driven),
@@ -82,7 +79,7 @@ final class DocumentController extends AbstractController
             'today' => $today,
             'groups' => $groups,
             'notApplicable' => $notApplicable,
-            'moduleRoutes' => self::MODULE_ROUTES,
+            'moduleRoutes' => self::moduleRoutes(),
             // Consumption aspects already trending worse than the threshold: surfaced proactively so
             // a likely-significant aspect is seen now, not only at the yearly evaluation.
             'aspectsToWatch' => $intensityEstimator->watchList($aspects->findLinkedToConsumption(), $today),
@@ -98,7 +95,7 @@ final class DocumentController extends AbstractController
     {
         return $this->render('document/structure.html.twig', [
             'structure' => $this->groupByPhase($documents->findObligations()),
-            'moduleRoutes' => self::MODULE_ROUTES,
+            'moduleRoutes' => self::moduleRoutes(),
         ]);
     }
 
