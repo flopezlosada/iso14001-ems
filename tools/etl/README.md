@@ -1,6 +1,6 @@
 # ETL de datos reales (cutover)
 
-Importación de los datos históricos reales (3 años) del IES La Cabrera a la base de datos, en
+Importación de los datos históricos reales (3 años) del centro a la base de datos, en
 **dos etapas** para separar la limpieza (sucia, offline, revisable) de la carga (determinista,
 idempotente, testeada, apta para producción).
 
@@ -17,7 +17,7 @@ fechas, cantidades en "bolsones", fechas en texto, etc.); lo no convertible se p
 + texto en `notes`, nunca se descarta.
 
 ```bash
-DOC="../ruta/a/documentacion_base/IES La Cabrera"
+DOC="../ruta/a/documentacion_base"
 
 python3 tools/etl/normalize_consumptions.py \
   "$DOC/00.PLAN/.../CONSUMOS LUZ AGUA GASOIL PAPEL TONER 2023 24 25 26.xlsx" \

@@ -29,7 +29,7 @@ final class CsvReader
 
         try {
             $header = fgetcsv($handle);
-            if (false === $header || null === $header) {
+            if (false === $header) {
                 throw new \RuntimeException(sprintf('El CSV "%s" está vacío (sin cabecera).', $path));
             }
             /** @var list<string> $columns */

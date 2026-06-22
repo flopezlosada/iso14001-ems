@@ -75,6 +75,7 @@ final class ConsumptionImporterTest extends KernelTestCase
         self::assertSame(0, $report->getCreated());
         self::assertSame(1, $report->getUpdated());
 
+        $this->entityManager->clear(); // re-read from DB to assert the persisted, decimal-cast value
         $found = $this->readings->findBy(['type' => ConsumptionType::ELECTRICITY, 'periodYear' => 2024, 'periodMonth' => 3]);
         self::assertCount(1, $found, 'No debe duplicar: misma clave natural (tipo, año, mes).');
         self::assertSame('5000.000', $found[0]->getQuantity());
