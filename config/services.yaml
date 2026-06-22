@@ -10,22 +10,10 @@ parameters:
     # Private, persistent storage for uploaded files (outside public/, survives deploys).
     # Built on the project's APP_SHARE_DIR convention.
     app.uploads_dir: '%kernel.project_dir%/%env(APP_SHARE_DIR)%'
-    # Significance threshold for ABNORMAL environmental aspects (PG-06.01 Anexo III): significant
-    # when the score exceeds this. NOTE: direct aspects (Anexo I) do NOT use this — their threshold
-    # is per-category (consumos/emisiones 12, residuos 10, vertidos 8), see
-    # DirectAspectCategory::significanceThreshold(). This value is also the fallback for a direct
-    # aspect with no category. Centralised here so it is easy to change.
-    app.aspect_significance_threshold: 10
+    # The aspect significance thresholds and auto-intensity bounds now live in the Settings entity
+    # (editable from /admin/settings), so they are no longer hard-coded parameters here.
     # "From" address for the obligation reminder e-mails. Override per environment via MAILER_FROM.
     app.mailer_from: '%env(MAILER_FROM)%'
-    # Auto-intensity of direct CONSUMPTION aspects (PG-06.01): the year's consumption is compared
-    # against a baseline (the mean of the previous N years) over the same year-to-date window, and
-    # the relative change drives the suggested intensity. Rise above +rise_threshold → HIGH; drop
-    # below -drop_threshold → LOW; in between → MEDIUM. baseline_years=1 means "vs last year" (the
-    # simple, procedure-aligned default). Centralised here; a UI to edit them will come later.
-    app.aspect_intensity.rise_threshold: 0.10
-    app.aspect_intensity.drop_threshold: 0.10
-    app.aspect_intensity.baseline_years: 1
 
 services:
     # default configuration for services in *this* file
@@ -42,12 +30,3 @@ services:
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
-    App\Service\AspectSignificanceCalculator:
-        arguments:
-            $threshold: '%app.aspect_significance_threshold%'
-
-    App\Service\AspectIntensityEstimator:
-        arguments:
-            $riseThreshold: '%app.aspect_intensity.rise_threshold%'
-            $dropThreshold: '%app.aspect_intensity.drop_threshold%'
-            $baselineYears: '%app.aspect_intensity.baseline_years%'
