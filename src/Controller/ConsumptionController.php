@@ -6,6 +6,7 @@ namespace App\Controller;
 
 use App\Entity\ConsumptionReading;
 use App\Enum\Area;
+use App\Enum\ConsumptionType;
 use App\Form\ConsumptionReadingType;
 use App\Repository\ConsumptionReadingRepository;
 use App\Security\Voter\AreaVoter;
@@ -42,6 +43,51 @@ class ConsumptionController extends AbstractController
         $this->denyAccessUnlessGranted(AreaVoter::READ, Area::CONSUMPTION);
 
         return $this->redirectToRoute('consumption_year', ['year' => (int) date('Y')]);
+    }
+
+    /**
+     * Multi-year consumption trend: the yearly total of each utility over the last N years, as a
+     * simple bar chart. Exploratory view only — it does not feed the official intensity or alerts.
+     * (The interactive/styled chart is left to the frontend; this is the data + a minimal CSS chart.)
+     */
+    #[Route('/tendencia', name: 'consumption_trend', methods: ['GET'])]
+    public function trend(Request $request, ConsumptionReadingRepository $readings): Response
+    {
+        $this->denyAccessUnlessGranted(AreaVoter::READ, Area::CONSUMPTION);
+
+        $years = max(2, min(10, $request->query->getInt('years', 5)));
+
+        $series = [];
+        foreach (ConsumptionType::cases() as $type) {
+            $totals = $readings->yearlyTotals($type);
+            if ([] === $totals) {
+                continue;
+            }
+
+            // Keep the most recent N years THAT HAVE DATA (years with no readings are skipped, not
+            // shown as a zero bar — a zero would wrongly read as "no consumption"). Each bar is
+            // scaled to the maximum of the shown window, so it reflects the recent trend (relative),
+            // not an all-time reference.
+            $totals = \array_slice($totals, -$years, null, true);
+            $max = max(array_map('floatval', $totals));
+
+            $points = [];
+            foreach ($totals as $year => $total) {
+                $value = (float) $total;
+                $points[] = [
+                    'year' => $year,
+                    'value' => $value,
+                    'percent' => $max > 0.0 ? (int) round($value / $max * 100) : 0,
+                ];
+            }
+
+            $series[] = ['type' => $type, 'points' => $points];
+        }
+
+        return $this->render('consumption/trend.html.twig', [
+            'series' => $series,
+            'years' => $years,
+        ]);
     }
 
     /**
