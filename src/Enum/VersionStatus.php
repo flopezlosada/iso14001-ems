@@ -26,4 +26,19 @@ enum VersionStatus: string
     {
         return $this === self::APPROVED;
     }
+
+    /**
+     * Human-facing label (Spanish, the application's UI language).
+     *
+     * @return string the display name
+     */
+    public function label(): string
+    {
+        return match ($this) {
+            self::DRAFT => 'Borrador',
+            self::IN_REVIEW => 'En revisión',
+            self::APPROVED => 'Aprobada',
+            self::OBSOLETE => 'Obsoleta',
+        };
+    }
 }

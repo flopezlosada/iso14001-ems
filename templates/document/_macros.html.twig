@@ -7,7 +7,7 @@
     <tr>
         <td>
             <span class="mono">{{ obl.code }}</span>
-            <div>{{ obl.title }}</div>
+            <div><a class="cell-link" href="{{ path('document_show', { id: obl.id }) }}">{{ obl.title }}</a></div>
             {% if obl.instructions %}<div class="muted obligation-help">{{ obl.instructions }}</div>{% endif %}
         </td>
         <td>{{ obl.responsibleRole ? obl.responsibleRole.name : '—' }}</td>

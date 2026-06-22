@@ -1,0 +1,83 @@
+{% extends 'app_shell.html.twig' %}
+
+{# Clase de badge por estado de versión (VersionStatus). #}
+{% set version_badge = { 'draft': 'badge--draft', 'in_review': 'badge--warning', 'approved': 'badge--success', 'obsolete': 'badge' } %}
+
+{% block title %}{{ document.code ?? document.title }}{% endblock %}
+
+{% block breadcrumb %}
+    <a href="{{ path('app_homepage') }}">Inicio</a><span class="sep">/</span>
+    {{ document.code ?? document.title }}
+{% endblock %}
+
+{% block body %}
+    <div class="page-head">
+        <div>
+            <p class="eyebrow">{% if document.code %}<span class="mono">{{ document.code }}</span> · {% endif %}{{ document.type.label }}</p>
+            <h1>{{ document.title }}</h1>
+            <p class="lead">
+                {% if current %}
+                    En vigor: revisión {{ current.revisionNumber }} · {{ current.issueDate|date('d/m/Y') }}
+                {% else %}
+                    <span class="badge badge--warning">Sin versión en vigor</span>
+                {% endif %}
+            </p>
+        </div>
+        {% if moduleRoute %}<a class="btn secondary" href="{{ path(moduleRoute) }}">Ir al módulo</a>{% endif %}
+    </div>
+
+    <div class="card">
+        <dl class="detail-grid">
+            <dt>Tipo</dt><dd>{{ document.type.label }}</dd>
+            {% if document.linkedArea %}<dt>Área / módulo</dt><dd>{{ document.linkedArea.label }}</dd>{% endif %}
+            {% if document.process %}<dt>Proceso</dt><dd>{{ document.process }}</dd>{% endif %}
+            <dt>Responsable</dt><dd>{{ document.responsibleRole ? document.responsibleRole.name : '—' }}</dd>
+            <dt>Estado</dt><dd>{{ document.status.label }}{% if document.statusNote %} <span class="muted">· {{ document.statusNote }}</span>{% endif %}</dd>
+            <dt>Retención</dt><dd>{{ document.retentionYears ? document.retentionYears ~ ' años' : 'Indefinida' }}</dd>
+            {% if document.legacyCodes is not empty %}<dt>Códigos anteriores</dt><dd class="mono muted">{{ document.legacyCodes|join(', ') }}</dd>{% endif %}
+        </dl>
+        {% if document.instructions %}
+            <h2>Instrucciones</h2>
+            <p>{{ document.instructions|nl2br }}</p>
+        {% endif %}
+    </div>
+
+    <div class="page-head"><h2>Historial de versiones</h2></div>
+
+    <div class="card">
+        {% if versions is empty %}
+            <div class="empty-state">
+                <h2>Aún no hay versiones</h2>
+                <p>Cuando se emita la primera revisión del documento, aparecerá aquí con su aprobación.</p>
+            </div>
+        {% else %}
+            <table>
+                <thead>
+                    <tr><th>Rev.</th><th>Fecha</th><th>Estado</th><th>Autor</th><th>Cambios</th><th>Aprobación</th></tr>
+                </thead>
+                <tbody>
+                    {% for v in versions %}
+                        {% set ap = v.latestApproval %}
+                        {% set is_current = current and v.id == current.id %}
+                        <tr class="{{ is_current ? 'is-in-force' }}">
+                            <td class="mono">{{ v.revisionNumber }}{% if is_current %} <span class="badge badge--success">En vigor</span>{% endif %}</td>
+                            <td>{{ v.issueDate|date('d/m/Y') }}</td>
+                            <td><span class="badge {{ version_badge[v.status.value] ?? 'badge--draft' }}">{{ v.status.label }}</span></td>
+                            <td>{{ v.author ?? '—' }}</td>
+                            <td class="muted">{{ v.changeSummary ?? '—' }}</td>
+                            <td>
+                                {%- if ap -%}
+                                    {{ ap.approver.fullName }} <span class="muted">· {{ ap.approvedAt|date('d/m/Y') }}</span>
+                                    {% if ap.digitallySigned %} <span class="badge badge--success" title="Firma digital adjunta">Firmada</span>{% endif %}
+                                    <span class="mono muted" title="Hash de integridad: {{ ap.integrityHash|e('html_attr') }}">· {{ ap.integrityHash|slice(0, 10) }}…</span>
+                                {%- else -%}
+                                    <span class="muted">Pendiente</span>
+                                {%- endif -%}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    </div>
+{% endblock %}

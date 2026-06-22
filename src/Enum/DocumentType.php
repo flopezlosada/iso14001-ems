@@ -31,4 +31,22 @@ enum DocumentType: string
     {
         return $this !== self::EXTERNAL_EVIDENCE;
     }
+
+    /**
+     * Human-facing label (Spanish, the application's UI language), following the procedure's
+     * five-type taxonomy plus external evidence.
+     *
+     * @return string the display name
+     */
+    public function label(): string
+    {
+        return match ($this) {
+            self::POLICY => 'Política',
+            self::MANUAL => 'Manual',
+            self::PROCEDURE => 'Procedimiento',
+            self::FORM => 'Formato',
+            self::RECORD => 'Registro',
+            self::EXTERNAL_EVIDENCE => 'Evidencia externa',
+        };
+    }
 }

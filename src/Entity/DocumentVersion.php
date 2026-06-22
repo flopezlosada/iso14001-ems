@@ -85,6 +85,24 @@ class DocumentVersion
         return $this->status->isInForce();
     }
 
+    /**
+     * The most recent approval of this revision (by approval date), for the audit trail. Computed
+     * explicitly rather than relying on the collection's iteration order.
+     *
+     * @return ApprovalEvent|null the latest approval, or null if the revision was never approved
+     */
+    public function getLatestApproval(): ?ApprovalEvent
+    {
+        $latest = null;
+        foreach ($this->approvalEvents as $event) {
+            if (null === $latest || $event->getApprovedAt() > $latest->getApprovedAt()) {
+                $latest = $event;
+            }
+        }
+
+        return $latest;
+    }
+
     public function getId(): ?int
     {
         return $this->id;
