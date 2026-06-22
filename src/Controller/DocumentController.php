@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Entity\Document;
+use App\Entity\User;
 use App\Enum\Area;
 use App\Enum\IsoChapter;
 use App\Enum\ObligationStatus;
@@ -14,6 +15,7 @@ use App\Repository\DocumentRepository;
 use App\Repository\EnvironmentalAspectRepository;
 use App\Service\AspectIntensityEstimator;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
@@ -51,11 +53,17 @@ final class DocumentController extends AbstractController
      */
     #[Route('/obligaciones', name: 'obligation_index', methods: ['GET'])]
     public function index(
+        Request $request,
         DocumentRepository $documents,
         EnvironmentalAspectRepository $aspects,
         AspectIntensityEstimator $intensityEstimator,
     ): Response {
         $today = new \DateTimeImmutable('today');
+
+        // Scope: "mías" (the user's own obligations) by default — consistent with the home worklist;
+        // "todas" shows the whole centre (the view for Dirección / the auditor).
+        $scope = 'todas' === $request->query->get('scope') ? 'todas' : 'mias';
+        $user = $this->getUser();
 
         // Pre-seed the buckets so the template always renders them in a fixed, meaningful order.
         $groups = [
@@ -65,8 +73,23 @@ final class DocumentController extends AbstractController
             ObligationUrgency::EVENT_DRIVEN->value => [],
         ];
         $notApplicable = [];
+        // Counts for the scope pills. They tally EVERY obligation in each scope (urgency buckets,
+        // event-driven and not-applicable alike), which is exactly what the page renders — so the
+        // badge number always matches the rows shown.
+        $mineCount = 0;
+        $totalCount = 0;
 
         foreach ($documents->findObligations() as $obligation) {
+            ++$totalCount;
+            $responsible = $obligation->getResponsibleRole();
+            $isMine = $user instanceof User && null !== $responsible && $user->holdsRole($responsible);
+            if ($isMine) {
+                ++$mineCount;
+            }
+            if ('mias' === $scope && !$isMine) {
+                continue;
+            }
+
             if (ObligationStatus::NOT_APPLICABLE === $obligation->getStatus()) {
                 $notApplicable[] = $obligation;
 
@@ -77,6 +100,9 @@ final class DocumentController extends AbstractController
 
         return $this->render('document/index.html.twig', [
             'today' => $today,
+            'scope' => $scope,
+            'mineCount' => $mineCount,
+            'totalCount' => $totalCount,
             'groups' => $groups,
             'notApplicable' => $notApplicable,
             'moduleRoutes' => self::moduleRoutes(),

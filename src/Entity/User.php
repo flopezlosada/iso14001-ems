@@ -125,6 +125,25 @@ class User implements UserInterface
     }
 
     /**
+     * Whether this user holds the given responsibility. Single definition of "mine", shared by the
+     * dashboard worklist and the "Qué toca" scope filter. Compares by persisted id, so an unpersisted
+     * role is never considered held.
+     *
+     * @param Role $role the responsibility to check
+     *
+     * @return bool true if the user has this role assigned
+     */
+    public function holdsRole(Role $role): bool
+    {
+        $id = $role->getId();
+        if (null === $id) {
+            return false;
+        }
+
+        return $this->assignedRoles->exists(static fn (int $key, Role $held): bool => $held->getId() === $id);
+    }
+
+    /**
      * Unique identifier used by the security system (the e-mail address).
      */
     public function getUserIdentifier(): string

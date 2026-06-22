@@ -912,6 +912,24 @@ input[type="email"], input[type="text"], select, textarea {
 .nav-label { margin: 1.1rem 0 .3rem; padding: 0 .9rem; font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--text-faint); }
 
 /* --- Obligations cockpit ("Qué toca" y "Estructura SGA") --- */
+/* Conmutador de ámbito (Mías / Todas): pastillas, misma estética que .theme-toggle. */
+.scope-toggle {
+    display: inline-flex;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--surface-sunken);
+    margin-bottom: 1.2rem;
+}
+.scope-toggle a {
+    padding: 6px 14px;
+    font: 500 13px var(--font-body);
+    color: var(--text-muted);
+    text-decoration: none;
+}
+.scope-toggle a:hover { color: var(--text); }
+.scope-toggle a.is-active { background: var(--accent); color: var(--on-accent); }
+
 .obligation-group { margin-block: 1.6rem; }
 .obligation-group-head { display: flex; align-items: center; gap: .6rem; margin-bottom: .6rem; flex-wrap: wrap; }
 .obligation-help { font-size: .85rem; margin-top: .2rem; max-width: 64ch; }
