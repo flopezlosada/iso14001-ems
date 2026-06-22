@@ -1,4 +1,5 @@
 {% extends 'app_shell.html.twig' %}
+{% import '_macros/form.html.twig' as f %}
 
 {% block title %}{{ reading.id ? 'Editar' : 'Nueva' }} lectura · {{ year }}{% endblock %}
 
@@ -13,17 +14,10 @@
         <h1>{{ reading.id ? 'Editar lectura' : 'Nueva lectura' }} · {{ year }}</h1>
     </div>
 
-    <div class="card" style="max-width: 520px;">
+    <div class="card form-card">
         {{ form_start(form, { 'attr': { 'novalidate': 'novalidate' } }) }}
             {{ form_errors(form) }}
-            {% for field in [form.type, form.periodMonth, form.quantity, form.cost, form.notes, form.invoiceFile] %}
-                <div class="form-row">
-                    {{ form_label(field) }}
-                    {{ form_widget(field) }}
-                    {% if field.vars.help %}<p class="help">{{ field.vars.help }}</p>{% endif %}
-                    {{ form_errors(field) }}
-                </div>
-            {% endfor %}
+            {{ f.fields([form.type, form.periodMonth, form.quantity, form.cost, form.notes, form.invoiceFile]) }}
             {% if reading.hasInvoice %}
                 <p class="help">
                     Factura actual:
@@ -31,8 +25,7 @@
                     Si subes otra, la reemplaza.
                 </p>
             {% endif %}
-            <button class="btn" type="submit">Guardar</button>
-            <a class="btn secondary" href="{{ path('consumption_year', { year: year }) }}">Cancelar</a>
+            {{ f.actions(path('consumption_year', { year: year })) }}
         {{ form_end(form) }}
     </div>
 {% endblock %}

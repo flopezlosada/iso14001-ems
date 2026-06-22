@@ -1,4 +1,5 @@
 {% extends 'app_shell.html.twig' %}
+{% import '_macros/form.html.twig' as f %}
 
 {% block title %}{{ drill.id ? 'Editar' : 'Nuevo' }} simulacro{% endblock %}
 
@@ -13,19 +14,11 @@
         <h1>{{ drill.id ? 'Editar informe de simulacro' : 'Nuevo informe de simulacro' }}</h1>
     </div>
 
-    <div class="card" style="max-width: 560px;">
+    <div class="card form-card">
         {{ form_start(form, { 'attr': { 'novalidate': 'novalidate' } }) }}
             {{ form_errors(form) }}
-            {% for field in [form.drillDate, form.emergencyType, form.location, form.participants, form.actionProcedure, form.conclusions, form.reportedBy] %}
-                <div class="form-row">
-                    {{ form_label(field) }}
-                    {{ form_widget(field) }}
-                    {% if field.vars.help %}<p class="help">{{ field.vars.help }}</p>{% endif %}
-                    {{ form_errors(field) }}
-                </div>
-            {% endfor %}
-            <button class="btn" type="submit">Guardar</button>
-            <a class="btn secondary" href="{{ path('emergency_drill_index') }}">Cancelar</a>
+            {{ f.fields([form.drillDate, form.emergencyType, form.location, form.participants, form.actionProcedure, form.conclusions, form.reportedBy]) }}
+            {{ f.actions(path('emergency_drill_index')) }}
         {{ form_end(form) }}
     </div>
 {% endblock %}

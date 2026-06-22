@@ -1,4 +1,5 @@
 {% extends 'app_shell.html.twig' %}
+{% import '_macros/form.html.twig' as f %}
 
 {% block title %}{{ isNew ? 'Nueva valoración' : 'Editar valoración ' ~ assessment.exercise }} · {{ item.type.label }}{% endblock %}
 
@@ -14,7 +15,7 @@
         <h1>{{ isNew ? 'Nueva valoración' : 'Editar valoración ' ~ assessment.exercise }} · {{ item.type.label }}</h1>
     </div>
 
-    <div class="card" style="max-width: 720px;">
+    <div class="card form-card form-card--wide">
         {{ form_start(form, { 'attr': { 'novalidate': 'novalidate' } }) }}
             {{ form_errors(form) }}
             {% for field in [form.exercise, form.probability, form.impact, form.justification, form.revisionNumber] %}
@@ -31,8 +32,7 @@
             {{ form_row(form.actions) }}
 
             <p class="help">La puntuación (PxI) y la categoría se calculan automáticamente al guardar.</p>
-            <button class="btn" type="submit">Guardar</button>
-            <a class="btn secondary" href="{{ path('risk_show', { id: item.id }) }}">Cancelar</a>
+            {{ f.actions(path('risk_show', { id: item.id })) }}
         {{ form_end(form) }}
     </div>
 {% endblock %}

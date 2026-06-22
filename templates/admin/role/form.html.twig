@@ -1,4 +1,5 @@
 {% extends 'app_shell.html.twig' %}
+{% import '_macros/form.html.twig' as f %}
 
 {% block title %}{{ role.id ? 'Editar rol' : 'Nuevo rol' }}{% endblock %}
 
@@ -13,7 +14,7 @@
         <h1>{{ role.id ? 'Editar rol' : 'Nuevo rol' }}</h1>
     </div>
 
-    <div class="card" style="max-width: 560px;">
+    <div class="card form-card">
         {{ form_start(form, { 'attr': { 'novalidate': 'novalidate' } }) }}
             {{ form_errors(form) }}
             <div class="form-row">
@@ -58,10 +59,7 @@
                 {% endfor %}
             </div>
 
-            <div style="margin-top: 24px;">
-                <button class="btn" type="submit">Guardar</button>
-                <a class="btn secondary" href="{{ path('admin_role_index') }}">Cancelar</a>
-            </div>
+            {{ f.actions(path('admin_role_index')) }}
         {{ form_end(form) }}
     </div>
 
