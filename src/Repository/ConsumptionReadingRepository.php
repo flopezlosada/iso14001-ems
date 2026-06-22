@@ -108,4 +108,32 @@ class ConsumptionReadingRepository extends ServiceEntityRepository
 
         return null === $max ? null : (int) $max;
     }
+
+    /**
+     * Yearly totals of a utility's quantity (year => summed quantity), ascending by year and only
+     * for years that have readings. Feeds the multi-year consumption trend.
+     *
+     * @param ConsumptionType $type the utility
+     *
+     * @return array<int, numeric-string> summed quantity per year
+     */
+    public function yearlyTotals(ConsumptionType $type): array
+    {
+        /** @var list<array{year: int, total: numeric-string}> $rows */
+        $rows = $this->createQueryBuilder('r')
+            ->select('r.periodYear AS year, SUM(r.quantity) AS total')
+            ->andWhere('r.type = :type')
+            ->setParameter('type', $type)
+            ->groupBy('r.periodYear')
+            ->orderBy('r.periodYear', 'ASC')
+            ->getQuery()
+            ->getResult();
+
+        $totals = [];
+        foreach ($rows as $row) {
+            $totals[$row['year']] = $row['total'];
+        }
+
+        return $totals;
+    }
 }

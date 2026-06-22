@@ -12,7 +12,10 @@
             <h1>Consumos {{ year }}</h1>
             <p class="lead">Lecturas de agua, electricidad y demás consumos del centro, registradas mes a mes.</p>
         </div>
-        <a class="btn" href="{{ path('consumption_new', { year: year }) }}">+ Añadir lectura</a>
+        <div>
+            <a class="btn secondary" href="{{ path('consumption_trend') }}">Ver tendencia</a>
+            <a class="btn" href="{{ path('consumption_new', { year: year }) }}">+ Añadir lectura</a>
+        </div>
     </div>
 
     <div class="toolbar">
