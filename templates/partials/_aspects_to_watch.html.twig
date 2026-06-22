@@ -1,0 +1,22 @@
+{# Aspectos cuyo consumo va al alza y que podrían volverse significativos: aviso proactivo, para
+   verlos antes de la evaluación anual. Se muestra en el inicio y en "Qué toca". Espera en el
+   contexto la variable `aspectsToWatch` (lista de {aspect, estimate}); si está vacía, no pinta nada. #}
+{% if aspectsToWatch is not empty %}
+    <section class="obligation-group">
+        <div class="obligation-group-head">
+            <span class="badge badge--warning">Aspectos a vigilar</span>
+            <span class="muted">{{ aspectsToWatch|length }} · El consumo va al alza respecto a años anteriores; vigílalo antes de la evaluación anual.</span>
+        </div>
+        <div class="card">
+            <ul class="watch-list">
+                {% for row in aspectsToWatch %}
+                    <li>
+                        <a href="{{ path('aspect_show', { id: row.aspect.id }) }}">{{ row.aspect.name }}</a>
+                        — consumo {{ row.estimate.changeRatio >= 0 ? '+' : '' }}{{ (row.estimate.changeRatio * 100)|round(1) }}%
+                        <span class="muted">(intensidad sugerida: {{ row.estimate.level.label }})</span>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </section>
+{% endif %}
