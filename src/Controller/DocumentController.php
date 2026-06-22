@@ -106,9 +106,9 @@ final class DocumentController extends AbstractController
             'groups' => $groups,
             'notApplicable' => $notApplicable,
             'moduleRoutes' => self::moduleRoutes(),
-            // Consumption aspects already trending worse than the threshold: surfaced proactively so
-            // a likely-significant aspect is seen now, not only at the yearly evaluation.
-            'aspectsToWatch' => $intensityEstimator->watchList($aspects->findLinkedToConsumption(), $today),
+            // Aspects (consumption or waste) already trending worse than the threshold: surfaced
+            // proactively so a likely-significant aspect is seen now, not only at the yearly evaluation.
+            'aspectsToWatch' => $intensityEstimator->watchList($aspects->findLinkedForIntensity(), $today),
         ]);
     }
 

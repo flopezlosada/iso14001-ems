@@ -10,6 +10,7 @@ use App\Enum\ConsumptionType;
 use App\Enum\ScoreLevel;
 use App\Repository\ConsumptionReadingRepository;
 use App\Repository\SettingsRepository;
+use App\Repository\WasteRecordRepository;
 use App\Service\AspectIntensityEstimator;
 use App\Service\SettingsProvider;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -23,7 +24,7 @@ use PHPUnit\Framework\TestCase;
  */
 final class AspectIntensityEstimatorTest extends TestCase
 {
-    private function estimator(?ConsumptionReadingRepository $readings = null, int $baselineYears = 1): AspectIntensityEstimator
+    private function estimator(?ConsumptionReadingRepository $readings = null, int $baselineYears = 1, ?WasteRecordRepository $wasteRecords = null): AspectIntensityEstimator
     {
         // Settings with the default ±10% bounds and the given baseline window.
         $settings = (new Settings())->setIntensityBaselineYears($baselineYears);
@@ -32,6 +33,7 @@ final class AspectIntensityEstimatorTest extends TestCase
 
         return new AspectIntensityEstimator(
             $readings ?? $this->createMock(ConsumptionReadingRepository::class),
+            $wasteRecords ?? $this->createMock(WasteRecordRepository::class),
             new SettingsProvider($settingsRepository),
         );
     }
@@ -191,5 +193,73 @@ final class AspectIntensityEstimatorTest extends TestCase
         self::assertCount(1, $watch);
         self::assertSame($rising, $watch[0]['aspect']);
         self::assertSame(ScoreLevel::HIGH, $watch[0]['estimate']->level);
+    }
+
+    public function testEstimateForWasteAspectUsesItsLerCodes(): void
+    {
+        $waste = $this->createMock(WasteRecordRepository::class);
+        $waste->method('lastRecordedMonth')->willReturn(4);
+        $waste->method('sumKgForYearToDate')->willReturnCallback(
+            static fn (array $codes, int $year, int $month): ?string => match ($year) {
+                2026 => '25.0',
+                2025 => '20.0',
+                default => null,
+            },
+        );
+
+        $aspect = (new EnvironmentalAspect())->setLinkedLerCodes(['200121', '080318']);
+        $estimate = $this->estimator(wasteRecords: $waste)->estimateFor($aspect, new \DateTimeImmutable('2026-06-15'));
+
+        self::assertNotNull($estimate);
+        self::assertSame(ScoreLevel::HIGH, $estimate->level); // +25%
+        self::assertEqualsWithDelta(0.25, $estimate->changeRatio, 0.0001);
+    }
+
+    public function testWasteAspectReturnsNullWithoutPriorYear(): void
+    {
+        $waste = $this->createMock(WasteRecordRepository::class);
+        $waste->method('lastRecordedMonth')->willReturn(4);
+        $waste->method('sumKgForYearToDate')->willReturnCallback(
+            static fn (array $codes, int $year, int $month): ?string => 2026 === $year ? '25.0' : null,
+        );
+
+        $aspect = (new EnvironmentalAspect())->setLinkedLerCodes(['200121']);
+        $estimate = $this->estimator(wasteRecords: $waste)->estimateFor($aspect, new \DateTimeImmutable('2026-06-15'));
+
+        self::assertNull($estimate);
+    }
+
+    public function testUnlinkedAspectReturnsNull(): void
+    {
+        // An aspect with neither a consumption type nor LER codes has no source → null.
+        $estimate = $this->estimator()->estimateFor(new EnvironmentalAspect(), new \DateTimeImmutable('2026-06-15'));
+
+        self::assertNull($estimate);
+    }
+
+    public function testConsumptionTakesPrecedenceOverLerCodesWhenBothAreSet(): void
+    {
+        $readings = $this->createMock(ConsumptionReadingRepository::class);
+        $readings->method('lastRecordedMonth')->willReturn(4);
+        $readings->method('sumQuantityForYearToDate')->willReturnCallback(
+            static fn (ConsumptionType $type, int $year, int $month): ?string => match ($year) {
+                2026 => '1200',
+                2025 => '1000',
+                default => null,
+            },
+        );
+        // If consumption wins, the waste source must never be queried.
+        $waste = $this->createMock(WasteRecordRepository::class);
+        $waste->expects(self::never())->method('lastRecordedMonth');
+        $waste->expects(self::never())->method('sumKgForYearToDate');
+
+        $aspect = (new EnvironmentalAspect())
+            ->setLinkedConsumptionType(ConsumptionType::ELECTRICITY)
+            ->setLinkedLerCodes(['200121']);
+
+        $estimate = $this->estimator($readings, wasteRecords: $waste)->estimateFor($aspect, new \DateTimeImmutable('2026-06-15'));
+
+        self::assertNotNull($estimate);
+        self::assertSame(ScoreLevel::HIGH, $estimate->level); // +20% from the consumption source
     }
 }

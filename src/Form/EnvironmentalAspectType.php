@@ -9,6 +9,7 @@ use App\Enum\AspectType;
 use App\Enum\ConsumptionType;
 use App\Enum\DirectAspectCategory;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\CallbackTransformer;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\EnumType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
@@ -54,6 +55,11 @@ class EnvironmentalAspectType extends AbstractType
                 'choice_label' => static fn (ConsumptionType $t): string => $t->label(),
                 'help' => 'Solo para aspectos de consumo. Si lo enlazas, la intensidad se sugiere sola comparando el consumo de este año con el de años anteriores.',
             ])
+            ->add('linkedLerCodes', TextType::class, [
+                'label' => 'Códigos LER para la intensidad (residuos)',
+                'required' => false,
+                'help' => 'Solo para aspectos de residuos. Códigos LER separados por comas (p. ej. 200121, 080318); se suman sus kg para sugerir la intensidad.',
+            ])
             ->add('associatedImpact', TextType::class, [
                 'label' => 'Impacto asociado',
                 'required' => false,
@@ -62,6 +68,15 @@ class EnvironmentalAspectType extends AbstractType
                 'label' => 'Activo',
                 'required' => false,
             ]);
+
+        // The LER codes are stored as a list but edited as a comma-separated text field.
+        $builder->get('linkedLerCodes')->addModelTransformer(new CallbackTransformer(
+            static fn (array $codes): string => implode(', ', $codes),
+            static fn (?string $value): array => array_values(array_filter(
+                array_map('trim', explode(',', $value ?? '')),
+                static fn (string $code): bool => '' !== $code,
+            )),
+        ));
     }
 
     public function configureOptions(OptionsResolver $resolver): void
