@@ -113,7 +113,7 @@ class Document
 
     /**
      * What the responsible has to do for this obligation, in plain language. Sourced from the
-     * consultant's guide ("Tareas IES La Cabrera"); now that there is no consultant, this is how
+     * consultant's guide ("Tareas del centro"); now that there is no consultant, this is how
      * the app guides the staff. Shown as on-screen help on the obligation.
      */
     #[ORM\Column(type: Types::TEXT, nullable: true)]
