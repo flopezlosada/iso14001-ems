@@ -1,0 +1,31 @@
+{% extends 'app_shell.html.twig' %}
+
+{% block title %}Ajustes de cálculo{% endblock %}
+
+{% block breadcrumb %}<a href="{{ path('app_homepage') }}">Inicio</a><span class="sep">/</span>Ajustes{% endblock %}
+
+{% block body %}
+    <div class="page-head">
+        <div>
+            <h1>Ajustes de cálculo</h1>
+            <p class="lead">Umbrales de significancia de aspectos y parámetros de auto-intensidad (PG-06.01).</p>
+        </div>
+    </div>
+
+    <div class="card" style="max-width: 640px;">
+        {{ form_start(form, { 'attr': { 'novalidate': 'novalidate' } }) }}
+            {{ form_errors(form) }}
+            {% for child in form %}
+                {% if child.vars.name != '_token' %}
+                    <div class="form-row">
+                        {{ form_label(child) }}
+                        {{ form_widget(child) }}
+                        {% if child.vars.help %}<p class="help">{{ child.vars.help }}</p>{% endif %}
+                        {{ form_errors(child) }}
+                    </div>
+                {% endif %}
+            {% endfor %}
+            <button class="btn" type="submit">Guardar</button>
+        {{ form_end(form) }}
+    </div>
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends 'app_shell.html.twig' %}
+
+{% block title %}{{ isNew ? 'Nuevo ítem' : 'Editar ítem' }} · Checklist{% endblock %}
+
+{% block breadcrumb %}
+    <a href="{{ path('app_homepage') }}">Inicio</a><span class="sep">/</span>
+    <a href="{{ path('admin_operational_control_item_index') }}">Checklist de control operacional</a><span class="sep">/</span>
+    {{ isNew ? 'Nuevo' : 'Editar' }}
+{% endblock %}
+
+{% block body %}
+    <div class="page-head">
+        <h1>{{ isNew ? 'Nuevo ítem del checklist' : 'Editar ítem del checklist' }}</h1>
+    </div>
+
+    <div class="card" style="max-width: 560px;">
+        {{ form_start(form, { 'attr': { 'novalidate': 'novalidate' } }) }}
+            {{ form_errors(form) }}
+            {% for child in form %}
+                {% if child.vars.name != '_token' %}
+                    <div class="form-row">
+                        {{ form_label(child) }}
+                        {{ form_widget(child) }}
+                        {% if child.vars.help %}<p class="help">{{ child.vars.help }}</p>{% endif %}
+                        {{ form_errors(child) }}
+                    </div>
+                {% endif %}
+            {% endfor %}
+            <button class="btn" type="submit">Guardar</button>
+            <a class="btn secondary" href="{{ path('admin_operational_control_item_index') }}">Cancelar</a>
+        {{ form_end(form) }}
+    </div>
+{% endblock %}

@@ -6,11 +6,14 @@ namespace App\Tests\Service;
 
 use App\Entity\AspectEvaluation;
 use App\Entity\EnvironmentalAspect;
+use App\Entity\Settings;
 use App\Enum\AspectType;
 use App\Enum\DirectAspectCategory;
 use App\Enum\InfluenceLevel;
 use App\Enum\ScoreLevel;
+use App\Repository\SettingsRepository;
 use App\Service\AspectSignificanceCalculator;
+use App\Service\SettingsProvider;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -28,9 +31,22 @@ final class AspectSignificanceCalculatorTest extends TestCase
         return (new AspectEvaluation())->setAspect($aspect);
     }
 
+    /**
+     * Calculator backed by a Settings with the default per-category thresholds (12/12/10/8) and the
+     * given abnormal/fallback threshold, so the cases below assert the same numbers as before.
+     */
+    private function calculator(int $abnormalThreshold = 10): AspectSignificanceCalculator
+    {
+        $settings = (new Settings())->setAbnormalThreshold($abnormalThreshold);
+        $repository = $this->createMock(SettingsRepository::class);
+        $repository->method('findSettings')->willReturn($settings);
+
+        return new AspectSignificanceCalculator(new SettingsProvider($repository));
+    }
+
     public function testDirectAspectSumsTheThreeCriteria(): void
     {
-        $calculator = new AspectSignificanceCalculator(10);
+        $calculator = $this->calculator();
         $evaluation = $this->evaluation(DirectAspectCategory::CONSUMPTION)
             ->setFrequency(ScoreLevel::HIGH)
             ->setIntensity(ScoreLevel::HIGH)
@@ -44,7 +60,7 @@ final class AspectSignificanceCalculatorTest extends TestCase
 
     public function testDischargeIgnoresIntensity(): void
     {
-        $calculator = new AspectSignificanceCalculator(10);
+        $calculator = $this->calculator();
         $evaluation = $this->evaluation(DirectAspectCategory::DISCHARGE)
             ->setFrequency(ScoreLevel::HIGH)
             ->setIntensity(ScoreLevel::HIGH) // must be ignored for discharges
@@ -59,7 +75,7 @@ final class AspectSignificanceCalculatorTest extends TestCase
 
     public function testMissingIntensityDefaultsToFour(): void
     {
-        $calculator = new AspectSignificanceCalculator(10);
+        $calculator = $this->calculator();
         $evaluation = $this->evaluation(DirectAspectCategory::WASTE)
             ->setFrequency(ScoreLevel::LOW)   // 2
             ->setHazard(ScoreLevel::LOW);      // 2
@@ -95,7 +111,7 @@ final class AspectSignificanceCalculatorTest extends TestCase
     #[DataProvider('categoryThresholdProvider')]
     public function testThresholdIsPerCategory(DirectAspectCategory $category, ScoreLevel $frequency, ?ScoreLevel $intensity, ScoreLevel $hazard, int $expectedScore, bool $expectedSignificant): void
     {
-        $calculator = new AspectSignificanceCalculator(10);
+        $calculator = $this->calculator();
         $evaluation = $this->evaluation($category)
             ->setFrequency($frequency)
             ->setIntensity($intensity)
@@ -112,7 +128,7 @@ final class AspectSignificanceCalculatorTest extends TestCase
         // Regression: a discharge scoring 10 (vertido semanal=4 + sustancias peligrosas=6) is
         // significant (threshold 8). With a single threshold of 10 it was wrongly marked NOT
         // significant — a false negative an ISO auditor would flag against Anexo I.
-        $calculator = new AspectSignificanceCalculator(10);
+        $calculator = $this->calculator();
         $evaluation = $this->evaluation(DirectAspectCategory::DISCHARGE)
             ->setFrequency(ScoreLevel::MEDIUM)
             ->setHazard(ScoreLevel::HIGH);
@@ -132,10 +148,10 @@ final class AspectSignificanceCalculatorTest extends TestCase
             ->setControl(ScoreLevel::LOW)
             ->setSeverity(ScoreLevel::MEDIUM); // 2 + 2 + 4 = 8
 
-        (new AspectSignificanceCalculator(10))->apply($evaluation);
+        ($this->calculator())->apply($evaluation);
         self::assertFalse($evaluation->isSignificant());
 
-        (new AspectSignificanceCalculator(6))->apply($evaluation);
+        $this->calculator(6)->apply($evaluation);
         self::assertTrue($evaluation->isSignificant());
     }
 
@@ -149,7 +165,7 @@ final class AspectSignificanceCalculatorTest extends TestCase
             ->setIntensity(ScoreLevel::MEDIUM)
             ->setHazard(ScoreLevel::MEDIUM); // 12
 
-        (new AspectSignificanceCalculator(10))->apply($evaluation);
+        ($this->calculator())->apply($evaluation);
 
         self::assertSame(12, $evaluation->getSignificanceScore());
         self::assertTrue($evaluation->isSignificant());
@@ -163,7 +179,7 @@ final class AspectSignificanceCalculatorTest extends TestCase
             ->setControl(ScoreLevel::MEDIUM)     // 4
             ->setSeverity(ScoreLevel::HIGH);     // 6
 
-        (new AspectSignificanceCalculator(10))->apply($evaluation);
+        ($this->calculator())->apply($evaluation);
 
         self::assertSame(16, $evaluation->getSignificanceScore());
         self::assertTrue($evaluation->isSignificant());
@@ -176,7 +192,7 @@ final class AspectSignificanceCalculatorTest extends TestCase
             ->setInfluence(InfluenceLevel::HIGH)
             ->setSignificant(true); // manual decision (no threshold defined for indirect)
 
-        (new AspectSignificanceCalculator(10))->apply($evaluation);
+        ($this->calculator())->apply($evaluation);
 
         // Score reflects the influence; the manual significant flag is preserved (not overwritten).
         self::assertSame(3, $evaluation->getSignificanceScore());

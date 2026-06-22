@@ -5,10 +5,13 @@ declare(strict_types=1);
 namespace App\Tests\Service;
 
 use App\Entity\EnvironmentalAspect;
+use App\Entity\Settings;
 use App\Enum\ConsumptionType;
 use App\Enum\ScoreLevel;
 use App\Repository\ConsumptionReadingRepository;
+use App\Repository\SettingsRepository;
 use App\Service\AspectIntensityEstimator;
+use App\Service\SettingsProvider;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -22,11 +25,14 @@ final class AspectIntensityEstimatorTest extends TestCase
 {
     private function estimator(?ConsumptionReadingRepository $readings = null, int $baselineYears = 1): AspectIntensityEstimator
     {
+        // Settings with the default ±10% bounds and the given baseline window.
+        $settings = (new Settings())->setIntensityBaselineYears($baselineYears);
+        $settingsRepository = $this->createMock(SettingsRepository::class);
+        $settingsRepository->method('findSettings')->willReturn($settings);
+
         return new AspectIntensityEstimator(
             $readings ?? $this->createMock(ConsumptionReadingRepository::class),
-            0.10,
-            0.10,
-            $baselineYears,
+            new SettingsProvider($settingsRepository),
         );
     }
 
@@ -77,13 +83,6 @@ final class AspectIntensityEstimatorTest extends TestCase
         self::assertNotNull($estimate);
         self::assertSame(ScoreLevel::LOW, $estimate->level);
         self::assertEqualsWithDelta(-1.0, $estimate->changeRatio, 0.0001);
-    }
-
-    public function testConstructorRejectsBaselineYearsBelowOne(): void
-    {
-        $this->expectException(\InvalidArgumentException::class);
-
-        new AspectIntensityEstimator($this->createMock(ConsumptionReadingRepository::class), 0.10, 0.10, 0);
     }
 
     public function testEstimateForReturnsNullAndTouchesNothingWhenAspectHasNoSource(): void

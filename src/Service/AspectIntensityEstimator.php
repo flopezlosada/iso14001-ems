@@ -21,21 +21,10 @@ use App\Repository\ConsumptionReadingRepository;
  */
 final class AspectIntensityEstimator
 {
-    /**
-     * @param ConsumptionReadingRepository $readings      source of the consumption sums
-     * @param float                        $riseThreshold change above which intensity is HIGH (e.g. 0.10 = +10%)
-     * @param float                        $dropThreshold change below which intensity is LOW (e.g. 0.10 = -10%)
-     * @param int                          $baselineYears how many previous years the baseline averages (1 = vs last year)
-     */
     public function __construct(
         private readonly ConsumptionReadingRepository $readings,
-        private readonly float $riseThreshold,
-        private readonly float $dropThreshold,
-        private readonly int $baselineYears,
+        private readonly SettingsProvider $settings,
     ) {
-        if ($baselineYears < 1) {
-            throw new \InvalidArgumentException(sprintf('baselineYears must be at least 1, got %d.', $baselineYears));
-        }
     }
 
     /**
@@ -120,11 +109,12 @@ final class AspectIntensityEstimator
             return null;
         }
 
+        $settings = $this->settings->get();
         $changeRatio = ($current - $baseline) / $baseline;
 
         $level = match (true) {
-            $changeRatio > $this->riseThreshold => ScoreLevel::HIGH,
-            $changeRatio < -$this->dropThreshold => ScoreLevel::LOW,
+            $changeRatio > $settings->getIntensityRiseThreshold() => ScoreLevel::HIGH,
+            $changeRatio < -$settings->getIntensityDropThreshold() => ScoreLevel::LOW,
             default => ScoreLevel::MEDIUM,
         };
 
@@ -144,7 +134,8 @@ final class AspectIntensityEstimator
     private function baselineMean(ConsumptionType $type, int $currentYear, int $cutMonth): ?float
     {
         $sums = [];
-        for ($i = 1; $i <= $this->baselineYears; ++$i) {
+        $baselineYears = $this->settings->get()->getIntensityBaselineYears();
+        for ($i = 1; $i <= $baselineYears; ++$i) {
             $sum = $this->readings->sumQuantityForYearToDate($type, $currentYear - $i, $cutMonth);
             if (null !== $sum) {
                 $sums[] = (float) $sum;

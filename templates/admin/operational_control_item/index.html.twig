@@ -1,0 +1,38 @@
+{% extends 'app_shell.html.twig' %}
+
+{% block title %}Checklist de control operacional{% endblock %}
+
+{% block breadcrumb %}<a href="{{ path('app_homepage') }}">Inicio</a><span class="sep">/</span>Checklist de control operacional{% endblock %}
+
+{% block body %}
+    <div class="page-head">
+        <div>
+            <h1>Checklist de control operacional</h1>
+            <p class="lead">Ítems que componen la inspección mensual (PG-08.01). Se desactivan, no se borran.</p>
+        </div>
+        <a class="btn" href="{{ path('admin_operational_control_item_new') }}">Nuevo ítem</a>
+    </div>
+
+    <div class="card">
+        {% if items is empty %}
+            <p class="help">Aún no hay ítems en el catálogo.</p>
+        {% else %}
+            <table>
+                <thead>
+                    <tr><th>Sección</th><th>Ítem</th><th>Orden</th><th>Estado</th><th></th></tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                        <tr>
+                            <td>{{ item.section.label }}</td>
+                            <td><a href="{{ path('admin_operational_control_item_edit', { id: item.id }) }}">{{ item.label }}</a></td>
+                            <td>{{ item.position }}</td>
+                            <td>{{ item.active ? 'Activo' : 'Inactivo' }}</td>
+                            <td><a href="{{ path('admin_operational_control_item_edit', { id: item.id }) }}">Editar</a></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    </div>
+{% endblock %}

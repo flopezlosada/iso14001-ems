@@ -30,4 +30,15 @@ class OperationalControlItemRepository extends ServiceEntityRepository
     {
         return $this->findBy(['active' => true], ['position' => 'ASC']);
     }
+
+    /**
+     * Every catalogue item (active and inactive), ordered by section and position, for the admin
+     * management screen.
+     *
+     * @return OperationalControlItem[] all items
+     */
+    public function findAllOrdered(): array
+    {
+        return $this->findBy([], ['section' => 'ASC', 'position' => 'ASC']);
+    }
 }
