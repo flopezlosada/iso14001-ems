@@ -18,7 +18,7 @@ namespace App\DataFixtures;
  * - `doctrine:fixtures:load --group=demo`   → backbone + sample data (DEMO ⊇ GOLDEN).
  * - `doctrine:fixtures:load --group=golden` → only the production-baseline backbone.
  *
- * The real IES La Cabrera data (PII/LOPD) is NEVER seeded here: it will come from the future
+ * The real centre data (PII/LOPD) is NEVER seeded here: it will come from the future
  * ETL and live under the git-ignored /fixtures/real/, loaded only on local machines.
  */
 final class FixtureGroups

@@ -27,7 +27,7 @@ final class SupplierFixtures extends AbstractDemoFixture
                 'incidents' => [],
             ],
             [
-                'name' => 'Calefacción y Clima La Cabrera',
+                'name' => 'Calefacción y Clima del Valle',
                 'service' => 'Mantenimiento de la caldera de calefacción',
                 'notes' => null,
                 'evaluations' => [[2024, SupplierCriterion::CAPABLE], [2025, SupplierCriterion::ON_TRIAL]],

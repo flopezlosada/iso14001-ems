@@ -56,7 +56,7 @@ from Mailpit (`ddev launch -m`).
 
 > **All fixtures are synthetic** — names, e-mails (`@example.test`) and figures are invented,
 > modelled on the centre's real document structure but containing **no personal data**, so they
-> are safe to commit. The real IES La Cabrera data (PII/LOPD) is never seeded here: it will come
+> are safe to commit. The real centre data (PII/LOPD) is never seeded here: it will come
 > from a future ETL and live under the git-ignored `/fixtures/real/`, loaded only on local
 > machines.
 
