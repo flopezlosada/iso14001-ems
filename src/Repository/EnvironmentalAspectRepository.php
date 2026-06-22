@@ -29,18 +29,20 @@ class EnvironmentalAspectRepository extends ServiceEntityRepository
     }
 
     /**
-     * Active aspects linked to a consumption source, i.e. the ones whose intensity can be estimated
-     * and watched automatically. Used to build the cockpit's "aspectos a vigilar" list.
+     * Active aspects with an auto-intensity source — a linked consumption utility or a set of LER
+     * codes (waste) — i.e. the ones whose intensity can be estimated and watched automatically. Used
+     * to build the cockpit's "aspectos a vigilar" list. The LER-codes condition is applied in PHP to
+     * avoid JSON SQL; the active set is small.
      *
      * @return EnvironmentalAspect[] the linked, active aspects ordered by name
      */
-    public function findLinkedToConsumption(): array
+    public function findLinkedForIntensity(): array
     {
-        return $this->createQueryBuilder('a')
-            ->andWhere('a.active = true')
-            ->andWhere('a.linkedConsumptionType IS NOT NULL')
-            ->orderBy('a.name', 'ASC')
-            ->getQuery()
-            ->getResult();
+        $active = $this->findBy(['active' => true], ['name' => 'ASC']);
+
+        return array_values(array_filter(
+            $active,
+            static fn (EnvironmentalAspect $aspect): bool => null !== $aspect->getLinkedConsumptionType() || [] !== $aspect->getLinkedLerCodes(),
+        ));
     }
 }

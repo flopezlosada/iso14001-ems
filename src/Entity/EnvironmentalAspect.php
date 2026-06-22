@@ -59,6 +59,22 @@ class EnvironmentalAspect
     private ?ConsumptionType $linkedConsumptionType = null;
 
     /**
+     * LER codes whose waste records feed this aspect's auto-intensity: their kilograms are compared
+     * interannually to suggest the intensity (PG-06.01). Only meaningful for WASTE aspects; an empty
+     * list means no linked waste source.
+     *
+     * @var list<string>
+     */
+    #[ORM\Column(type: Types::JSON)]
+    #[Assert\All([
+        new Assert\Regex(
+            pattern: '/^\d{2}\s?\d{2}\s?\d{2}\*?$/',
+            message: 'Cada código LER debe tener 6 dígitos (p. ej. 200121), con * si es peligroso.',
+        ),
+    ])]
+    private array $linkedLerCodes = [];
+
+    /**
      * Associated environmental impact ("Impacto asociado"), e.g. "Agotamiento recurso natural".
      */
     #[ORM\Column(length: 255, nullable: true)]
@@ -170,6 +186,24 @@ class EnvironmentalAspect
     public function setLinkedConsumptionType(?ConsumptionType $linkedConsumptionType): static
     {
         $this->linkedConsumptionType = $linkedConsumptionType;
+
+        return $this;
+    }
+
+    /**
+     * @return list<string> the LER codes linked as the waste data source for this aspect's auto-intensity
+     */
+    public function getLinkedLerCodes(): array
+    {
+        return $this->linkedLerCodes;
+    }
+
+    /**
+     * @param list<string> $linkedLerCodes the LER codes whose waste feeds this aspect's auto-intensity
+     */
+    public function setLinkedLerCodes(array $linkedLerCodes): static
+    {
+        $this->linkedLerCodes = $linkedLerCodes;
 
         return $this;
     }

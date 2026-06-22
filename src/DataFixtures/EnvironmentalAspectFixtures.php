@@ -44,6 +44,7 @@ final class EnvironmentalAspectFixtures extends AbstractGoldenFixture
                 ->setCategory($def['category'] ?? null)
                 ->setUnit($def['unit'] ?? null)
                 ->setLinkedConsumptionType($def['linkedConsumptionType'] ?? null)
+                ->setLinkedLerCodes($def['linkedLerCodes'] ?? [])
                 ->setAssociatedImpact($def['impact'] ?? null)
                 ->setActive(true);
 
@@ -86,7 +87,7 @@ final class EnvironmentalAspectFixtures extends AbstractGoldenFixture
 
     /**
      * @return array<string, array{name: string, type: AspectType, category?: DirectAspectCategory,
-     *     unit?: string, linkedConsumptionType?: ConsumptionType, impact?: string,
+     *     unit?: string, linkedConsumptionType?: ConsumptionType, linkedLerCodes?: list<string>, impact?: string,
      *     scores: array<int, array<string, ScoreLevel|InfluenceLevel>>}>
      */
     private function definitions(): array
@@ -113,6 +114,7 @@ final class EnvironmentalAspectFixtures extends AbstractGoldenFixture
                 'type' => AspectType::DIRECT,
                 'category' => DirectAspectCategory::WASTE,
                 'unit' => 'kg',
+                'linkedLerCodes' => ['200121', '080318'],
                 'impact' => 'Contaminación del suelo y agua',
                 'scores' => [
                     2025 => ['frequency' => $mid, 'intensity' => $hi, 'hazard' => $hi],
