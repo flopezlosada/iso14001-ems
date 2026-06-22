@@ -9,8 +9,10 @@ use App\Enum\ObligationStatus;
 use App\Enum\ObligationUrgency;
 use App\Repository\AuditLogRepository;
 use App\Repository\DocumentRepository;
+use App\Repository\EnvironmentalAspectRepository;
 use App\Repository\RoleRepository;
 use App\Repository\UserRepository;
+use App\Service\AspectIntensityEstimator;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -31,10 +33,12 @@ class HomeController extends AbstractController
      * Renders the dashboard: the user's actionable obligations plus, for admins, the platform
      * snapshot.
      *
-     * @param DocumentRepository $documents repository providing the obligation register
-     * @param AuditLogRepository $auditLogs repository used to list recent activity (admins)
-     * @param UserRepository     $users     repository used to count users with access (admins)
-     * @param RoleRepository     $roles     repository used to count defined roles (admins)
+     * @param DocumentRepository           $documents          repository providing the obligation register
+     * @param AuditLogRepository           $auditLogs          repository used to list recent activity (admins)
+     * @param UserRepository               $users              repository used to count users with access (admins)
+     * @param RoleRepository               $roles              repository used to count defined roles (admins)
+     * @param EnvironmentalAspectRepository $aspects           aspects with a linked data source, for the watch-list
+     * @param AspectIntensityEstimator     $intensityEstimator computes the proactive aspects-to-watch list
      *
      * @return Response the rendered dashboard
      */
@@ -44,6 +48,8 @@ class HomeController extends AbstractController
         AuditLogRepository $auditLogs,
         UserRepository $users,
         RoleRepository $roles,
+        EnvironmentalAspectRepository $aspects,
+        AspectIntensityEstimator $intensityEstimator,
     ): Response {
         $today = new \DateTimeImmutable('today');
         $now = new \DateTimeImmutable();
@@ -74,6 +80,9 @@ class HomeController extends AbstractController
             'counts' => $worklist['counts'],
             'actionable' => $worklist['actionable'],
             'hasObligations' => $worklist['total'] > 0,
+            // Same proactive watch-list as the "Qué toca" cockpit: consumption aspects trending worse,
+            // surfaced where the user lands so a likely-significant aspect is not missed.
+            'aspectsToWatch' => $intensityEstimator->watchList($aspects->findLinkedForIntensity(), $today),
             // Nothing of one's own AND no admin tools: a genuinely empty landing.
             'hasNothing' => 0 === $worklist['total'] && !$isAdmin,
         ]);

@@ -86,6 +86,9 @@
         </p>
     {% endif %}
 
+    {# --- Aspectos a vigilar: aviso proactivo (mismo que en "Qué toca"); no en el estado vacío --- #}
+    {% if not hasNothing %}{{ include('partials/_aspects_to_watch.html.twig') }}{% endif %}
+
     {# --- Estado de la plataforma + actividad reciente (solo admin) --- #}
     {% if admin %}
         <section class="panel dash-admin">

@@ -988,6 +988,7 @@ input[type="email"], input[type="text"], select, textarea {
 
 .obligation-group { margin-block: 1.6rem; }
 .obligation-group-head { display: flex; align-items: center; gap: .6rem; margin-bottom: .6rem; flex-wrap: wrap; }
+.watch-list { margin: 0; padding-left: 1.2rem; }
 .obligation-help { font-size: .85rem; margin-top: .2rem; max-width: 64ch; }
 .row-actions { text-align: right; white-space: nowrap; }
 .sga-phase { margin-block: 2rem; }
