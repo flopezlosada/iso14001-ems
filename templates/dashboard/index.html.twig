@@ -8,16 +8,14 @@
 {% block breadcrumb %}Inicio{% endblock %}
 
 {% block body %}
-    {# --- Saludo: la cara amable de la pantalla; resume el rol del usuario --- #}
+    {# --- Saludo: la cara amable de la pantalla --- #}
     <section class="dash-greeting">
         <div>
             <p class="eyebrow">{{ day_names[today|date('w')] }} · {{ today|date('j') }} de {{ month_names[today|date('n')] }}</p>
             <h1>{{ greeting }}, {{ firstName }}.</h1>
             <p class="lead">
-                {% if isAdmin %}
-                    Administras la plataforma del sistema de gestión ambiental.
-                {% elseif canConsumption %}
-                    Tu responsabilidad es el registro de consumos del centro.
+                {% if hasObligations %}
+                    Esto es lo que te toca del sistema de gestión ambiental.
                 {% else %}
                     Bienvenida al sistema de gestión ambiental.
                 {% endif %}
@@ -26,17 +24,75 @@
         <div class="brand-mark brand-mark--lg dash-mark">{{ include('partials/_brand_mark.html.twig', { size: 72 }) }}</div>
     </section>
 
-    {# --- Accesos rápidos a las gestiones que el usuario puede abrir --- #}
-    {% if canConsumption or isAdmin %}
-        <p class="eyebrow dash-section-label">Accesos rápidos</p>
-        <div class="quick-links">
-            {% if canConsumption %}
-                <a class="quick-link" href="{{ path('consumption_index') }}">
-                    <span class="quick-link-title">Registrar consumo</span>
-                    <span class="quick-link-desc">Lecturas de agua, luz, gasoil, papel y tóner.</span>
-                </a>
-            {% endif %}
-            {% if isAdmin %}
+    {# --- "Lo que me toca": el núcleo de la pantalla --- #}
+    {% if hasObligations %}
+        {# Semáforo: tres cifras que resumen el estado de MIS obligaciones con fecha. #}
+        <div class="worklist-stats">
+            <a class="stat stat--danger {{ counts.overdue == 0 ? 'is-zero' }}" href="{{ path('obligation_index') }}">
+                <span class="stat-figure">{{ counts.overdue }}</span>
+                <span class="stat-label">Vencida{{ counts.overdue == 1 ? '' : 's' }}</span>
+            </a>
+            <a class="stat stat--warning {{ counts.due_soon == 0 ? 'is-zero' }}" href="{{ path('obligation_index') }}">
+                <span class="stat-figure">{{ counts.due_soon }}</span>
+                <span class="stat-label">Próxima{{ counts.due_soon == 1 ? '' : 's' }} a vencer</span>
+            </a>
+            <a class="stat stat--success {{ counts.on_track == 0 ? 'is-zero' }}" href="{{ path('obligation_index') }}">
+                <span class="stat-figure">{{ counts.on_track }}</span>
+                <span class="stat-label">Al día</span>
+            </a>
+        </div>
+
+        {% if actionable is empty %}
+            {# Tiene obligaciones, pero ninguna vencida ni próxima: refuerzo positivo. #}
+            <section class="panel worklist-clear">
+                <p><span class="badge badge--success">Al día</span></p>
+                <p class="muted">Nada vencido ni próximo a vencer. Te avisaremos cuando toque.</p>
+            </section>
+        {% else %}
+            <p class="eyebrow dash-section-label">Pendiente de ti</p>
+            <ul class="worklist">
+                {% for item in actionable %}
+                    {% set is_overdue = item.urgency.value == 'overdue' %}
+                    <li class="worklist-item">
+                        <span class="badge {{ is_overdue ? 'badge--danger' : 'badge--warning' }}">{{ item.urgency.label }}</span>
+                        <div class="worklist-main">
+                            <span class="worklist-title">{{ item.title }}</span>
+                            {% if item.code %}<span class="worklist-code mono muted">{{ item.code }}</span>{% endif %}
+                        </div>
+                        <span class="worklist-due {{ is_overdue ? 'is-overdue' : 'muted' }}">
+                            {%- if item.daysUntil is null -%}
+                                —
+                            {%- elseif item.daysUntil < 0 -%}
+                                venció hace {{ -item.daysUntil }} día{{ item.daysUntil == -1 ? '' : 's' }}
+                            {%- elseif item.daysUntil == 0 -%}
+                                vence hoy
+                            {%- else -%}
+                                vence en {{ item.daysUntil }} día{{ item.daysUntil == 1 ? '' : 's' }}
+                            {%- endif -%}
+                        </span>
+                        {% if item.route %}
+                            <a class="btn" href="{{ path(item.route) }}">Rellenar</a>
+                        {% else %}
+                            <span class="badge">Pendiente de módulo</span>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        <p class="worklist-links">
+            <a href="{{ path('obligation_index') }}">Ver todo lo que toca →</a>
+            <a href="{{ path('obligation_structure') }}">Ver la estructura del SGA →</a>
+        </p>
+    {% endif %}
+
+    {# --- Estado de la plataforma + actividad reciente (solo admin) --- #}
+    {% if admin %}
+        <section class="panel dash-admin">
+            <p class="eyebrow">La plataforma</p>
+            <p class="muted">{{ admin.userCount }} usuario{{ admin.userCount == 1 ? '' : 's' }} con acceso · {{ admin.roleCount }} rol{{ admin.roleCount == 1 ? '' : 'es' }} definido{{ admin.roleCount == 1 ? '' : 's' }}.</p>
+
+            <div class="quick-links dash-admin-links">
                 <a class="quick-link" href="{{ path('admin_user_index') }}">
                     <span class="quick-link-title">Usuarios</span>
                     <span class="quick-link-desc">Quién tiene acceso al sistema.</span>
@@ -49,58 +105,25 @@
                     <span class="quick-link-title">Registro de actividad</span>
                     <span class="quick-link-desc">Todo lo que ocurre en la plataforma.</span>
                 </a>
+            </div>
+
+            <p class="eyebrow dash-subhead">Actividad reciente</p>
+            {% if admin.recent is empty %}
+                <p class="muted">Todavía no hay eventos registrados.</p>
+            {% else %}
+                <ul class="activity">
+                    {% for entry in admin.recent %}
+                        <li>
+                            <span class="activity-when mono">{{ entry.occurredAt|date('d/m H:i') }}</span>
+                            <span class="activity-what">{{ entry.summary ?? entry.action }}</span>
+                            <span class="activity-who muted">{{ entry.actor ?? 'sistema' }}</span>
+                        </li>
+                    {% endfor %}
+                </ul>
+                <a class="activity-more" href="{{ path('audit_index') }}">Ver todo el registro →</a>
             {% endif %}
-        </div>
+        </section>
     {% endif %}
-
-    <div class="dash-grid">
-        {# --- Situación de consumos (datos reales del año en curso) --- #}
-        {% if canConsumption %}
-            <section class="panel">
-                <p class="eyebrow">Consumos {{ consumption.year }}</p>
-                <p class="dash-figure">{{ consumption.total }} <span>lectura{{ consumption.total == 1 ? '' : 's' }} este año</span></p>
-                <p class="muted">{{ consumption.monthsCovered }} mes{{ consumption.monthsCovered == 1 ? '' : 'es' }} con datos registrados.</p>
-
-                {% if consumption.currentMonthCount == 0 %}
-                    <p class="dash-note">
-                        <span class="badge badge--warning">Pendiente</span>
-                        Este mes aún no has registrado ninguna lectura.
-                    </p>
-                    <a class="btn" href="{{ path('consumption_index') }}">Registrar lectura</a>
-                {% else %}
-                    <p class="dash-note">
-                        <span class="badge badge--success">Al día</span>
-                        Este mes ya tienes {{ consumption.currentMonthCount }} lectura{{ consumption.currentMonthCount == 1 ? '' : 's' }}.
-                    </p>
-                    <a class="btn secondary" href="{{ path('consumption_index') }}">Ver consumos</a>
-                {% endif %}
-            </section>
-        {% endif %}
-
-        {# --- Estado de la plataforma + actividad reciente (solo admin) --- #}
-        {% if isAdmin %}
-            <section class="panel">
-                <p class="eyebrow">La plataforma</p>
-                <p class="muted">{{ admin.userCount }} usuario{{ admin.userCount == 1 ? '' : 's' }} con acceso · {{ admin.roleCount }} rol{{ admin.roleCount == 1 ? '' : 'es' }} definido{{ admin.roleCount == 1 ? '' : 's' }}.</p>
-
-                <p class="eyebrow dash-subhead">Actividad reciente</p>
-                {% if admin.recent is empty %}
-                    <p class="muted">Todavía no hay eventos registrados.</p>
-                {% else %}
-                    <ul class="activity">
-                        {% for entry in admin.recent %}
-                            <li>
-                                <span class="activity-when mono">{{ entry.occurredAt|date('d/m H:i') }}</span>
-                                <span class="activity-what">{{ entry.summary ?? entry.action }}</span>
-                                <span class="activity-who muted">{{ entry.actor ?? 'sistema' }}</span>
-                            </li>
-                        {% endfor %}
-                    </ul>
-                    <a class="activity-more" href="{{ path('audit_index') }}">Ver todo el registro →</a>
-                {% endif %}
-            </section>
-        {% endif %}
-    </div>
 
     {# --- Usuario sin gestiones asignadas todavía --- #}
     {% if hasNothing %}

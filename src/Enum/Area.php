@@ -43,4 +43,28 @@ enum Area: string
             self::INDICATOR => 'Indicadores',
         };
     }
+
+    /**
+     * Name of the module's index route, so an obligation linked to this area can deep-link to where
+     * it is actually filled in. Single source of truth shared by the obligations cockpit and the
+     * dashboard worklist.
+     *
+     * @return string the Symfony route name of the area's index page
+     */
+    public function indexRoute(): string
+    {
+        return match ($this) {
+            self::CONSUMPTION => 'consumption_index',
+            self::NONCONFORMITY => 'non_conformity_index',
+            self::WASTE => 'waste_index',
+            self::SUPPLIER => 'supplier_index',
+            self::TRAINING => 'training_index',
+            self::LEGAL_REQUIREMENT => 'legal_requirement_index',
+            self::EMERGENCY => 'emergency_drill_index',
+            self::ASPECT => 'aspect_index',
+            self::RISK_OPPORTUNITY => 'risk_index',
+            self::OBJECTIVE => 'objective_index',
+            self::INDICATOR => 'indicator_index',
+        };
+    }
 }
