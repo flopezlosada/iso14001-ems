@@ -30,7 +30,14 @@ python3 tools/etl/normalize_waste.py \
 python3 tools/etl/normalize_nc.py \
   "$DOC/03.MEJORA (Actuar).../F.11.0 LISTADO DE CONTROL DE NC.xlsx" \
   fixtures/real/non_conformities.csv
+
+python3 tools/etl/normalize_aspects.py \
+  "$DOC/00.PLAN/.../RG-06.01.01 Evaluación Aspectos Ambientales ...xlsx" \
+  fixtures/real/aspects.csv   # [año] opcional; por defecto el de la cabecera "Fecha: ... 20XX"
 ```
+
+(Los normalizadores de requisitos legales, objetivos, proveedores e indicadores siguen el mismo
+patrón; ver `tools/etl/normalize_*.py`.)
 
 `fixtures/real/` está en `.gitignore`: los CSV contienen datos reales (PII / NIF del centro) y no
 se commitean. `analyze_waste.py` es un perfilador de apoyo (solo lectura), no forma parte del flujo.
@@ -49,7 +56,9 @@ php bin/console app:import-real-data all
 Propiedades:
 
 - **Idempotente**: se puede re-ejecutar. Clave natural por dataset — consumos `(tipo, año, mes)`,
-  residuos hash del contenido de la fila, NC la referencia `NC.<origen>.<año>.<NN>`.
+  residuos hash del contenido de la fila, NC la referencia `NC.<origen>.<año>.<NN>`, aspectos el
+  nombre del aspecto y su evaluación por `(aspecto, año)`. La significancia del aspecto NO se lee de
+  la hoja: la recalcula `AspectSignificanceCalculator` (la regla de la app, fuente única de verdad).
 - **Validado**: cada entidad pasa por el Validator antes de persistir.
 - **Cuarentena**: las filas que no validan se escriben en `fixtures/real/<dataset>.rejected.csv`
   con el motivo, y el comando termina con código de error. Nada se descarta en silencio.
