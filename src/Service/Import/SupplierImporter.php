@@ -42,6 +42,9 @@ final class SupplierImporter extends AbstractDatasetImporter implements DatasetI
     {
         $report = new ImportReport();
         $line = 1; // header is line 1
+        // In-call identity map: several rows share a supplier and it is not flushed until the end,
+        // so findOneBy would not see the one created by an earlier row.
+        $seen = [];
 
         foreach ($rows as $row) {
             ++$line;
@@ -65,13 +68,14 @@ final class SupplierImporter extends AbstractDatasetImporter implements DatasetI
                 continue;
             }
 
-            $supplier = $this->suppliers->findOneBy(['name' => $name]);
+            $supplier = $seen[$name] ?? $this->suppliers->findOneBy(['name' => $name]);
             if (null === $supplier) {
                 $supplier = (new Supplier())->setName($name)->setProductOrService($service);
                 $this->entityManager->persist($supplier);
             } else {
                 $supplier->setProductOrService($service);
             }
+            $seen[$name] = $supplier;
 
             if ($this->upsertEvaluation($supplier, $year, $criterion)) {
                 $report->created();

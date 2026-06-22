@@ -43,6 +43,9 @@ final class IndicatorImporter extends AbstractDatasetImporter implements Dataset
     {
         $report = new ImportReport();
         $line = 1; // header is line 1
+        // In-call identity map: the metadata row and the measurement rows share an indicator that
+        // is not flushed until the end, so findOneBy would not see it across rows.
+        $seen = [];
 
         foreach ($rows as $row) {
             ++$line;
@@ -63,7 +66,7 @@ final class IndicatorImporter extends AbstractDatasetImporter implements Dataset
                 continue;
             }
 
-            $indicator = $this->indicators->findOneBy(['name' => $name]);
+            $indicator = $seen[$name] ?? $this->indicators->findOneBy(['name' => $name]);
             $isNewIndicator = null === $indicator;
             $indicator ??= new Indicator();
             $indicator->setName($name)
@@ -74,6 +77,7 @@ final class IndicatorImporter extends AbstractDatasetImporter implements Dataset
             if ($isNewIndicator) {
                 $this->entityManager->persist($indicator);
             }
+            $seen[$name] = $indicator;
 
             $year = trim($row['year'] ?? '');
             if ('' === $year) {
