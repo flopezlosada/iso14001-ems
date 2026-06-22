@@ -40,14 +40,14 @@ final class ConsumptionImporterTest extends KernelTestCase
      */
     private function row(array $overrides = []): array
     {
-        return [
+        return array_merge([
             'type' => 'electricity',
             'period_year' => '2024',
             'period_month' => '3',
             'quantity' => '4380',
             'cost' => '1543.66',
             'notes' => '',
-        ] + $overrides;
+        ], $overrides);
     }
 
     public function testCreatesReadingFromRow(): void

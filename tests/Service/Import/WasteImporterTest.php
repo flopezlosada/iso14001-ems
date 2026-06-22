@@ -36,7 +36,7 @@ final class WasteImporterTest extends KernelTestCase
      */
     private function row(array $overrides = []): array
     {
-        return [
+        return array_merge([
             'ler_code' => '160214',
             'description' => 'Aparatos pequeños',
             'quantity_kg' => '25',
@@ -44,7 +44,7 @@ final class WasteImporterTest extends KernelTestCase
             'manager' => 'GESTOR DEMO SL',
             'hazardous' => '0',
             'notes' => '',
-        ] + $overrides;
+        ], $overrides);
     }
 
     public function testImportsCleanRow(): void

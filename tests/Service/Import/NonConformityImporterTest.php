@@ -54,7 +54,7 @@ final class NonConformityImporterTest extends KernelTestCase
      */
     private function row(array $overrides = []): array
     {
-        return [
+        return array_merge([
             'origin' => 'external_audit',
             'origin_detail' => 'Auditoría externa Fase I',
             'year' => '2024',
@@ -67,7 +67,7 @@ final class NonConformityImporterTest extends KernelTestCase
             'closed_at' => '2024-03-01',
             'action_description' => 'Acción correctiva de ejemplo [Plazo: 6 meses]',
             'action_efficacy' => 'ok',
-        ] + $overrides;
+        ], $overrides);
     }
 
     public function testCreatesNonConformityWithReconstructedReferenceAndAction(): void

@@ -113,34 +113,40 @@ final class NonConformityImporter extends AbstractDatasetImporter implements Dat
     }
 
     /**
-     * Replaces the non-conformity's corrective actions with the single one described by the row
-     * (orphan removal deletes the previous ones), keeping the import idempotent. Does nothing when
-     * the row carries no corrective action.
+     * Brings the non-conformity's single corrective action in line with the row, keeping the import
+     * idempotent. The existing action is updated in place rather than deleted and recreated: a
+     * delete + re-insert with the same (non-conformity, sequence) would violate the unique key
+     * within one flush (Doctrine inserts before deleting). Extra actions, if any, are removed; when
+     * the row carries no action, all are removed.
      *
      * @param array<string, string> $row
      */
     private function syncCorrectiveAction(NonConformity $nc, array $row): void
     {
-        // Snapshot to a plain array: removing while iterating the live collection would skip elements.
-        foreach ($nc->getCorrectiveActions()->toArray() as $existing) {
-            $nc->removeCorrectiveAction($existing);
-        }
-
+        $actions = $nc->getCorrectiveActions()->toArray();
         $description = trim($row['action_description'] ?? '');
+
         if ('' === $description) {
+            foreach ($actions as $existing) {
+                $nc->removeCorrectiveAction($existing);
+            }
+
             return;
         }
 
-        $action = (new CorrectiveAction())
-            ->setSequence(1)
-            ->setDescription($description);
-
-        $efficacy = Efficacy::tryFrom($row['action_efficacy'] ?? '');
-        if (null !== $efficacy) {
-            $action->setEfficacy($efficacy);
+        // Reuse the first existing action; drop any extras (the register has a single action).
+        $action = array_shift($actions);
+        foreach ($actions as $extra) {
+            $nc->removeCorrectiveAction($extra);
         }
 
-        $nc->addCorrectiveAction($action);
+        if (!$action instanceof CorrectiveAction) {
+            $action = (new CorrectiveAction())->setSequence(1);
+            $nc->addCorrectiveAction($action);
+        }
+
+        $action->setDescription($description)
+            ->setEfficacy(Efficacy::tryFrom($row['action_efficacy'] ?? ''));
     }
 
     /**
