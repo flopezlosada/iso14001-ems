@@ -90,6 +90,7 @@ final class DocumentControllerTest extends WebTestCase
         $em = static::getContainer()->get(EntityManagerInterface::class);
         $mine = (new Role())->setCode('mant')->setName('Mantenimiento');
         $other = (new Role())->setCode('sec')->setName('Secretaría');
+        $em->persist($mine);
         $em->persist($other);
         // One obligation is mine, one belongs to another role.
         $this->persistObligation($em, 'TEST-MINE', IsoChapter::PLANNING, AlertFrequency::MONTHLY, '2000-01-01', $mine);
