@@ -1,0 +1,52 @@
+{% extends 'app_shell.html.twig' %}
+
+{% block title %}Documentos{% endblock %}
+
+{% block breadcrumb %}<a href="{{ path('app_homepage') }}">Inicio</a><span class="sep">/</span>Documentos{% endblock %}
+
+{% block body %}
+    <div class="page-head">
+        <div>
+            <h1>Documentos</h1>
+            <p class="lead">El registro de toda la documentación del sistema de gestión (la Lista de Documentación Vigente, F.01): qué hay, su versión en vigor y quién es responsable.</p>
+        </div>
+        <a class="btn secondary" href="{{ path('obligation_structure') }}">Ver estructura del SGA</a>
+    </div>
+
+    <div class="card">
+        {% if documents is empty %}
+            <div class="empty-state">
+                <h2>Aún no hay documentos</h2>
+                <p>Cuando se cargue el catálogo documental, aquí verás el registro completo.</p>
+            </div>
+        {% else %}
+            <table data-list-tools>
+                <thead>
+                    <tr>
+                        <th>Código</th><th>Documento</th><th data-filter>Tipo</th><th data-filter>Área</th><th>Responsable</th><th data-nosort>En vigor</th><th data-filter>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for document in documents %}
+                        {% set current = document.currentVersion %}
+                        <tr>
+                            <td class="mono">{{ document.code ?? '—' }}</td>
+                            <td><a class="cell-link" href="{{ path('document_show', { id: document.id }) }}">{{ document.title }}</a></td>
+                            <td>{{ document.type.label }}</td>
+                            <td>{{ document.linkedArea ? document.linkedArea.label : '—' }}</td>
+                            <td>{{ document.responsibleRole ? document.responsibleRole.name : '—' }}</td>
+                            <td class="mono">
+                                {%- if current -%}
+                                    Rev. {{ current.revisionNumber }} <span class="muted">· {{ current.issueDate|date('d/m/Y') }}</span>
+                                {%- else -%}
+                                    <span class="muted">—</span>
+                                {%- endif -%}
+                            </td>
+                            <td>{{ document.status.label }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    </div>
+{% endblock %}
