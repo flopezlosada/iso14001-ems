@@ -49,4 +49,20 @@ enum DocumentType: string
             self::EXTERNAL_EVIDENCE => 'Evidencia externa',
         };
     }
+
+    /**
+     * Code of the role that approves documents of this type (PC.01.0): Dirección approves the
+     * policy/manual/procedures, the RSGMA (Responsable del SGA) approves the forms. Records and
+     * external evidence are not approved through the revision workflow, so they return null.
+     *
+     * @return string|null the approving role's code, or null if this type is not approved here
+     */
+    public function approverRoleCode(): ?string
+    {
+        return match ($this) {
+            self::POLICY, self::MANUAL, self::PROCEDURE => 'direction',
+            self::FORM => 'ems_manager',
+            self::RECORD, self::EXTERNAL_EVIDENCE => null,
+        };
+    }
 }

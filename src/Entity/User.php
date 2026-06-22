@@ -144,6 +144,19 @@ class User implements UserInterface
     }
 
     /**
+     * Whether the user holds a role with the given code (e.g. 'direction'). Used for type-based
+     * document approval, where the approving role is identified by its code.
+     *
+     * @param string $code the role code to look for
+     *
+     * @return bool true if the user has a role with that code
+     */
+    public function holdsRoleCode(string $code): bool
+    {
+        return $this->assignedRoles->exists(static fn (int $key, Role $held): bool => $held->getCode() === $code);
+    }
+
+    /**
      * Unique identifier used by the security system (the e-mail address).
      */
     public function getUserIdentifier(): string

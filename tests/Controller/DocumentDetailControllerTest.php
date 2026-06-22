@@ -234,4 +234,104 @@ final class DocumentDetailControllerTest extends WebTestCase
 
         self::assertResponseStatusCodeSame(403);
     }
+
+    /** Persists a procedure owned by the given responsible role. */
+    private function persistProcedure(EntityManagerInterface $em, string $code, Role $responsible): Document
+    {
+        $em->persist($responsible);
+        $document = (new Document())->setCode($code)->setTitle('Procedimiento '.$code)->setType(DocumentType::PROCEDURE)->setStatus(ObligationStatus::DONE)->setResponsibleRole($responsible);
+        $em->persist($document);
+
+        return $document;
+    }
+
+    public function testResponsibleCanIssueRevision(): void
+    {
+        $client = static::createClient();
+        $em = $this->em();
+        $role = (new Role())->setCode('ems_manager')->setName('Responsable del SGA');
+        $document = $this->persistProcedure($em, 'PG-06.01', $role);
+        $user = (new User())->setFullName('Carlos SGA')->setEmail('sga-issue@example.test')->setActive(true)->addAssignedRole($role);
+        $em->persist($user);
+        $em->flush();
+        $client->loginUser($user);
+
+        $client->request('GET', '/documentos/'.$document->getId());
+        $client->submitForm('Nueva revisión', ['changeSummary' => 'Actualización anual']);
+
+        self::assertResponseRedirects('/documentos/'.$document->getId());
+        $client->followRedirect();
+        self::assertSelectorTextContains('tbody', 'Borrador');
+    }
+
+    public function testNonResponsibleCannotIssueRevision(): void
+    {
+        $client = static::createClient();
+        $em = $this->em();
+        $document = $this->persistProcedure($em, 'PG-06.02', (new Role())->setCode('ems_manager')->setName('RSGMA'));
+        $other = (new Role())->setCode('secretary')->setName('Secretaría');
+        $em->persist($other);
+        $user = (new User())->setFullName('Ana')->setEmail('sec-issue@example.test')->setActive(true)->addAssignedRole($other);
+        $em->persist($user);
+        $em->flush();
+        $client->loginUser($user);
+
+        // The voter runs before the CSRF check, so the 403 here is the authorization gate.
+        $client->request('POST', '/documentos/'.$document->getId().'/revision', ['changeSummary' => 'x']);
+
+        self::assertResponseStatusCodeSame(403);
+    }
+
+    public function testApproverApprovesRevisionAndSupersedes(): void
+    {
+        $client = static::createClient();
+        $em = $this->em();
+        // A procedure is approved by Dirección (PC.01.0).
+        $document = $this->persistProcedure($em, 'PG-06.03', (new Role())->setCode('ems_manager')->setName('RSGMA'));
+        $direction = (new Role())->setCode('direction')->setName('Dirección');
+        $em->persist($direction);
+        $approver = (new User())->setFullName('Marta Directora')->setEmail('direccion-approve@example.test')->setActive(true)->addAssignedRole($direction);
+        $em->persist($approver);
+
+        // Revision 0 already approved and in force; revision 1 is the draft we approve now.
+        $rev0 = (new DocumentVersion())->setRevisionNumber(0)->setStatus(VersionStatus::APPROVED)->setChangeSummary('Inicial.');
+        $rev0->addApprovalEvent((new ApprovalEvent())->setApprover($approver)->setIntegrityHash('seed0'));
+        $rev1 = (new DocumentVersion())->setRevisionNumber(1)->setStatus(VersionStatus::DRAFT)->setChangeSummary('Actualización.');
+        $document->addVersion($rev0);
+        $document->addVersion($rev1);
+        $em->persist($rev0);
+        $em->persist($rev1);
+        $em->flush();
+        $client->loginUser($approver);
+
+        $client->request('GET', '/documentos/'.$document->getId());
+        $client->submitForm('Aprobar');
+
+        $client->followRedirect();
+        // Revision 1 is now in force; revision 0 was superseded to obsolete.
+        self::assertSelectorTextContains('.is-in-force', 'En vigor');
+        self::assertSelectorTextContains('body', 'Obsoleta');
+    }
+
+    public function testWrongRoleCannotApproveRevision(): void
+    {
+        $client = static::createClient();
+        $em = $this->em();
+        $document = $this->persistProcedure($em, 'PG-06.04', (new Role())->setCode('ems_manager')->setName('RSGMA'));
+        $version = (new DocumentVersion())->setRevisionNumber(0)->setStatus(VersionStatus::DRAFT)->setChangeSummary('Edición inicial.');
+        $document->addVersion($version);
+        $em->persist($version);
+        // Quality is NOT the approver of a procedure (Dirección is).
+        $quality = (new Role())->setCode('quality')->setName('Calidad');
+        $em->persist($quality);
+        $user = (new User())->setFullName('Lucía')->setEmail('calidad-approve@example.test')->setActive(true)->addAssignedRole($quality);
+        $em->persist($user);
+        $em->flush();
+        $client->loginUser($user);
+
+        // The voter runs before the CSRF check, so the 403 here is the authorization gate.
+        $client->request('POST', '/documentos/'.$document->getId().'/revision/'.$version->getId().'/aprobar');
+
+        self::assertResponseStatusCodeSame(403);
+    }
 }

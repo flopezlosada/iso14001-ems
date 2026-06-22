@@ -389,6 +389,7 @@ tbody tr.is-in-force { background: var(--success-weak); }
     background: var(--surface-sunken);
 }
 .lifecycle-form { display: flex; align-items: center; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+.inline-form { display: inline; }
 .lifecycle-form input[type="text"] {
     flex: 1 1 280px;
     padding: 9px 12px;

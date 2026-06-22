@@ -79,6 +79,15 @@
 
     <div class="page-head"><h2>Historial de versiones</h2></div>
 
+    {% if document.isActive and is_granted('DOCUMENT_ISSUE', document) %}
+        <form method="post" action="{{ path('document_revision_new', { id: document.id }) }}" class="lifecycle-form">
+            <input type="hidden" name="_token" value="{{ csrf_token('document_revision' ~ document.id) }}">
+            <input type="text" name="changeSummary" aria-label="Resumen de los cambios" placeholder="Resumen de los cambios de la nueva revisión…">
+            <button class="btn" type="submit">Nueva revisión</button>
+        </form>
+    {% endif %}
+
+    {% set can_approve = is_granted('DOCUMENT_APPROVE', document) %}
     <div class="card">
         {% if versions is empty %}
             <div class="empty-state">
@@ -105,6 +114,11 @@
                                     {{ ap.approver.fullName }} <span class="muted">· {{ ap.approvedAt|date('d/m/Y') }}</span>
                                     {% if ap.digitallySigned %} <span class="badge badge--success" title="Firma digital adjunta">Firmada</span>{% endif %}
                                     <span class="mono muted" title="Hash de integridad: {{ ap.integrityHash|e('html_attr') }}">· {{ ap.integrityHash|slice(0, 10) }}…</span>
+                                {%- elseif can_approve and document.isActive and v.status.value in ['draft', 'in_review'] -%}
+                                    <form method="post" action="{{ path('document_revision_approve', { id: document.id, versionId: v.id }) }}" class="inline-form">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('document_approve' ~ document.id) }}">
+                                        <button class="btn secondary" type="submit">Aprobar</button>
+                                    </form>
                                 {%- else -%}
                                     <span class="muted">Pendiente</span>
                                 {%- endif -%}
