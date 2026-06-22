@@ -11,6 +11,8 @@ use App\Enum\ObligationStatus;
 use App\Enum\ObligationUrgency;
 use App\Enum\PdcaPhase;
 use App\Repository\DocumentRepository;
+use App\Repository\EnvironmentalAspectRepository;
+use App\Service\AspectIntensityEstimator;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -51,8 +53,11 @@ final class DocumentController extends AbstractController
      * plus the ones marked not-applicable set aside. This is the day-to-day landing view.
      */
     #[Route('/obligaciones', name: 'obligation_index', methods: ['GET'])]
-    public function index(DocumentRepository $documents): Response
-    {
+    public function index(
+        DocumentRepository $documents,
+        EnvironmentalAspectRepository $aspects,
+        AspectIntensityEstimator $intensityEstimator,
+    ): Response {
         $today = new \DateTimeImmutable('today');
 
         // Pre-seed the buckets so the template always renders them in a fixed, meaningful order.
@@ -78,6 +83,9 @@ final class DocumentController extends AbstractController
             'groups' => $groups,
             'notApplicable' => $notApplicable,
             'moduleRoutes' => self::MODULE_ROUTES,
+            // Consumption aspects already trending worse than the threshold: surfaced proactively so
+            // a likely-significant aspect is seen now, not only at the yearly evaluation.
+            'aspectsToWatch' => $intensityEstimator->watchList($aspects->findLinkedToConsumption(), $today),
         ]);
     }
 

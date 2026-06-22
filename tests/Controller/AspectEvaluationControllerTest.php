@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace App\Tests\Controller;
 
+use App\Entity\ConsumptionReading;
 use App\Entity\EnvironmentalAspect;
 use App\Entity\Role;
 use App\Entity\User;
 use App\Enum\Area;
 use App\Enum\AspectType;
+use App\Enum\ConsumptionType;
 use App\Enum\DirectAspectCategory;
 use App\Enum\PermissionLevel;
 use App\Repository\EnvironmentalAspectRepository;
@@ -156,5 +158,40 @@ final class AspectEvaluationControllerTest extends WebTestCase
         self::assertNotNull($latest);
         self::assertSame(3, $latest->getSignificanceScore());
         self::assertTrue($latest->isSignificant());
+    }
+
+    public function testNewEvaluationPreFillsSuggestedIntensityForLinkedAspect(): void
+    {
+        $client = static::createClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+
+        $role = (new Role())->setCode('aspectos')->setName('Gestión de aspectos')->setLevel(Area::ASPECT, PermissionLevel::WRITE);
+        $em->persist($role);
+        $user = (new User())->setFullName('Tester')->setEmail('aeval-linked@example.test')->setActive(true)->addAssignedRole($role);
+        $em->persist($user);
+
+        $aspect = (new EnvironmentalAspect())
+            ->setName('Electricidad')
+            ->setCategory(DirectAspectCategory::CONSUMPTION)
+            ->setLinkedConsumptionType(ConsumptionType::ELECTRICITY);
+        $em->persist($aspect);
+
+        // +30% this year vs last year over the same month → the suggestion must be surfaced.
+        $year = (int) date('Y');
+        foreach ([[$year - 1, '1000'], [$year, '1300']] as [$periodYear, $quantity]) {
+            $reading = (new ConsumptionReading())
+                ->setType(ConsumptionType::ELECTRICITY)
+                ->setPeriodYear($periodYear)
+                ->setPeriodMonth(1)
+                ->setQuantity($quantity);
+            $em->persist($reading);
+        }
+        $em->flush();
+        $client->loginUser($user);
+
+        $client->request('GET', '/aspects/'.$aspect->getId().'/evaluations/new');
+
+        self::assertResponseIsSuccessful();
+        self::assertStringContainsString('Intensidad sugerida', (string) $client->getResponse()->getContent());
     }
 }
