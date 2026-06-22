@@ -37,4 +37,23 @@ class DocumentRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    /**
+     * Every document in the register (the live F.01), including the ones with no ISO chapter
+     * (manual, procedures) that the obligations cockpit does not show. Versions and responsible role
+     * are eager-loaded so the list can show the in-force revision without an N+1 query. Ordered by
+     * code here; the caller re-orders by the PC.01.0 type taxonomy (not the alphabetical enum value).
+     *
+     * @return Document[] all documents, ordered by code
+     */
+    public function findForRegister(): array
+    {
+        return $this->createQueryBuilder('d')
+            ->addSelect('v', 'r')
+            ->leftJoin('d.versions', 'v')
+            ->leftJoin('d.responsibleRole', 'r')
+            ->orderBy('d.code', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
 }

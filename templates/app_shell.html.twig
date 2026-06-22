@@ -24,6 +24,7 @@
                 <a href="{{ path('app_homepage') }}" class="{{ route == 'app_homepage' ? 'is-active' }}">Inicio</a>
                 <a href="{{ path('obligation_index') }}" class="{{ route starts with 'obligation_index' ? 'is-active' }}">Qué toca</a>
                 <a href="{{ path('obligation_structure') }}" class="{{ route starts with 'obligation_structure' ? 'is-active' }}">Estructura del SGA</a>
+                <a href="{{ path('document_index') }}" class="{{ route starts with 'document_' ? 'is-active' }}">Documentos</a>
 
                 {# Módulos: normalmente se llega a ellos desde cada obligación; aquí como acceso directo,
                    en dos grupos: lo que se registra de forma operativa y el ciclo de evaluación/mejora. #}

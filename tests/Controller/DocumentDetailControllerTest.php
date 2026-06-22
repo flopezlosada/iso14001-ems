@@ -110,4 +110,32 @@ final class DocumentDetailControllerTest extends WebTestCase
 
         self::assertResponseStatusCodeSame(404);
     }
+
+    public function testRegisterListsAllDocumentsIncludingChapterless(): void
+    {
+        $client = static::createClient();
+        $em = $this->em();
+        // A manual has no ISO chapter, so it never appears in the obligations cockpit; the register must.
+        $manual = (new Document())->setCode('MA-04.01.01')->setTitle('Manual de Gestión Ambiental')->setType(DocumentType::MANUAL)->setStatus(ObligationStatus::DONE);
+        $form = (new Document())->setCode('F.04.0')->setTitle('Formato de ejemplo')->setType(DocumentType::FORM)->setStatus(ObligationStatus::PENDING);
+        // A document with several versions must appear ONCE despite the versions JOIN.
+        $multi = (new Document())->setCode('PC.02.0')->setTitle('Procedimiento con historial')->setType(DocumentType::PROCEDURE)->setStatus(ObligationStatus::DONE);
+        $multi->addVersion((new DocumentVersion())->setRevisionNumber(0)->setStatus(VersionStatus::OBSOLETE));
+        $multi->addVersion((new DocumentVersion())->setRevisionNumber(1)->setStatus(VersionStatus::APPROVED));
+        $em->persist($manual);
+        $em->persist($form);
+        $em->persist($multi);
+        $reader = (new User())->setFullName('Lectora')->setEmail('lectora4@example.test')->setActive(true);
+        $em->persist($reader);
+        $em->flush();
+        $client->loginUser($reader);
+
+        $crawler = $client->request('GET', '/documentos');
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('body', 'Manual de Gestión Ambiental');
+        self::assertSelectorTextContains('body', 'Formato de ejemplo');
+        // Three documents, three rows: the multi-version one is not duplicated by the JOIN.
+        self::assertCount(3, $crawler->filter('tbody tr'));
+    }
 }
