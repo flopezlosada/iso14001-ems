@@ -31,6 +31,17 @@
 {% endmacro %}
 
 {#
+   Agrupa un bloque de campos bajo un título, para partir los formularios largos en secciones
+   y que no sean un muro de campos. Usa <fieldset>/<legend> (semántica de agrupación accesible).
+#}
+{% macro section(title, list) %}
+    <fieldset class="form-section">
+        <legend class="form-section-title">{{ title }}</legend>
+        {{ _self.fields(list) }}
+    </fieldset>
+{% endmacro %}
+
+{#
    Barra de acciones del formulario: el botón primario de envío y un enlace de cancelar.
    cancelUrl: destino del enlace "Cancelar". submitLabel: texto del botón (por defecto "Guardar").
 #}

@@ -17,7 +17,9 @@
     <div class="card form-card">
         {{ form_start(form, { 'attr': { 'novalidate': 'novalidate' } }) }}
             {{ form_errors(form) }}
-            {{ f.fields([form.description, form.type, form.targetAudience, form.objectives, form.plannedDate, form.methodology, form.actualDate, form.efficacyEvaluation]) }}
+            {{ f.section('El curso', [form.description, form.type, form.targetAudience, form.objectives]) }}
+            {{ f.section('Planificación', [form.plannedDate, form.methodology]) }}
+            {{ f.section('Ejecución y eficacia', [form.actualDate, form.efficacyEvaluation]) }}
             {{ f.actions(path('training_year', { year: year })) }}
         {{ form_end(form) }}
     </div>

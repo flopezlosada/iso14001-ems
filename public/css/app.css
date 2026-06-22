@@ -430,6 +430,20 @@ thead th.is-sortable:focus-visible { outline: 2px solid var(--focus); outline-of
 /* Barra de acciones (Guardar / Cancelar): separación consistente y aire respecto al
    último campo, en vez de botones pegados sin contenedor. */
 .form-actions { display: flex; align-items: center; gap: 10px; margin-top: 22px; }
+/* Sección de formulario: agrupa campos bajo un título en los formularios largos. Reset del
+   fieldset nativo + una línea divisoria sutil sobre cada grupo salvo el primero. */
+.form-section { border: 0; margin: 0; padding: 0; min-width: 0; }
+.form-section + .form-section { margin-top: 26px; padding-top: 22px; border-top: 1px solid var(--border); }
+.form-section-title {
+    padding: 0;
+    margin-bottom: 14px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
 .form-row { margin-bottom: 16px; }
 .form-row > label, label.required { display: block; font-weight: 500; margin-bottom: 6px; color: var(--text); }
 .form-row input[type="text"],

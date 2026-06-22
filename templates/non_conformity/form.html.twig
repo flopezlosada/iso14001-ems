@@ -17,7 +17,9 @@
     <div class="card form-card">
         {{ form_start(form, { 'attr': { 'novalidate': 'novalidate' } }) }}
             {{ form_errors(form) }}
-            {{ f.fields([form.openedAt, form.origin, form.originDetail, form.affectedProcess, form.isoClause, form.description, form.rootCause, form.responsible, form.status]) }}
+            {{ f.section('Identificación', [form.openedAt, form.origin, form.originDetail, form.affectedProcess, form.isoClause]) }}
+            {{ f.section('Descripción y causa', [form.description, form.rootCause]) }}
+            {{ f.section('Gestión', [form.responsible, form.status]) }}
             {{ f.actions(path('non_conformity_index')) }}
         {{ form_end(form) }}
     </div>
