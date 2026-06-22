@@ -137,5 +137,22 @@ final class DocumentControllerTest extends WebTestCase
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('body', 'Planificar');
         self::assertSelectorTextContains('body', 'Planificación');
+        // The future-dated obligation is on track: the phase summary reflects it.
+        self::assertSelectorTextContains('.sga-summary', 'al día');
+    }
+
+    public function testStructureSummaryFlagsOverdue(): void
+    {
+        $client = static::createClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        // An overdue obligation must surface as "vencida" in its phase's completeness summary.
+        $this->persistObligation($em, 'TEST-OVERDUE', IsoChapter::PLANNING, AlertFrequency::MONTHLY, '2000-01-01');
+        $em->flush();
+        $this->loginPlainUser($client);
+
+        $client->request('GET', '/sga');
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('.sga-summary', 'vencida');
     }
 }

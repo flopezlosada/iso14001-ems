@@ -21,6 +21,24 @@
                 {{ phase.phase.label }}
             </h2>
 
+            {% set s = phase.summary %}
+            {% set dated = s.overdue + s.dueSoon + s.onTrack %}
+            <div class="sga-summary">
+                {% if s.applicable == 0 %}
+                    <span class="sga-stat muted">Todas las obligaciones de esta fase están marcadas como no aplicables</span>
+                {% else %}
+                    {% if dated > 0 %}
+                        <span class="sga-bar" role="img" aria-label="{{ s.onTrack }} de {{ dated }} al día">
+                            <span class="sga-bar-fill" style="width: {{ (s.onTrack / dated * 100)|round }}%"></span>
+                        </span>
+                    {% endif %}
+                    {% if s.overdue > 0 %}<span class="sga-stat sga-stat--danger">{{ s.overdue }} vencida{{ s.overdue == 1 ? '' : 's' }}</span>{% endif %}
+                    {% if s.dueSoon > 0 %}<span class="sga-stat sga-stat--warning">{{ s.dueSoon }} próxima{{ s.dueSoon == 1 ? '' : 's' }}</span>{% endif %}
+                    {% if dated > 0 %}<span class="sga-stat muted">{{ s.onTrack }}/{{ dated }} al día</span>{% endif %}
+                    {% if s.eventDriven > 0 %}<span class="sga-stat muted">{{ s.eventDriven }} según evento</span>{% endif %}
+                {% endif %}
+            </div>
+
             {% for chapter in phase.chapters %}
                 <div class="sga-chapter">
                     <p class="eyebrow">Punto {{ chapter.chapter.value }} · {{ chapter.chapter.label }}</p>

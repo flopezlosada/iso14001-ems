@@ -959,4 +959,11 @@ input[type="email"], input[type="text"], select, textarea {
 .sga-phase { margin-block: 2rem; }
 .sga-phase-head { display: flex; align-items: baseline; gap: .6rem; padding-bottom: .4rem; border-bottom: 1px solid var(--border); }
 .sga-phase-code { color: var(--text-muted); font-size: .9em; }
+/* Resumen de cumplimiento por fase: barra de "al día" + cifras de vencidas/próximas. */
+.sga-summary { display: flex; align-items: center; flex-wrap: wrap; gap: 14px; margin: 10px 0 4px; }
+.sga-bar { flex: 0 0 160px; height: 6px; border-radius: 999px; background: var(--surface-sunken); overflow: hidden; }
+.sga-bar-fill { display: block; height: 100%; background: var(--success); }
+.sga-stat { font-size: 13px; }
+.sga-stat--danger { color: var(--danger-text); font-weight: 500; }
+.sga-stat--warning { color: var(--warning-text); font-weight: 500; }
 .sga-chapter { margin-top: 1.1rem; }

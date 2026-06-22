@@ -119,10 +119,54 @@ final class DocumentController extends AbstractController
     #[Route('/sga', name: 'obligation_structure', methods: ['GET'])]
     public function structure(DocumentRepository $documents): Response
     {
+        $today = new \DateTimeImmutable('today');
+        $phases = $this->groupByPhase($documents->findObligations());
+
+        // A per-phase completeness summary (overdue / due-soon / on-track), so the auditor view shows
+        // at a glance whether each part of the cycle is under control, not just the list of folders.
+        foreach ($phases as $i => $phase) {
+            $items = [];
+            foreach ($phase['chapters'] as $chapter) {
+                foreach ($chapter['items'] as $item) {
+                    $items[] = $item;
+                }
+            }
+            $phases[$i]['summary'] = $this->summarize($items, $today);
+        }
+
         return $this->render('document/structure.html.twig', [
-            'structure' => $this->groupByPhase($documents->findObligations()),
+            'structure' => $phases,
             'moduleRoutes' => self::moduleRoutes(),
         ]);
+    }
+
+    /**
+     * Counts a set of obligations by date-derived urgency, setting aside the not-applicable ones, for
+     * the completeness summary. "applicable" is the count of applicable obligations; the date-driven
+     * ones (overdue/dueSoon/onTrack) feed the "al día" ratio, while eventDriven (no fixed date) is
+     * reported apart so it never inflates that ratio.
+     *
+     * @param Document[] $items the obligations to summarise
+     *
+     * @return array{applicable: int, overdue: int, dueSoon: int, onTrack: int, eventDriven: int}
+     */
+    private function summarize(array $items, \DateTimeImmutable $today): array
+    {
+        $summary = ['applicable' => 0, 'overdue' => 0, 'dueSoon' => 0, 'onTrack' => 0, 'eventDriven' => 0];
+        foreach ($items as $item) {
+            if (ObligationStatus::NOT_APPLICABLE === $item->getStatus()) {
+                continue;
+            }
+            ++$summary['applicable'];
+            match ($item->dueStatus($today)) {
+                ObligationUrgency::OVERDUE => ++$summary['overdue'],
+                ObligationUrgency::DUE_SOON => ++$summary['dueSoon'],
+                ObligationUrgency::ON_TRACK => ++$summary['onTrack'],
+                ObligationUrgency::EVENT_DRIVEN => ++$summary['eventDriven'],
+            };
+        }
+
+        return $summary;
     }
 
     /**
