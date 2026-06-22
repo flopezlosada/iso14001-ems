@@ -91,6 +91,16 @@ class Document
     private ?string $statusNote = null;
 
     /**
+     * Date the obligation was last completed for a review cycle (the responsible confirming "done for
+     * this period"). Null means it has never been closed through the app. This is the durable trace
+     * of the periodic close: the act of completing rolls the {@see ScheduledAlert} due dates to the
+     * next cycle (so the obligation leaves the worklist and reappears when the next period nears),
+     * while this field records when that happened. It is NOT the manual {@see $status}.
+     */
+    #[ORM\Column(type: Types::DATE_IMMUTABLE, nullable: true)]
+    private ?\DateTimeImmutable $lastCompletedOn = null;
+
+    /**
      * Lifecycle of the whole document (live / cancelled / archived). Documents are never deleted;
      * this is how a mistaken or retired document leaves a trace instead (PC.01.0, append-only).
      */
@@ -259,6 +269,42 @@ class Document
         return $earliest;
     }
 
+    /**
+     * Whether this obligation has at least one fixed-cadence alert (annual, biannual, monthly), i.e.
+     * a periodic review that can be "completed for the period". A purely event-driven obligation has
+     * no period to close, so it is not completable this way.
+     *
+     * @return bool true if at least one alert has a fixed cadence
+     */
+    public function hasFixedCadence(): bool
+    {
+        foreach ($this->alerts as $alert) {
+            if (AlertFrequency::ON_EVENT !== $alert->getFrequency()) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Completes the obligation for the current review cycle: records {@see $lastCompletedOn} and rolls
+     * every fixed-cadence alert to its next due date, so the obligation drops out of the worklist now
+     * and resurfaces automatically as the next period approaches. Event-driven alerts are left
+     * untouched (they have no cadence to advance).
+     *
+     * @param \DateTimeImmutable $on the date the obligation is considered completed (today)
+     */
+    public function completeCycle(\DateTimeImmutable $on): void
+    {
+        $this->lastCompletedOn = $on;
+        foreach ($this->alerts as $alert) {
+            if (AlertFrequency::ON_EVENT !== $alert->getFrequency()) {
+                $alert->rollToNextCycle();
+            }
+        }
+    }
+
     public function getId(): ?int
     {
         return $this->id;
@@ -374,6 +420,11 @@ class Document
         $this->statusNote = $statusNote;
 
         return $this;
+    }
+
+    public function getLastCompletedOn(): ?\DateTimeImmutable
+    {
+        return $this->lastCompletedOn;
     }
 
     public function getLifecycle(): DocumentLifecycle

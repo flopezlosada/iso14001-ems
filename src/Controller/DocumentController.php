@@ -13,7 +13,10 @@ use App\Enum\ObligationUrgency;
 use App\Enum\PdcaPhase;
 use App\Repository\DocumentRepository;
 use App\Repository\EnvironmentalAspectRepository;
+use App\Security\Voter\DocumentVoter;
 use App\Service\AspectIntensityEstimator;
+use App\Service\AuditLogger;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -110,6 +113,59 @@ final class DocumentController extends AbstractController
             // proactively so a likely-significant aspect is seen now, not only at the yearly evaluation.
             'aspectsToWatch' => $intensityEstimator->watchList($aspects->findLinkedForIntensity(), $today),
         ]);
+    }
+
+    /**
+     * Closes an obligation's review cycle: the responsible confirms it is done for this period. Rolls
+     * its alerts to the next due date (so it leaves the worklist and resurfaces next period) and
+     * records when it was completed. Does NOT touch the manual {@see ObligationStatus}. Audited.
+     *
+     * @param Request                $request  the POST request (CSRF token)
+     * @param Document               $document the obligation to complete
+     * @param EntityManagerInterface $em       to persist the rolled dates
+     * @param AuditLogger            $auditLogger to record the completion
+     *
+     * @return Response a redirect back to the cockpit
+     */
+    #[Route('/obligaciones/{id}/completar', name: 'obligation_complete', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function complete(
+        Request $request,
+        Document $document,
+        EntityManagerInterface $em,
+        AuditLogger $auditLogger,
+    ): Response {
+        $this->denyAccessUnlessGranted(DocumentVoter::COMPLETE, $document);
+        if (!$this->isCsrfTokenValid('obligation_complete'.(string) $document->getId(), (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Token CSRF inválido.');
+        }
+
+        // Redirect back to the cockpit keeping the scope the action was triggered from ("todas" vs
+        // the "mías" default), so completing one obligation does not bounce the user to another view.
+        $scope = 'todas' === $request->query->get('scope') ? 'todas' : null;
+        $redirect = $this->redirectToRoute('obligation_index', null !== $scope ? ['scope' => $scope] : []);
+
+        // The cockpit never lists cancelled/archived documents, but the POST route accepts any id:
+        // a non-active document has no live review cycle to close, so reject rather than roll its dates.
+        if (!$document->isActive()) {
+            $this->addFlash('error', 'Esta obligación no está activa.');
+
+            return $redirect;
+        }
+        // Purely event-driven obligations have no period to close: nothing to roll, so reject rather
+        // than silently no-op (which would read as "done" while the dates never moved).
+        if (!$document->hasFixedCadence()) {
+            $this->addFlash('error', 'Esta obligación no tiene revisión periódica que cerrar.');
+
+            return $redirect;
+        }
+
+        $document->completeCycle(new \DateTimeImmutable('today'));
+        $em->flush();
+        // Audit AFTER the business flush, per the project convention.
+        $auditLogger->log('obligation.completed', 'Document', (string) $document->getId(), 'Revisión del periodo cerrada');
+        $this->addFlash('success', 'Obligación marcada como revisada. Volverá a avisarte en el siguiente periodo.');
+
+        return $redirect;
     }
 
     /**
