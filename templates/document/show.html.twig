@@ -11,6 +11,13 @@
 {% endblock %}
 
 {% block body %}
+    {% if not document.isActive %}
+        <div class="lifecycle-banner">
+            <span class="badge {{ document.lifecycle.value == 'cancelled' ? 'badge--danger' : 'badge--draft' }}">{{ document.lifecycle.label }}</span>
+            {% if document.lifecycleReason %}<span class="muted">{{ document.lifecycleReason }}</span>{% endif %}
+        </div>
+    {% endif %}
+
     <div class="page-head">
         <div>
             <p class="eyebrow">{% if document.code %}<span class="mono">{{ document.code }}</span> · {% endif %}{{ document.type.label }}</p>
@@ -33,6 +40,7 @@
             {% if document.process %}<dt>Proceso</dt><dd>{{ document.process }}</dd>{% endif %}
             <dt>Responsable</dt><dd>{{ document.responsibleRole ? document.responsibleRole.name : '—' }}</dd>
             <dt>Estado</dt><dd>{{ document.status.label }}{% if document.statusNote %} <span class="muted">· {{ document.statusNote }}</span>{% endif %}</dd>
+            <dt>Situación</dt><dd>{{ document.lifecycle.label }}{% if document.lifecycleReason %} <span class="muted">· {{ document.lifecycleReason }}</span>{% endif %}</dd>
             <dt>Retención</dt><dd>{{ document.retentionYears ? document.retentionYears ~ ' años' : 'Indefinida' }}</dd>
             {% if document.legacyCodes is not empty %}<dt>Códigos anteriores</dt><dd class="mono muted">{{ document.legacyCodes|join(', ') }}</dd>{% endif %}
         </dl>
@@ -41,6 +49,33 @@
             <p>{{ document.instructions|nl2br }}</p>
         {% endif %}
     </div>
+
+    {% if is_granted('ROLE_ADMIN') %}
+        <div class="card">
+            <h2>Control del documento</h2>
+            <p class="muted">Los documentos no se borran: se anulan (con motivo) o se archivan, dejando rastro para la auditoría.</p>
+            {% if document.isActive %}
+                <form method="post" action="{{ path('document_lifecycle', { id: document.id }) }}" class="lifecycle-form">
+                    <input type="hidden" name="_token" value="{{ csrf_token('document_lifecycle' ~ document.id) }}">
+                    <input type="hidden" name="action" value="cancel">
+                    <input type="text" name="reason" aria-label="Motivo de la anulación" placeholder="Motivo de la anulación…">
+                    <button class="btn danger" type="submit">Anular</button>
+                </form>
+                <form method="post" action="{{ path('document_lifecycle', { id: document.id }) }}" class="lifecycle-form">
+                    <input type="hidden" name="_token" value="{{ csrf_token('document_lifecycle' ~ document.id) }}">
+                    <input type="hidden" name="action" value="archive">
+                    <input type="text" name="reason" aria-label="Motivo del archivado (opcional)" placeholder="Motivo del archivado (opcional)…">
+                    <button class="btn secondary" type="submit">Archivar</button>
+                </form>
+            {% else %}
+                <form method="post" action="{{ path('document_lifecycle', { id: document.id }) }}">
+                    <input type="hidden" name="_token" value="{{ csrf_token('document_lifecycle' ~ document.id) }}">
+                    <input type="hidden" name="action" value="restore">
+                    <button class="btn secondary" type="submit">Reactivar documento</button>
+                </form>
+            {% endif %}
+        </div>
+    {% endif %}
 
     <div class="page-head"><h2>Historial de versiones</h2></div>
 

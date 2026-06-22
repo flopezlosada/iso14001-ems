@@ -6,6 +6,7 @@ namespace App\Entity;
 
 use App\Enum\AlertFrequency;
 use App\Enum\Area;
+use App\Enum\DocumentLifecycle;
 use App\Enum\DocumentType;
 use App\Enum\IsoChapter;
 use App\Enum\ObligationStatus;
@@ -88,6 +89,19 @@ class Document
      */
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $statusNote = null;
+
+    /**
+     * Lifecycle of the whole document (live / cancelled / archived). Documents are never deleted;
+     * this is how a mistaken or retired document leaves a trace instead (PC.01.0, append-only).
+     */
+    #[ORM\Column(length: 20, enumType: DocumentLifecycle::class)]
+    private DocumentLifecycle $lifecycle = DocumentLifecycle::ACTIVE;
+
+    /**
+     * Why the document was cancelled or archived (mandatory for cancellation), kept for the audit.
+     */
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $lifecycleReason = null;
 
     /**
      * The built module where this obligation is actually filled in (consumos, NC, formación…).
@@ -358,6 +372,64 @@ class Document
     public function setStatusNote(?string $statusNote): static
     {
         $this->statusNote = $statusNote;
+
+        return $this;
+    }
+
+    public function getLifecycle(): DocumentLifecycle
+    {
+        return $this->lifecycle;
+    }
+
+    public function getLifecycleReason(): ?string
+    {
+        return $this->lifecycleReason;
+    }
+
+    /**
+     * Whether the document is live (part of the current SGA).
+     */
+    public function isActive(): bool
+    {
+        return $this->lifecycle->isActive();
+    }
+
+    /**
+     * Cancels the document (created by mistake), recording the mandatory reason. Append-only: the
+     * document and its history stay; it is just no longer part of the live SGA.
+     *
+     * @param string $reason why it is cancelled
+     */
+    public function cancel(string $reason): static
+    {
+        $this->lifecycle = DocumentLifecycle::CANCELLED;
+        $this->lifecycleReason = $reason;
+
+        return $this;
+    }
+
+    /**
+     * Archives the document (no longer applies) — retired but still visible to the auditor.
+     *
+     * @param string|null $reason optional note on why it was retired
+     */
+    public function archive(?string $reason = null): static
+    {
+        $this->lifecycle = DocumentLifecycle::ARCHIVED;
+        $this->lifecycleReason = $reason;
+
+        return $this;
+    }
+
+    /**
+     * Returns the document to the live SGA (e.g. archived or cancelled by mistake). The reason is
+     * cleared because it no longer describes the current (active) state; the previous cancel/archive
+     * with its reason stays in the activity log, which is the definitive audit trail.
+     */
+    public function restore(): static
+    {
+        $this->lifecycle = DocumentLifecycle::ACTIVE;
+        $this->lifecycleReason = null;
 
         return $this;
     }
