@@ -39,7 +39,9 @@ final class NonConformityReferenceGenerator
     }
 
     /**
-     * Builds the reference string from its parts.
+     * Builds the reference string from its parts. Public so the historical-data importer can reuse
+     * the exact same format when reconstructing references for already-numbered records, keeping a
+     * single source of truth for the reference shape.
      *
      * @param string $originCode the origin short code (e.g. "AE")
      * @param int    $year       the reference year
@@ -47,7 +49,7 @@ final class NonConformityReferenceGenerator
      *
      * @return string the formatted reference (e.g. "NC.AE.2026.01")
      */
-    private function format(string $originCode, int $year, int $sequence): string
+    public function format(string $originCode, int $year, int $sequence): string
     {
         return sprintf('NC.%s.%d.%02d', $originCode, $year, $sequence);
     }

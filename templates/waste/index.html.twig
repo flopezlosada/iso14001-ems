@@ -29,11 +29,11 @@
                 <tbody>
                     {% for record in records %}
                         <tr>
-                            <td>{{ record.pickupDate|date('d/m/Y') }}</td>
-                            <td class="mono muted">{{ record.lerCode }}</td>
+                            <td>{{ record.pickupDate ? record.pickupDate|date('d/m/Y') : '—' }}</td>
+                            <td class="mono muted">{{ record.lerCode ?? '—' }}</td>
                             <td>{{ record.description }}</td>
-                            <td>{{ record.quantityKg }} kg</td>
-                            <td class="muted">{{ record.manager }}</td>
+                            <td>{{ record.quantityKg ? record.quantityKg ~ ' kg' : '—' }}</td>
+                            <td class="muted">{{ record.manager ?? '—' }}</td>
                             <td>{{ record.hazardous ? 'Sí' : 'No' }}</td>
                             <td>{% if can_write %}<a href="{{ path('waste_edit', { id: record.id }) }}">Editar</a>{% endif %}</td>
                         </tr>

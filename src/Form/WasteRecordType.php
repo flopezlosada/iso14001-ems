@@ -26,19 +26,22 @@ class WasteRecordType extends AbstractType
             ->add('lerCode', TextType::class, [
                 'label' => 'Código LER',
                 'help' => 'Código del Catálogo Europeo de Residuos (p. ej. 200121).',
+                'required' => false,
             ])
             ->add('description', TextType::class, ['label' => 'Residuo'])
             ->add('quantityKg', TextType::class, [
                 'label' => 'Cantidad (kg)',
                 'attr' => ['inputmode' => 'decimal'],
                 'help' => 'Usa el punto para los decimales.',
+                'required' => false,
             ])
             ->add('pickupDate', DateType::class, [
                 'label' => 'Fecha de retirada',
                 'widget' => 'single_text',
                 'input' => 'datetime_immutable',
+                'required' => false,
             ])
-            ->add('manager', TextType::class, ['label' => 'Gestor autorizado'])
+            ->add('manager', TextType::class, ['label' => 'Gestor autorizado', 'required' => false])
             ->add('hazardous', CheckboxType::class, ['label' => 'Residuo peligroso', 'required' => false])
             ->add('notes', TextareaType::class, ['label' => 'Observaciones', 'required' => false]);
     }

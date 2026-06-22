@@ -68,7 +68,12 @@ class WasteController extends AbstractController
                 $isNew ? 'waste.created' : 'waste.updated',
                 'WasteRecord',
                 (string) $record->getId(),
-                sprintf('Residuo %s · %s kg · %s', $record->getLerCode(), $record->getQuantityKg(), $record->getPickupDate()->format('d/m/Y')),
+                sprintf(
+                    'Residuo %s · %s kg · %s',
+                    $record->getLerCode() ?? '—',
+                    $record->getQuantityKg() ?? '—',
+                    $record->getPickupDate()?->format('d/m/Y') ?? '—',
+                ),
             );
             $this->addFlash('success', 'Registro de residuo guardado.');
 

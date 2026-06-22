@@ -4,6 +4,10 @@
 # sintéticas de src/DataFixtures SÍ van a git: no contienen datos personales.
 /fixtures/real/
 
+# Bytecode compilado de los scripts ETL (offline)
+tools/etl/__pycache__/
+*.pyc
+
 ###> symfony/framework-bundle ###
 /.env.local
 /.env.local.php
