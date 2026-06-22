@@ -8,7 +8,10 @@ use App\Entity\Document;
 use App\Entity\DocumentVersion;
 use App\Enum\DocumentType;
 use App\Repository\DocumentRepository;
+use App\Service\AuditLogger;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
@@ -20,12 +23,17 @@ use Symfony\Component\Routing\Attribute\Route;
  * documented information that the app already records but never showed. Issuing/approving revisions
  * is a separate workflow, not part of these views.
  *
- * Access is intentionally granted to any authenticated user (ROLE_USER), with no area gating: the
- * document register is a transparency artefact, consistent with the obligations cockpit. The
- * AreaVoter only guards write operations on module-specific data, not this read-only register view.
+ * Reading is granted to any authenticated user (ROLE_USER), with no area gating: the document
+ * register is a transparency artefact, consistent with the obligations cockpit. Changing a
+ * document's lifecycle (cancel/archive/restore) is restricted to ROLE_ADMIN for now — widening it
+ * to the RSGMA role is a follow-up once that maps to a permission.
  */
 final class DocumentDetailController extends AbstractController
 {
+    public function __construct(private readonly AuditLogger $auditLogger)
+    {
+    }
+
     /**
      * The document register (F.01): every document with its in-force revision, for searching and
      * navigating to each detail. Includes the manual and procedures that the obligations cockpit
@@ -69,5 +77,53 @@ final class DocumentDetailController extends AbstractController
             'current' => $document->getCurrentVersion(),
             'moduleRoute' => $document->getLinkedArea()?->indexRoute(),
         ]);
+    }
+
+    /**
+     * Changes a document's lifecycle (cancel / archive / restore), append-only and audited. A
+     * document is never deleted: a mistaken one is cancelled with a reason, a retired one archived.
+     *
+     * @param Request                $request  the POST request (action, reason, CSRF token)
+     * @param Document               $document the document to act on
+     * @param EntityManagerInterface $em       to persist the state change
+     *
+     * @return Response a redirect back to the document detail
+     */
+    #[Route('/documentos/{id}/estado', name: 'document_lifecycle', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function changeLifecycle(Request $request, Document $document, EntityManagerInterface $em): Response
+    {
+        $this->denyAccessUnlessGranted('ROLE_ADMIN');
+        if (!$this->isCsrfTokenValid('document_lifecycle'.(string) $document->getId(), (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Token CSRF inválido.');
+        }
+
+        $action = (string) $request->request->get('action');
+        $reason = trim((string) $request->request->get('reason'));
+        $redirect = $this->redirectToRoute('document_show', ['id' => $document->getId()]);
+
+        if ('cancel' === $action) {
+            if ('' === $reason) {
+                $this->addFlash('error', 'Indica el motivo de la anulación.');
+
+                return $redirect;
+            }
+            $document->cancel($reason);
+            [$logAction, $summary, $flash] = ['document.cancelled', 'Anulado: '.$reason, 'Documento anulado.'];
+        } elseif ('archive' === $action) {
+            $document->archive('' !== $reason ? $reason : null);
+            [$logAction, $summary, $flash] = ['document.archived', '' !== $reason ? 'Archivado: '.$reason : 'Archivado', 'Documento archivado.'];
+        } elseif ('restore' === $action) {
+            $document->restore();
+            [$logAction, $summary, $flash] = ['document.restored', 'Reactivado', 'Documento reactivado.'];
+        } else {
+            throw $this->createNotFoundException('Acción de ciclo de vida desconocida.');
+        }
+
+        $em->flush();
+        // Audit AFTER the business flush, per the project convention.
+        $this->auditLogger->log($logAction, 'Document', (string) $document->getId(), $summary);
+        $this->addFlash('success', $flash);
+
+        return $redirect;
     }
 }

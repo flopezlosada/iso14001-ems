@@ -7,6 +7,7 @@ namespace App\Tests\Controller;
 use App\Entity\ApprovalEvent;
 use App\Entity\Document;
 use App\Entity\DocumentVersion;
+use App\Entity\Role;
 use App\Entity\User;
 use App\Enum\DocumentType;
 use App\Enum\ObligationStatus;
@@ -137,5 +138,100 @@ final class DocumentDetailControllerTest extends WebTestCase
         self::assertSelectorTextContains('body', 'Formato de ejemplo');
         // Three documents, three rows: the multi-version one is not duplicated by the JOIN.
         self::assertCount(3, $crawler->filter('tbody tr'));
+    }
+
+    private function persistDocument(EntityManagerInterface $em, string $code): Document
+    {
+        $document = (new Document())->setCode($code)->setTitle('Documento '.$code)->setType(DocumentType::PROCEDURE)->setStatus(ObligationStatus::DONE);
+        $em->persist($document);
+
+        return $document;
+    }
+
+    private function loginAdmin(object $client, EntityManagerInterface $em, string $email): void
+    {
+        $role = (new Role())->setCode('admin')->setName('Administrador')->setAdmin(true);
+        $em->persist($role);
+        $admin = (new User())->setFullName('Admin')->setEmail($email)->setActive(true)->addAssignedRole($role);
+        $em->persist($admin);
+        $em->flush();
+        $client->loginUser($admin);
+    }
+
+    public function testAdminCancelsDocumentWithReason(): void
+    {
+        $client = static::createClient();
+        $em = $this->em();
+        $document = $this->persistDocument($em, 'PC.07.0');
+        $this->loginAdmin($client, $em, 'admin-cancel@example.test');
+
+        $client->request('GET', '/documentos/'.$document->getId());
+        $client->submitForm('Anular', ['reason' => 'Creado por error']);
+
+        self::assertResponseRedirects('/documentos/'.$document->getId());
+        $client->followRedirect();
+        self::assertSelectorTextContains('.lifecycle-banner', 'Anulado');
+        self::assertSelectorTextContains('.lifecycle-banner', 'Creado por error');
+    }
+
+    public function testCancelWithoutReasonIsRejected(): void
+    {
+        $client = static::createClient();
+        $em = $this->em();
+        $document = $this->persistDocument($em, 'PC.08.0');
+        $this->loginAdmin($client, $em, 'admin-noreason@example.test');
+
+        $client->request('GET', '/documentos/'.$document->getId());
+        $client->submitForm('Anular', ['reason' => '']);
+
+        $client->followRedirect();
+        // Rejected: it stays active (no banner) and the reason is demanded.
+        self::assertSelectorNotExists('.lifecycle-banner');
+        self::assertSelectorTextContains('.flash', 'motivo');
+    }
+
+    public function testAdminArchivesDocument(): void
+    {
+        $client = static::createClient();
+        $em = $this->em();
+        $document = $this->persistDocument($em, 'PC.10.0');
+        $this->loginAdmin($client, $em, 'admin-archive@example.test');
+
+        $client->request('GET', '/documentos/'.$document->getId());
+        $client->submitForm('Archivar', ['reason' => 'Ya no aplica']);
+
+        $client->followRedirect();
+        self::assertSelectorTextContains('.lifecycle-banner', 'Archivado');
+    }
+
+    public function testAdminRestoresArchivedDocument(): void
+    {
+        $client = static::createClient();
+        $em = $this->em();
+        $document = $this->persistDocument($em, 'PC.11.0')->archive('Obsoleto');
+        $this->loginAdmin($client, $em, 'admin-restore@example.test');
+
+        $client->request('GET', '/documentos/'.$document->getId());
+        $client->submitForm('Reactivar documento');
+
+        $client->followRedirect();
+        // Back to active: no lifecycle banner.
+        self::assertSelectorNotExists('.lifecycle-banner');
+    }
+
+    public function testNonAdminCannotChangeLifecycle(): void
+    {
+        $client = static::createClient();
+        $em = $this->em();
+        $document = $this->persistDocument($em, 'PC.09.0');
+        $reader = (new User())->setFullName('Lectora')->setEmail('lectora5@example.test')->setActive(true);
+        $em->persist($reader);
+        $em->flush();
+        $client->loginUser($reader);
+
+        // Access is denied before any CSRF check, so no token is needed to assert the gate.
+        $client->request('POST', '/documentos/'.$document->getId().'/estado', ['action' => 'cancel', 'reason' => 'x']);
+
+        self::assertResponseStatusCodeSame(403);
     }
 }

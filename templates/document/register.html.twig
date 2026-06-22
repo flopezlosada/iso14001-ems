@@ -42,7 +42,7 @@
                                     <span class="muted">—</span>
                                 {%- endif -%}
                             </td>
-                            <td>{{ document.status.label }}</td>
+                            <td>{{ document.status.label }}{% if not document.isActive %} <span class="badge {{ document.lifecycle.value == 'cancelled' ? 'badge--danger' : 'badge--draft' }}">{{ document.lifecycle.label }}</span>{% endif %}</td>
                         </tr>
                     {% endfor %}
                 </tbody>
