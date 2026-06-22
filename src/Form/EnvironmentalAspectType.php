@@ -6,6 +6,7 @@ namespace App\Form;
 
 use App\Entity\EnvironmentalAspect;
 use App\Enum\AspectType;
+use App\Enum\ConsumptionType;
 use App\Enum\DirectAspectCategory;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
@@ -44,6 +45,14 @@ class EnvironmentalAspectType extends AbstractType
                 'label' => 'Unidad de medida',
                 'required' => false,
                 'help' => 'P. ej. kWh, m³, Kg, litros.',
+            ])
+            ->add('linkedConsumptionType', EnumType::class, [
+                'class' => ConsumptionType::class,
+                'label' => 'Fuente de datos para la intensidad',
+                'required' => false,
+                'placeholder' => 'Sin enlazar (intensidad manual)',
+                'choice_label' => static fn (ConsumptionType $t): string => $t->label(),
+                'help' => 'Solo para aspectos de consumo. Si lo enlazas, la intensidad se sugiere sola comparando el consumo de este año con el de años anteriores.',
             ])
             ->add('associatedImpact', TextType::class, [
                 'label' => 'Impacto asociado',

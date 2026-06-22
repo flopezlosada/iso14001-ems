@@ -27,4 +27,20 @@ class EnvironmentalAspectRepository extends ServiceEntityRepository
     {
         return $this->findBy([], ['category' => 'ASC', 'name' => 'ASC']);
     }
+
+    /**
+     * Active aspects linked to a consumption source, i.e. the ones whose intensity can be estimated
+     * and watched automatically. Used to build the cockpit's "aspectos a vigilar" list.
+     *
+     * @return EnvironmentalAspect[] the linked, active aspects ordered by name
+     */
+    public function findLinkedToConsumption(): array
+    {
+        return $this->createQueryBuilder('a')
+            ->andWhere('a.active = true')
+            ->andWhere('a.linkedConsumptionType IS NOT NULL')
+            ->orderBy('a.name', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
 }

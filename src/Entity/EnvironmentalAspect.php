@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Entity;
 
 use App\Enum\AspectType;
+use App\Enum\ConsumptionType;
 use App\Enum\DirectAspectCategory;
 use App\Repository\EnvironmentalAspectRepository;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -48,6 +49,14 @@ class EnvironmentalAspect
     #[ORM\Column(length: 50, nullable: true)]
     #[Assert\Length(max: 50)]
     private ?string $unit = null;
+
+    /**
+     * Utility whose monthly readings feed this aspect's auto-intensity: its consumption is compared
+     * interannually to suggest the intensity score (PG-06.01). Only meaningful for direct
+     * CONSUMPTION aspects; null means the intensity is entered manually (no linked data source).
+     */
+    #[ORM\Column(length: 20, nullable: true, enumType: ConsumptionType::class)]
+    private ?ConsumptionType $linkedConsumptionType = null;
 
     /**
      * Associated environmental impact ("Impacto asociado"), e.g. "Agotamiento recurso natural".
@@ -143,6 +152,24 @@ class EnvironmentalAspect
     public function setUnit(?string $unit): static
     {
         $this->unit = $unit;
+
+        return $this;
+    }
+
+    /**
+     * The utility linked as the data source for this aspect's auto-intensity, or null when none.
+     */
+    public function getLinkedConsumptionType(): ?ConsumptionType
+    {
+        return $this->linkedConsumptionType;
+    }
+
+    /**
+     * Links (or unlinks, with null) the utility whose readings drive this aspect's auto-intensity.
+     */
+    public function setLinkedConsumptionType(?ConsumptionType $linkedConsumptionType): static
+    {
+        $this->linkedConsumptionType = $linkedConsumptionType;
 
         return $this;
     }

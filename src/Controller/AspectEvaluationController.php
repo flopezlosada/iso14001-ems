@@ -9,8 +9,10 @@ use App\Entity\EnvironmentalAspect;
 use App\Enum\Area;
 use App\Form\AspectEvaluationType;
 use App\Security\Voter\AreaVoter;
+use App\Service\AspectIntensityEstimator;
 use App\Service\AspectSignificanceCalculator;
 use App\Service\AuditLogger;
+use App\Service\IntensityEstimate;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -31,11 +33,14 @@ class AspectEvaluationController extends AbstractController
     public function __construct(
         private readonly AuditLogger $auditLogger,
         private readonly AspectSignificanceCalculator $calculator,
+        private readonly AspectIntensityEstimator $intensityEstimator,
     ) {
     }
 
     /**
-     * Adds a new yearly evaluation to the aspect, defaulting the year to the current one.
+     * Adds a new yearly evaluation to the aspect, defaulting the year to the current one. When the
+     * aspect is linked to a consumption source, the intensity is pre-filled with the auto-suggestion
+     * (the user can still override it before saving).
      */
     #[Route('/new', name: 'aspect_evaluation_new', methods: ['GET', 'POST'])]
     public function new(EnvironmentalAspect $aspect, Request $request, EntityManagerInterface $em): Response
@@ -46,7 +51,12 @@ class AspectEvaluationController extends AbstractController
             ->setAspect($aspect)
             ->setYear((int) date('Y'));
 
-        return $this->handleForm($evaluation, $aspect, $request, $em);
+        $estimate = $this->intensityEstimator->estimateFor($aspect, new \DateTimeImmutable());
+        if (null !== $estimate) {
+            $evaluation->setIntensity($estimate->level);
+        }
+
+        return $this->handleForm($evaluation, $aspect, $request, $em, $estimate);
     }
 
     /**
@@ -72,8 +82,11 @@ class AspectEvaluationController extends AbstractController
     /**
      * Builds and processes the evaluation form, computing significance and persisting on a valid
      * submission.
+     *
+     * @param IntensityEstimate|null $estimate the auto-intensity suggestion to surface in the form
+     *                                         (only on a new evaluation of a linked aspect), or null
      */
-    private function handleForm(AspectEvaluation $evaluation, EnvironmentalAspect $aspect, Request $request, EntityManagerInterface $em): Response
+    private function handleForm(AspectEvaluation $evaluation, EnvironmentalAspect $aspect, Request $request, EntityManagerInterface $em, ?IntensityEstimate $estimate = null): Response
     {
         $isNew = null === $evaluation->getId();
 
@@ -105,6 +118,7 @@ class AspectEvaluationController extends AbstractController
             'aspect' => $aspect,
             'evaluation' => $evaluation,
             'isNew' => $isNew,
+            'intensityEstimate' => $estimate,
         ]);
     }
 }

@@ -7,6 +7,7 @@ namespace App\DataFixtures;
 use App\Entity\AspectEvaluation;
 use App\Entity\EnvironmentalAspect;
 use App\Enum\AspectType;
+use App\Enum\ConsumptionType;
 use App\Enum\DirectAspectCategory;
 use App\Enum\InfluenceLevel;
 use App\Enum\ScoreLevel;
@@ -42,6 +43,7 @@ final class EnvironmentalAspectFixtures extends AbstractGoldenFixture
                 ->setType($def['type'])
                 ->setCategory($def['category'] ?? null)
                 ->setUnit($def['unit'] ?? null)
+                ->setLinkedConsumptionType($def['linkedConsumptionType'] ?? null)
                 ->setAssociatedImpact($def['impact'] ?? null)
                 ->setActive(true);
 
@@ -84,7 +86,8 @@ final class EnvironmentalAspectFixtures extends AbstractGoldenFixture
 
     /**
      * @return array<string, array{name: string, type: AspectType, category?: DirectAspectCategory,
-     *     unit?: string, impact?: string, scores: array<int, array<string, ScoreLevel|InfluenceLevel>>}>
+     *     unit?: string, linkedConsumptionType?: ConsumptionType, impact?: string,
+     *     scores: array<int, array<string, ScoreLevel|InfluenceLevel>>}>
      */
     private function definitions(): array
     {
@@ -98,6 +101,7 @@ final class EnvironmentalAspectFixtures extends AbstractGoldenFixture
                 'type' => AspectType::DIRECT,
                 'category' => DirectAspectCategory::CONSUMPTION,
                 'unit' => 'kWh',
+                'linkedConsumptionType' => ConsumptionType::ELECTRICITY,
                 'impact' => 'Agotamiento de recursos naturales',
                 'scores' => [
                     2025 => ['frequency' => $hi, 'intensity' => $mid, 'hazard' => $mid],

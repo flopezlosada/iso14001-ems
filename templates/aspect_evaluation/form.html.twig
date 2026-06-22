@@ -17,6 +17,13 @@
     <div class="card" style="max-width: 560px;">
         {{ form_start(form, { 'attr': { 'novalidate': 'novalidate' } }) }}
             {{ form_errors(form) }}
+            {% if intensityEstimate is not null %}
+                <p class="help" style="background: var(--surface-2, #f4f7f4); border-left: 3px solid var(--accent, #2e7d32); padding: .6rem .8rem; margin-bottom: 1rem; color: var(--text, inherit);">
+                    <strong>Intensidad sugerida:</strong> {{ intensityEstimate.level.label }} ({{ intensityEstimate.level.value }}) —
+                    el consumo de este año va {{ intensityEstimate.changeRatio >= 0 ? '+' : '' }}{{ (intensityEstimate.changeRatio * 100)|round(1) }}% respecto a años anteriores.
+                    Revísala y ajústala si procede.
+                </p>
+            {% endif %}
             {# The criteria fields depend on the aspect type, so render them dynamically. #}
             {% for child in form %}
                 {% if child.vars.name != '_token' %}

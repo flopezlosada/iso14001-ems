@@ -22,6 +22,26 @@
         <a class="btn secondary" href="{{ path('obligation_structure') }}">Ver estructura del SGA</a>
     </div>
 
+    {% if aspectsToWatch is not empty %}
+        <section class="obligation-group">
+            <div class="obligation-group-head">
+                <span class="badge badge--warning">Aspectos a vigilar</span>
+                <span class="muted">{{ aspectsToWatch|length }} · El consumo va al alza respecto a años anteriores; vigílalo antes de la evaluación anual.</span>
+            </div>
+            <div class="card">
+                <ul style="margin: 0; padding-left: 1.2rem;">
+                    {% for row in aspectsToWatch %}
+                        <li>
+                            <a href="{{ path('aspect_show', { id: row.aspect.id }) }}">{{ row.aspect.name }}</a>
+                            — consumo {{ row.estimate.changeRatio >= 0 ? '+' : '' }}{{ (row.estimate.changeRatio * 100)|round(1) }}%
+                            <span class="muted">(intensidad sugerida: {{ row.estimate.level.label }})</span>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </section>
+    {% endif %}
+
     {% set anything = false %}
     {% for key, meta in buckets %}
         {% set items = groups[key] %}
