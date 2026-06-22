@@ -422,6 +422,14 @@ thead th.is-sortable:focus-visible { outline: 2px solid var(--focus); outline-of
 .badge--void    { color: var(--text-faint); text-decoration: line-through; }
 
 /* ---- Formularios -------------------------------------------------------- */
+/* Tarjeta contenedora de un formulario de alta/edición: ancho de línea cómodo y único
+   (antes cada plantilla llevaba un style="max-width" inline distinto). */
+.form-card { max-width: 640px; }
+/* Variante ancha para formularios con contenido tabular (matriz de permisos, checklist). */
+.form-card--wide { max-width: 720px; }
+/* Barra de acciones (Guardar / Cancelar): separación consistente y aire respecto al
+   último campo, en vez de botones pegados sin contenedor. */
+.form-actions { display: flex; align-items: center; gap: 10px; margin-top: 22px; }
 .form-row { margin-bottom: 16px; }
 .form-row > label, label.required { display: block; font-weight: 500; margin-bottom: 6px; color: var(--text); }
 .form-row input[type="text"],

@@ -1,4 +1,5 @@
 {% extends 'app_shell.html.twig' %}
+{% import '_macros/form.html.twig' as f %}
 
 {% block title %}{{ isNew ? 'Nuevo control operacional' : 'Editar control operacional' }}{% endblock %}
 
@@ -13,7 +14,7 @@
         <h1>{{ isNew ? 'Nuevo control operacional' : 'Editar control operacional' }}</h1>
     </div>
 
-    <div class="card" style="max-width: 720px;">
+    <div class="card form-card form-card--wide">
         {{ form_start(form, { 'attr': { 'novalidate': 'novalidate' } }) }}
             {{ form_errors(form) }}
 
@@ -38,8 +39,7 @@
 
             <div class="form-row">{{ form_label(form.observations) }}{{ form_widget(form.observations) }}</div>
 
-            <button class="btn" type="submit">Guardar</button>
-            <a class="btn secondary" href="{{ path('operational_control_index') }}">Cancelar</a>
+            {{ f.actions(path('operational_control_index')) }}
         {{ form_end(form) }}
     </div>
 {% endblock %}

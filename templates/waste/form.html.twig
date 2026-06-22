@@ -1,4 +1,5 @@
 {% extends 'app_shell.html.twig' %}
+{% import '_macros/form.html.twig' as f %}
 
 {% block title %}{{ record.id ? 'Editar retirada' : 'Nueva retirada' }}{% endblock %}
 
@@ -13,7 +14,7 @@
         <h1>{{ record.id ? 'Editar retirada' : 'Nueva retirada' }}</h1>
     </div>
 
-    <div class="card" style="max-width: 560px;">
+    <div class="card form-card">
         {{ form_start(form, { 'attr': { 'novalidate': 'novalidate' } }) }}
             {{ form_errors(form) }}
             {% for field in [form.lerCode, form.description, form.quantityKg, form.pickupDate, form.manager] %}
@@ -31,8 +32,7 @@
                 {{ form_label(form.notes) }}
                 {{ form_widget(form.notes) }}
             </div>
-            <button class="btn" type="submit">Guardar</button>
-            <a class="btn secondary" href="{{ path('waste_index') }}">Cancelar</a>
+            {{ f.actions(path('waste_index')) }}
         {{ form_end(form) }}
     </div>
 {% endblock %}

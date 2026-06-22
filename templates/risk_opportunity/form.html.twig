@@ -1,4 +1,5 @@
 {% extends 'app_shell.html.twig' %}
+{% import '_macros/form.html.twig' as f %}
 
 {% block title %}{{ isNew ? 'Registrar' : 'Editar' }} riesgo/oportunidad{% endblock %}
 
@@ -13,19 +14,11 @@
         <h1>{{ isNew ? 'Registrar riesgo / oportunidad' : 'Editar riesgo / oportunidad' }}</h1>
     </div>
 
-    <div class="card" style="max-width: 560px;">
+    <div class="card form-card">
         {{ form_start(form, { 'attr': { 'novalidate': 'novalidate' } }) }}
             {{ form_errors(form) }}
-            {% for field in [form.type, form.description, form.processArea] %}
-                <div class="form-row">
-                    {{ form_label(field) }}
-                    {{ form_widget(field) }}
-                    {% if field.vars.help %}<p class="help">{{ field.vars.help }}</p>{% endif %}
-                    {{ form_errors(field) }}
-                </div>
-            {% endfor %}
-            <button class="btn" type="submit">Guardar</button>
-            <a class="btn secondary" href="{{ path('risk_index') }}">Cancelar</a>
+            {{ f.fields([form.type, form.description, form.processArea]) }}
+            {{ f.actions(path('risk_index')) }}
         {{ form_end(form) }}
     </div>
 {% endblock %}
