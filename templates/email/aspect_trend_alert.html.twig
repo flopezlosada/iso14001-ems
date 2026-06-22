@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="utf-8"></head>
+<body style="font-family: Arial, sans-serif; color: #1a1a1a; line-height: 1.5;">
+    <p>Hola {{ user.fullName }},</p>
+
+    <p>Estos aspectos ambientales (ISO 14001) van al alza respecto a años anteriores a fecha de {{ today|date('d/m/Y') }}. Conviene vigilarlos antes de la evaluación anual, ya que apuntan a ser significativos:</p>
+
+    <table cellpadding="8" cellspacing="0" border="0" style="border-collapse: collapse; width: 100%; max-width: 640px;">
+        <thead>
+            <tr style="text-align: left; border-bottom: 2px solid #ddd;">
+                <th>Aspecto</th>
+                <th>Variación</th>
+                <th>Intensidad sugerida</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in watch %}
+                <tr style="border-bottom: 1px solid #eee;">
+                    <td><strong>{{ row.aspect.name }}</strong></td>
+                    <td style="white-space: nowrap; color: #b00020;">
+                        {{ row.estimate.changeRatio >= 0 ? '+' : '' }}{{ (row.estimate.changeRatio * 100)|round(1) }}%
+                    </td>
+                    {# Every watched aspect is HIGH by construction (isWatchworthy); shown for clarity and in case the watch criterion widens later. #}
+                    <td style="white-space: nowrap;">{{ row.estimate.level.label }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <p style="margin-top: 20px;">Entra en la aplicación del SGA para revisarlos en "Qué toca" o en el módulo de aspectos ambientales.</p>
+
+    <p style="color: #888; font-size: 12px;">Este es un aviso automático del sistema de gestión ambiental del IES La Cabrera.</p>
+</body>
+</html>
