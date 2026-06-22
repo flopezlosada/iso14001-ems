@@ -95,21 +95,11 @@ class HomeController extends AbstractController
      */
     private function buildWorklist(DocumentRepository $documents, ?object $user, \DateTimeImmutable $today): array
     {
-        $myRoleIds = [];
-        if ($user instanceof User) {
-            foreach ($user->getAssignedRoles() as $role) {
-                $id = $role->getId();
-                if (null !== $id) {
-                    $myRoleIds[$id] = true;
-                }
-            }
-        }
-
         $counts = ['overdue' => 0, 'due_soon' => 0, 'on_track' => 0];
         $actionable = [];
 
         // No roles → nothing is the user's responsibility; skip the query and the loop entirely.
-        if ([] === $myRoleIds) {
+        if (!$user instanceof User || $user->getAssignedRoles()->isEmpty()) {
             return ['counts' => $counts, 'actionable' => $actionable, 'total' => 0];
         }
 
@@ -121,8 +111,7 @@ class HomeController extends AbstractController
                 continue;
             }
             $responsible = $obligation->getResponsibleRole();
-            $responsibleId = $responsible?->getId();
-            if (null === $responsibleId || !isset($myRoleIds[$responsibleId])) {
+            if (null === $responsible || !$user->holdsRole($responsible)) {
                 continue; // not the user's responsibility
             }
 

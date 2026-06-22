@@ -17,9 +17,21 @@
     <div class="page-head">
         <div>
             <h1>Qué toca</h1>
-            <p class="lead">Tus obligaciones del sistema de gestión, ordenadas por urgencia. {{ today|date('d/m/Y') }}.</p>
+            <p class="lead">
+                {%- if scope == 'mias' -%}
+                    Tus obligaciones del sistema de gestión, ordenadas por urgencia.
+                {%- else -%}
+                    Todas las obligaciones del centro, ordenadas por urgencia.
+                {%- endif %} {{ today|date('d/m/Y') }}.
+            </p>
         </div>
         <a class="btn secondary" href="{{ path('obligation_structure') }}">Ver estructura del SGA</a>
+    </div>
+
+    {# Ámbito: lo del usuario (por defecto, como el inicio) o todo el centro (Dirección / auditor). #}
+    <div class="scope-toggle" role="group" aria-label="Ámbito de las obligaciones">
+        <a href="{{ path('obligation_index', { scope: 'mias' }) }}" class="{{ scope == 'mias' ? 'is-active' }}"{{ scope == 'mias' ? ' aria-current="page"' }}>Mías ({{ mineCount }})</a>
+        <a href="{{ path('obligation_index', { scope: 'todas' }) }}" class="{{ scope == 'todas' ? 'is-active' }}"{{ scope == 'todas' ? ' aria-current="page"' }}>Todas ({{ totalCount }})</a>
     </div>
 
     {% if aspectsToWatch is not empty %}
@@ -73,8 +85,13 @@
 
     {% if not anything and notApplicable is empty %}
         <div class="empty-state">
-            <h2>No hay obligaciones registradas</h2>
-            <p>Cuando se cargue el catálogo de obligaciones, aquí verás qué toca y cuándo.</p>
+            {% if scope == 'mias' and totalCount > 0 %}
+                <h2>No tienes obligaciones asignadas</h2>
+                <p>No hay obligaciones bajo tu responsabilidad. <a href="{{ path('obligation_index', { scope: 'todas' }) }}">Ver todas las del centro</a>.</p>
+            {% else %}
+                <h2>No hay obligaciones registradas</h2>
+                <p>Cuando se cargue el catálogo de obligaciones, aquí verás qué toca y cuándo.</p>
+            {% endif %}
         </div>
     {% endif %}
 {% endblock %}
