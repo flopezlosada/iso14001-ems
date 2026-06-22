@@ -22,7 +22,7 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
  */
 final class DocumentControllerTest extends WebTestCase
 {
-    private function persistObligation(EntityManagerInterface $em, string $code, IsoChapter $chapter, AlertFrequency $frequency, string $nextDue, ?Role $role = null): void
+    private function persistObligation(EntityManagerInterface $em, string $code, IsoChapter $chapter, AlertFrequency $frequency, string $nextDue, ?Role $role = null): Document
     {
         $document = new Document();
         $document->setCode($code)
@@ -36,7 +36,12 @@ final class DocumentControllerTest extends WebTestCase
         $alert->setFrequency($frequency)->setNextDueDate(new \DateTimeImmutable($nextDue));
         $document->addAlert($alert);
 
+        if ($role !== null) {
+            $em->persist($role);
+        }
         $em->persist($document);
+
+        return $document;
     }
 
     private function loginPlainUser(KernelBrowser $client): void
@@ -154,5 +159,97 @@ final class DocumentControllerTest extends WebTestCase
 
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('.sga-summary', 'vencida');
+    }
+
+    public function testResponsibleCompletesObligationAndRollsDueDateForward(): void
+    {
+        $client = static::createClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $mine = (new Role())->setCode('mant')->setName('Mantenimiento');
+        // An overdue annual obligation owned by the user: completing it must push the date a year on.
+        $document = $this->persistObligation($em, 'TEST-CLOSE', IsoChapter::PLANNING, AlertFrequency::ANNUAL, '2026-01-01', $mine);
+        $em->flush();
+        $id = $document->getId();
+        $this->loginUserWithRole($client, $mine);
+
+        $client->request('GET', '/obligaciones');
+        $client->submitForm('Marcar revisado');
+
+        self::assertResponseRedirects('/obligaciones');
+        $client->followRedirect();
+        self::assertSelectorTextContains('.flash', 'revisada');
+
+        // The stored due date moved a full year on, and the completion was recorded.
+        $em->clear();
+        $reloaded = $em->find(Document::class, $id);
+        self::assertNotNull($reloaded);
+        self::assertNotNull($reloaded->getLastCompletedOn());
+        $alert = $reloaded->getAlerts()->first();
+        self::assertNotFalse($alert);
+        self::assertEquals(new \DateTimeImmutable('2027-01-01'), $alert->getNextDueDate());
+    }
+
+    public function testNonResponsibleCannotCompleteObligation(): void
+    {
+        $client = static::createClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $owner = (new Role())->setCode('sec')->setName('Secretaría');
+        $em->persist($owner);
+        $document = $this->persistObligation($em, 'TEST-CLOSE-DENY', IsoChapter::PLANNING, AlertFrequency::ANNUAL, '2026-01-01', $owner);
+        $em->flush();
+        // The logged-in user holds a different role than the obligation's responsible.
+        $this->loginUserWithRole($client, (new Role())->setCode('mant')->setName('Mantenimiento'));
+
+        // The voter runs before the CSRF check, so the 403 here is the authorization gate.
+        $client->request('POST', '/obligaciones/'.$document->getId().'/completar');
+
+        self::assertResponseStatusCodeSame(403);
+    }
+
+    public function testCannotCompleteAnArchivedObligation(): void
+    {
+        $client = static::createClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $mine = (new Role())->setCode('mant')->setName('Mantenimiento');
+        $document = $this->persistObligation($em, 'TEST-ARCHIVED', IsoChapter::PLANNING, AlertFrequency::ANNUAL, '2026-01-01', $mine);
+        $em->flush();
+        $id = $document->getId();
+        $this->loginUserWithRole($client, $mine);
+
+        // Capture a valid complete form while the obligation is still active...
+        $crawler = $client->request('GET', '/obligaciones');
+        $form = $crawler->filter('form[action*="/'.$id.'/completar"]')->form();
+        // ...then archive it and submit: a non-active document must be rejected, not rolled.
+        $document->archive('Ya no aplica');
+        $em->flush();
+        $client->submit($form);
+
+        $client->followRedirect();
+        self::assertSelectorTextContains('.flash', 'no está activa');
+        $em->clear();
+        $reloaded = $em->find(Document::class, $id);
+        self::assertNotNull($reloaded);
+        self::assertNull($reloaded->getLastCompletedOn());
+        $alert = $reloaded->getAlerts()->first();
+        self::assertNotFalse($alert);
+        self::assertEquals(new \DateTimeImmutable('2026-01-01'), $alert->getNextDueDate());
+    }
+
+    public function testEventDrivenObligationOffersNoCompleteButton(): void
+    {
+        $client = static::createClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $mine = (new Role())->setCode('mant')->setName('Mantenimiento');
+        // A purely event-driven obligation has no period to close: the cockpit must not offer the close.
+        $this->persistObligation($em, 'TEST-EVENT', IsoChapter::OPERATION, AlertFrequency::ON_EVENT, '2026-01-01', $mine);
+        $em->flush();
+        $this->loginUserWithRole($client, $mine);
+
+        $crawler = $client->request('GET', '/obligaciones');
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('body', 'Obligación TEST-EVENT');
+        // No "Marcar revisado" form is rendered for it.
+        self::assertCount(0, $crawler->filter('form[action$="/completar"]'));
     }
 }

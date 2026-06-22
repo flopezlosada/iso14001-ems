@@ -47,7 +47,7 @@
                     <span class="muted">{{ items|length }} · {{ meta.desc }}</span>
                 </div>
                 <div class="card">
-                    {{ m.obligation_table(items, moduleRoutes) }}
+                    {{ m.obligation_table(items, moduleRoutes, true, scope) }}
                 </div>
             </section>
         {% endif %}
@@ -60,6 +60,7 @@
                 <span class="muted">{{ notApplicable|length }} · Marcadas como no aplicables actualmente.</span>
             </div>
             <div class="card">
+                {# Sin canComplete a propósito: las no-aplicables no se cierran por periodo. #}
                 {{ m.obligation_table(notApplicable, moduleRoutes) }}
             </div>
         </section>

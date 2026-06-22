@@ -14,6 +14,8 @@ use Symfony\Component\Security\Core\Authorization\Voter\Voter;
  *  - ISSUE: drafting a new revision is done by the document's responsible role (the "elaborator").
  *  - APPROVE: approving a revision is done by the role that approves that document type (Dirección
  *    for policy/manual/procedures, RSGMA for forms) — {@see \App\Enum\DocumentType::approverRoleCode()}.
+ *  - COMPLETE: closing an obligation's review cycle is done by its responsible role (same as ISSUE):
+ *    the responsible is who confirms the periodic review is done for this period.
  *
  * ROLE_ADMIN bypasses both. Elaborator and approver are deliberately separate: e.g. the RSGMA drafts
  * a procedure but Dirección approves it.
@@ -24,10 +26,11 @@ class DocumentVoter extends Voter
 {
     public const ISSUE = 'DOCUMENT_ISSUE';
     public const APPROVE = 'DOCUMENT_APPROVE';
+    public const COMPLETE = 'DOCUMENT_COMPLETE';
 
     protected function supports(string $attribute, mixed $subject): bool
     {
-        return \in_array($attribute, [self::ISSUE, self::APPROVE], true) && $subject instanceof Document;
+        return \in_array($attribute, [self::ISSUE, self::APPROVE, self::COMPLETE], true) && $subject instanceof Document;
     }
 
     protected function voteOnAttribute(string $attribute, mixed $subject, TokenInterface $token): bool
@@ -43,7 +46,7 @@ class DocumentVoter extends Voter
         }
 
         return match ($attribute) {
-            self::ISSUE => null !== $subject->getResponsibleRole() && $user->holdsRole($subject->getResponsibleRole()),
+            self::ISSUE, self::COMPLETE => null !== $subject->getResponsibleRole() && $user->holdsRole($subject->getResponsibleRole()),
             self::APPROVE => null !== ($code = $subject->getType()->approverRoleCode()) && $user->holdsRoleCode($code),
             default => false,
         };

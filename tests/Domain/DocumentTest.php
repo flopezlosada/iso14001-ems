@@ -133,4 +133,48 @@ final class DocumentTest extends TestCase
 
         self::assertSame(ObligationUrgency::OVERDUE, $document->dueStatus(new \DateTimeImmutable('2026-06-21')));
     }
+
+    public function testHasFixedCadenceIsFalseWithoutAlertsOrEventDrivenOnly(): void
+    {
+        self::assertFalse((new Document())->hasFixedCadence());
+
+        $eventOnly = new Document();
+        $eventOnly->addAlert($this->makeAlert(AlertFrequency::ON_EVENT, '2020-01-01'));
+        self::assertFalse($eventOnly->hasFixedCadence());
+    }
+
+    public function testHasFixedCadenceIsTrueWithAnyScheduledAlert(): void
+    {
+        $document = new Document();
+        $document->addAlert($this->makeAlert(AlertFrequency::ANNUAL, '2026-09-01'));
+
+        self::assertTrue($document->hasFixedCadence());
+    }
+
+    public function testCompleteCycleRecordsTheDateAndRollsDueDatesForward(): void
+    {
+        $document = new Document();
+        $annual = $this->makeAlert(AlertFrequency::ANNUAL, '2026-09-01');
+        $document->addAlert($annual);
+
+        $document->completeCycle(new \DateTimeImmutable('2026-06-22'));
+
+        self::assertEquals(new \DateTimeImmutable('2026-06-22'), $document->getLastCompletedOn());
+        // The obligation now points at next year's cycle, so it leaves the worklist until then.
+        self::assertEquals(new \DateTimeImmutable('2027-09-01'), $annual->getNextDueDate());
+    }
+
+    public function testCompleteCycleLeavesEventDrivenAlertsUntouched(): void
+    {
+        $document = new Document();
+        $event = $this->makeAlert(AlertFrequency::ON_EVENT, '2026-09-01');
+        $document->addAlert($event);
+
+        $document->completeCycle(new \DateTimeImmutable('2026-06-22'));
+
+        // Event-driven alerts have no cadence to advance: the date stays put...
+        self::assertEquals(new \DateTimeImmutable('2026-09-01'), $event->getNextDueDate());
+        // ...but the completion date is still recorded (the act of completing happened).
+        self::assertEquals(new \DateTimeImmutable('2026-06-22'), $document->getLastCompletedOn());
+    }
 }
