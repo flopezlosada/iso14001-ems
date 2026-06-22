@@ -1,0 +1,37 @@
+{% extends 'app_shell.html.twig' %}
+
+{% block title %}Control operacional{% endblock %}
+
+{% block breadcrumb %}<a href="{{ path('app_homepage') }}">Inicio</a><span class="sep">/</span>Control operacional{% endblock %}
+
+{% block body %}
+    <div class="page-head">
+        <div>
+            <h1>Control operacional</h1>
+            <p class="lead">Inspecciones mensuales del checklist ambiental (PG-08.01).</p>
+        </div>
+        <a class="btn" href="{{ path('operational_control_new') }}">Nuevo control del mes</a>
+    </div>
+
+    <div class="card">
+        {% if checks is empty %}
+            <p class="help">Aún no hay controles registrados. Crea el del mes con el botón de arriba.</p>
+        {% else %}
+            <table>
+                <thead>
+                    <tr><th>Periodo</th><th>Realizado por</th><th>No conformes</th><th></th></tr>
+                </thead>
+                <tbody>
+                    {% for check in checks %}
+                        <tr>
+                            <td><a href="{{ path('operational_control_edit', { id: check.id }) }}">{{ '%02d'|format(check.periodMonth) }}/{{ check.periodYear }}</a></td>
+                            <td>{{ check.performedBy }}</td>
+                            <td>{{ check.countNonConform }}</td>
+                            <td><a href="{{ path('operational_control_edit', { id: check.id }) }}">Editar</a></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    </div>
+{% endblock %}

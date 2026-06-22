@@ -1,0 +1,45 @@
+{% extends 'app_shell.html.twig' %}
+
+{% block title %}{{ isNew ? 'Nuevo control operacional' : 'Editar control operacional' }}{% endblock %}
+
+{% block breadcrumb %}
+    <a href="{{ path('app_homepage') }}">Inicio</a><span class="sep">/</span>
+    <a href="{{ path('operational_control_index') }}">Control operacional</a><span class="sep">/</span>
+    {{ isNew ? 'Nuevo' : 'Editar' }}
+{% endblock %}
+
+{% block body %}
+    <div class="page-head">
+        <h1>{{ isNew ? 'Nuevo control operacional' : 'Editar control operacional' }}</h1>
+    </div>
+
+    <div class="card" style="max-width: 720px;">
+        {{ form_start(form, { 'attr': { 'novalidate': 'novalidate' } }) }}
+            {{ form_errors(form) }}
+
+            <div class="form-row">{{ form_label(form.periodYear) }}{{ form_widget(form.periodYear) }}{{ form_errors(form.periodYear) }}</div>
+            <div class="form-row">{{ form_label(form.periodMonth) }}{{ form_widget(form.periodMonth) }}{{ form_errors(form.periodMonth) }}</div>
+            <div class="form-row">{{ form_label(form.performedBy) }}{{ form_widget(form.performedBy) }}{{ form_errors(form.performedBy) }}</div>
+
+            <h2>Checklist</h2>
+            {% set currentSection = null %}
+            {% for answer in form.answers %}
+                {% set item = answer.vars.data.item %}
+                {% if item.section != currentSection %}
+                    {% set currentSection = item.section %}
+                    <h3 class="section-head">{{ item.section.label }}</h3>
+                {% endif %}
+                <div class="form-row">
+                    <span class="checklist-item-label">{{ item.label }}</span>
+                    {{ form_widget(answer.result) }}
+                    {{ form_errors(answer.result) }}
+                </div>
+            {% endfor %}
+
+            <div class="form-row">{{ form_label(form.observations) }}{{ form_widget(form.observations) }}</div>
+
+            <button class="btn" type="submit">Guardar</button>
+            <a class="btn secondary" href="{{ path('operational_control_index') }}">Cancelar</a>
+        {{ form_end(form) }}
+    </div>
+{% endblock %}

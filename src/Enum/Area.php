@@ -23,6 +23,7 @@ enum Area: string
     case RISK_OPPORTUNITY = 'risk_opportunity';
     case OBJECTIVE = 'objective';
     case INDICATOR = 'indicator';
+    case OPERATIONAL_CONTROL = 'operational_control';
 
     /**
      * Human-facing area name (Spanish), used in the permissions matrix.
@@ -41,6 +42,7 @@ enum Area: string
             self::RISK_OPPORTUNITY => 'Riesgos y oportunidades',
             self::OBJECTIVE => 'Objetivos',
             self::INDICATOR => 'Indicadores',
+            self::OPERATIONAL_CONTROL => 'Control operacional',
         };
     }
 
@@ -65,6 +67,7 @@ enum Area: string
             self::RISK_OPPORTUNITY => 'risk_index',
             self::OBJECTIVE => 'objective_index',
             self::INDICATOR => 'indicator_index',
+            self::OPERATIONAL_CONTROL => 'operational_control_index',
         };
     }
 }
