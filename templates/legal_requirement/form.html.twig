@@ -17,7 +17,9 @@
     <div class="card form-card">
         {{ form_start(form, { 'attr': { 'novalidate': 'novalidate' } }) }}
             {{ form_errors(form) }}
-            {{ f.fields([form.legalProvision, form.scope, form.environmentalVector, form.specificRequirement, form.complianceEvidence, form.complianceStatus, form.evaluationFrequency, form.lastReviewedOn, form.nextReviewOn]) }}
+            {{ f.section('El requisito', [form.legalProvision, form.scope, form.environmentalVector, form.specificRequirement]) }}
+            {{ f.section('Cumplimiento', [form.complianceEvidence, form.complianceStatus]) }}
+            {{ f.section('Revisión', [form.evaluationFrequency, form.lastReviewedOn, form.nextReviewOn]) }}
             {{ f.actions(path('legal_requirement_index')) }}
         {{ form_end(form) }}
     </div>

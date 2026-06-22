@@ -18,7 +18,9 @@
     <div class="card form-card">
         {{ form_start(form, { 'attr': { 'novalidate': 'novalidate' } }) }}
             {{ form_errors(form) }}
-            {{ f.fields([form.description, form.responsible, form.plannedDate, form.implementationEvidence, form.requiresDirectionAuthorization, form.authorizedBy, form.reviewedBy, form.reviewedAt, form.efficacy]) }}
+            {{ f.section('Acción', [form.description, form.responsible, form.plannedDate, form.implementationEvidence]) }}
+            {{ f.section('Autorización', [form.requiresDirectionAuthorization, form.authorizedBy]) }}
+            {{ f.section('Revisión y eficacia', [form.reviewedBy, form.reviewedAt, form.efficacy]) }}
             {{ f.actions(path('non_conformity_show', { id: nonConformity.id })) }}
         {{ form_end(form) }}
     </div>
