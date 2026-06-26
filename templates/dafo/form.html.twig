@@ -1,0 +1,26 @@
+{% extends 'app_shell.html.twig' %}
+{% import '_macros/form.html.twig' as f %}
+
+{% block title %}{{ isNew ? 'Nuevo' : 'Editar' }} análisis DAFO{% endblock %}
+
+{% block breadcrumb %}
+    <a href="{{ path('app_homepage') }}">Inicio</a><span class="sep">/</span>
+    <a href="{{ path('dafo_index') }}">Análisis DAFO</a><span class="sep">/</span>
+    {{ isNew ? 'Nuevo' : analysis.schoolYear }}
+{% endblock %}
+
+{% block body %}
+    <div class="page-head">
+        <h1>{{ isNew ? 'Nuevo análisis DAFO' : 'Editar DAFO ' ~ analysis.schoolYear }}</h1>
+    </div>
+
+    <div class="card form-card">
+        {{ form_start(form, { 'attr': { 'novalidate': 'novalidate' } }) }}
+            {{ form_errors(form) }}
+            {{ f.section('Ejercicio', [form.schoolYear]) }}
+            {{ f.section('Enfoque interno', [form.weaknesses, form.strengths]) }}
+            {{ f.section('Enfoque externo', [form.threats, form.opportunities]) }}
+            {{ f.actions(path('dafo_index')) }}
+        {{ form_end(form) }}
+    </div>
+{% endblock %}
