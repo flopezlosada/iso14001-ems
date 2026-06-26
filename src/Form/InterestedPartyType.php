@@ -33,6 +33,8 @@ class InterestedPartyType extends AbstractType
             ->add('incidents', TextareaType::class, [
                 'label' => 'Incidencias',
                 'required' => false,
+                // Store a blank field as NULL (not an empty string), matching the nullable column.
+                'empty_data' => null,
                 'help' => 'Incidencias detectadas en la revisión. Texto libre (p. ej. "NO" si no hay).',
             ]);
     }
