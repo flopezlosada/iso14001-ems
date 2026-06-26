@@ -12,9 +12,10 @@ use App\Enum\ScoreLevel;
  * Computes the significance of an aspect evaluation (PG-06.01), the single source of truth for the
  * rule. The criteria and threshold depend on the aspect type:
  *
- * - DIRECT (Anexo I): frequency + intensity + hazard (each 2/4/6); discharges have no intensity;
- *   a missing intensity counts as 4 ("Media") per the no-prior-year-data default. Significant when
- *   the sum exceeds the PER-CATEGORY threshold (configurable in {@see \App\Entity\Settings}).
+ * - DIRECT (Anexo I): frequency + intensity + hazard (each 2/4/6), discharges included (RG-06.01.01
+ *   Rev 02 added the intensity criterion to discharges); a missing intensity counts as 4 ("Media")
+ *   per the no-prior-year-data default. Significant when the sum REACHES OR EXCEEDS the PER-CATEGORY
+ *   threshold (configurable in {@see \App\Entity\Settings}).
  * - ABNORMAL (Anexo III): probability + control + severity (each 2/4/6). Threshold is the single
  *   bound default (10).
  * - INDIRECT (Anexo II): only "capacity of influence" (1/2/3) is recorded; the procedure defines
@@ -50,7 +51,7 @@ final class AspectSignificanceCalculator
         if (AspectType::ABNORMAL === $aspect->getType()) {
             // Abnormal aspects (Anexo III) use the single configurable abnormal threshold.
             $score = $this->abnormalScore($evaluation);
-            $evaluation->setSignificanceScore($score)->setSignificant($score > $settings->getAbnormalThreshold());
+            $evaluation->setSignificanceScore($score)->setSignificant($score >= $settings->getAbnormalThreshold());
 
             return;
         }
@@ -60,23 +61,19 @@ final class AspectSignificanceCalculator
         $score = $this->directScore($evaluation);
         $category = $aspect->getCategory();
         $threshold = null !== $category ? $settings->thresholdFor($category) : $settings->getAbnormalThreshold();
-        $evaluation->setSignificanceScore($score)->setSignificant($score > $threshold);
+        $evaluation->setSignificanceScore($score)->setSignificant($score >= $threshold);
     }
 
     /**
-     * Significance sum for a direct aspect (frequency + intensity + hazard; no intensity for
-     * discharges, missing intensity defaults to 4).
+     * Significance sum for a direct aspect: frequency + intensity + hazard. All four categories
+     * (discharges included since RG-06.01.01 Rev 02) score the three criteria; a missing intensity
+     * defaults to 4 ("Media") per the no-prior-year-data convention.
      */
     private function directScore(AspectEvaluation $evaluation): int
     {
-        $total = $this->value($evaluation->getFrequency(), 0) + $this->value($evaluation->getHazard(), 0);
-
-        $category = $evaluation->getAspect()->getCategory();
-        if (null === $category || $category->usesIntensity()) {
-            $total += $this->value($evaluation->getIntensity(), ScoreLevel::MEDIUM->value);
-        }
-
-        return $total;
+        return $this->value($evaluation->getFrequency(), 0)
+            + $this->value($evaluation->getIntensity(), ScoreLevel::MEDIUM->value)
+            + $this->value($evaluation->getHazard(), 0);
     }
 
     /**

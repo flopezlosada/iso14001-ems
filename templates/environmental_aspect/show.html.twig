@@ -57,7 +57,8 @@
                                 <td>{{ evaluation.control ? evaluation.control.value : '—' }}</td>
                                 <td>{{ evaluation.severity ? evaluation.severity.value : '—' }}</td>
                             {% elseif type == 'indirect' %}
-                                <td>{{ evaluation.influence ? evaluation.influence.value : '—' }}</td>
+                                {# influence may be NONE (value 0): test for null, not truthiness, so "Nula" shows 0, not the dash. #}
+                                <td>{{ evaluation.influence is not null ? evaluation.influence.value : '—' }}</td>
                             {% else %}
                                 <td>{{ evaluation.frequency ? evaluation.frequency.value : '—' }}</td>
                                 <td>{{ evaluation.intensity ? evaluation.intensity.value : '—' }}</td>
