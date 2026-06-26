@@ -77,6 +77,24 @@ class InterestedParty
         $this->updatedAt = new \DateTimeImmutable();
     }
 
+    /**
+     * Creates a fresh copy of this interested party for another review year, carrying over its name,
+     * needs/expectations and incidents. Used to seed a new year's register from the previous one as
+     * an editable draft; the copy is a brand-new entity (no id, own timestamps).
+     *
+     * @param int $year the review year the copy belongs to
+     *
+     * @return self a new, unpersisted interested party for the given year
+     */
+    public function copyForYear(int $year): self
+    {
+        return (new self())
+            ->setReviewYear($year)
+            ->setName($this->name)
+            ->setNeedsAndExpectations($this->needsAndExpectations)
+            ->setIncidents($this->incidents);
+    }
+
     public function getId(): ?int
     {
         return $this->id;

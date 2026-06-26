@@ -153,4 +153,81 @@ final class InterestedPartyControllerTest extends WebTestCase
             static::getContainer()->get(AuditLogRepository::class)->findOneBy(['action' => 'interestedparty.deleted'])
         );
     }
+
+    public function testCopyFromPreviousYearIntoEmptyYearBringsAll(): void
+    {
+        $client = $this->loggedInClient();
+        $this->persistParty(2024, 'Usuarios/Alumnos', 'Atención cercana.', 'NO');
+        $this->persistParty(2024, 'Proveedores', 'Puntualidad en pagos.', null);
+
+        $client->request('GET', '/interested-parties/2025');
+        $client->submitForm('Copiar de 2024');
+
+        self::assertResponseRedirects('/interested-parties/2025');
+
+        $copied = static::getContainer()->get(InterestedPartyRepository::class)->findForYear(2025);
+        self::assertCount(2, $copied);
+        $names = array_map(static fn (InterestedParty $p): string => $p->getName(), $copied);
+        self::assertEqualsCanonicalizing(['Usuarios/Alumnos', 'Proveedores'], $names);
+        // The free-text incidents value is carried over, including a null one.
+        $byName = [];
+        foreach ($copied as $p) {
+            $byName[$p->getName()] = $p->getIncidents();
+        }
+        self::assertSame('NO', $byName['Usuarios/Alumnos']);
+        self::assertNull($byName['Proveedores']);
+
+        self::assertNotNull(
+            static::getContainer()->get(AuditLogRepository::class)->findOneBy(['action' => 'interestedparty.copied_from_previous'])
+        );
+    }
+
+    public function testCopyFromPreviousYearOnlyBringsMissingOnes(): void
+    {
+        $client = $this->loggedInClient();
+        // Previous year has two parties; current year already has one of them (with its own text).
+        $this->persistParty(2024, 'Proveedores', 'Texto del año anterior.', null);
+        $this->persistParty(2024, 'Dirección', 'Buena imagen.', null);
+        $this->persistParty(2025, 'Proveedores', 'Texto YA editado en el año actual.', 'Sí');
+
+        $client->request('GET', '/interested-parties/2025');
+        $client->submitForm('Copiar de 2024');
+
+        $current = static::getContainer()->get(InterestedPartyRepository::class)->findForYear(2025);
+        // Only "Dirección" is brought over; "Proveedores" is not duplicated.
+        self::assertCount(2, $current);
+        $names = array_map(static fn (InterestedParty $p): string => $p->getName(), $current);
+        self::assertEqualsCanonicalizing(['Proveedores', 'Dirección'], $names);
+        // The pre-existing "Proveedores" keeps its own edited text (not overwritten by the copy).
+        $proveedores = array_values(array_filter($current, static fn (InterestedParty $p): bool => 'Proveedores' === $p->getName()))[0];
+        self::assertSame('Texto YA editado en el año actual.', $proveedores->getNeedsAndExpectations());
+    }
+
+    public function testCopyFromPreviousYearWhenNothingNewCopiesNothing(): void
+    {
+        $client = $this->loggedInClient();
+        $this->persistParty(2024, 'Proveedores', 'Texto.', null);
+        $this->persistParty(2025, 'proveedores', 'Mismo concepto, distinto texto.', null);
+
+        $client->request('GET', '/interested-parties/2025');
+        $client->submitForm('Copiar de 2024');
+
+        // Names match case-insensitively, so nothing new is copied: still a single party in 2025.
+        self::assertCount(1, static::getContainer()->get(InterestedPartyRepository::class)->findForYear(2025));
+    }
+
+    /**
+     * Persists an interested party for a year, for arranging the copy-from-previous-year scenarios.
+     */
+    private function persistParty(int $year, string $name, string $needs, ?string $incidents): void
+    {
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $party = (new InterestedParty())
+            ->setReviewYear($year)
+            ->setName($name)
+            ->setNeedsAndExpectations($needs)
+            ->setIncidents($incidents);
+        $em->persist($party);
+        $em->flush();
+    }
 }
