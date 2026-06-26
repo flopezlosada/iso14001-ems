@@ -1,0 +1,37 @@
+{% extends 'app_shell.html.twig' %}
+{% import '_macros/form.html.twig' as f %}
+
+{% block title %}{{ isNew ? 'Nueva' : 'Editar' }} revisión por la dirección{% endblock %}
+
+{% block breadcrumb %}
+    <a href="{{ path('app_homepage') }}">Inicio</a><span class="sep">/</span>
+    <a href="{{ path('management_review_index') }}">Revisión por la dirección</a><span class="sep">/</span>
+    {{ isNew ? 'Nueva' : 'Editar' }}
+{% endblock %}
+
+{% block body %}
+    <div class="page-head">
+        <h1>{{ isNew ? 'Nueva revisión por la dirección' : 'Editar revisión por la dirección' }}</h1>
+    </div>
+
+    <div class="card form-card">
+        {{ form_start(form, { 'attr': { 'novalidate': 'novalidate' } }) }}
+            {{ form_errors(form) }}
+            {{ f.fields([form.exercise, form.meetingDate, form.participants]) }}
+
+            {% if form.sections|length == 0 %}
+                <p class="help">Al guardar se generarán las secciones del informe con un resumen de los demás módulos, que luego podrás editar.</p>
+            {% else %}
+                {% for child in form.sections %}
+                    <fieldset class="form-section">
+                        <legend class="form-section-title">{{ child.vars.value.sectionKey.label }}</legend>
+                        {{ form_widget(child.content) }}
+                        {{ form_errors(child.content) }}
+                    </fieldset>
+                {% endfor %}
+            {% endif %}
+
+            {{ f.actions(path('management_review_index')) }}
+        {{ form_end(form) }}
+    </div>
+{% endblock %}

@@ -1,0 +1,44 @@
+{% extends 'app_shell.html.twig' %}
+
+{% block title %}Revisión por la dirección{% endblock %}
+
+{% block breadcrumb %}<a href="{{ path('app_homepage') }}">Inicio</a><span class="sep">/</span>Revisión por la dirección{% endblock %}
+
+{% block body %}
+    <div class="page-head">
+        <div>
+            <h1>Revisión por la dirección</h1>
+            <p class="lead">Revisión anual del sistema de gestión ambiental (PG-09.03.00 / RG-09.03.01).</p>
+        </div>
+        <div>
+            <a class="btn" href="{{ path('management_review_new') }}">+ Nueva revisión</a>
+        </div>
+    </div>
+
+    <div class="card">
+        {% if reviews is empty %}
+            <div class="empty-state">
+                <h2>Aún no hay revisiones</h2>
+                <p>Crea la revisión por la dirección del curso en vigor.</p>
+                <a class="btn" href="{{ path('management_review_new') }}">Crear la primera</a>
+            </div>
+        {% else %}
+            <table data-list-tools>
+                <thead>
+                    <tr>
+                        <th data-filter>Curso</th><th>Fecha de reunión</th><th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for review in reviews %}
+                        <tr>
+                            <td><a class="cell-link" href="{{ path('management_review_show', { id: review.id }) }}">{{ review.exercise }}</a></td>
+                            <td class="muted">{{ review.meetingDate ? review.meetingDate|date('d/m/Y') : '—' }}</td>
+                            <td>{{ review.approved ? 'Aprobada' : 'Borrador' }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    </div>
+{% endblock %}

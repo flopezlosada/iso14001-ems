@@ -45,6 +45,7 @@
                 <a href="{{ path('indicator_index') }}" class="{{ route starts with 'indicator' ? 'is-active' }}">Indicadores</a>
                 <a href="{{ path('legal_requirement_index') }}" class="{{ route starts with 'legal_requirement' ? 'is-active' }}">Requisitos legales</a>
                 <a href="{{ path('non_conformity_index') }}" class="{{ route starts with 'non_conformity' ? 'is-active' }}">No conformidades</a>
+                <a href="{{ path('management_review_index') }}" class="{{ route starts with 'management_review' ? 'is-active' }}">Revisión por la dirección</a>
                 {% if is_granted('ROLE_ADMIN') %}
                     <p class="nav-label">Administración</p>
                     <a href="{{ path('audit_index') }}" class="{{ route starts with 'audit' ? 'is-active' }}">Registro de actividad</a>

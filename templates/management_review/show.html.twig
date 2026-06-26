@@ -1,0 +1,68 @@
+{% extends 'app_shell.html.twig' %}
+
+{% block title %}Revisión por la dirección · {{ review.exercise }}{% endblock %}
+
+{% block breadcrumb %}
+    <a href="{{ path('app_homepage') }}">Inicio</a><span class="sep">/</span>
+    <a href="{{ path('management_review_index') }}">Revisión por la dirección</a><span class="sep">/</span>
+    {{ review.exercise }}
+{% endblock %}
+
+{% block body %}
+    <div class="page-head">
+        <div>
+            <h1>Revisión por la dirección · {{ review.exercise }}</h1>
+            <p class="lead">
+                {% if review.meetingDate %}Reunión: {{ review.meetingDate|date('d/m/Y') }} · {% endif %}
+                {% if review.approved %}
+                    <strong>Aprobada</strong> por {{ review.approvedBy ? review.approvedBy.fullName : '—' }}{% if review.approvedAt %} el {{ review.approvedAt|date('d/m/Y') }}{% endif %}
+                {% else %}
+                    Borrador
+                {% endif %}
+            </p>
+        </div>
+        {% if not review.approved %}
+            <a class="btn secondary" href="{{ path('management_review_edit', { id: review.id }) }}">Editar</a>
+        {% endif %}
+    </div>
+
+    <div class="card">
+        <h2>Participantes</h2>
+        {% if review.participants is empty %}
+            <p class="muted">Sin participantes registrados.</p>
+        {% else %}
+            <ul>
+                {% for participant in review.participants %}
+                    <li>{{ participant.fullName }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </div>
+
+    {% for section in review.sections %}
+        <div class="card">
+            <h2>{{ section.sectionKey.label }}</h2>
+            {% if section.content %}
+                <p style="white-space: pre-line">{{ section.content }}</p>
+            {% else %}
+                <p class="muted">Sin contenido.</p>
+            {% endif %}
+        </div>
+    {% endfor %}
+
+    {% if not review.approved %}
+        <div class="card">
+            <form method="post" action="{{ path('management_review_approve', { id: review.id }) }}" onsubmit="return confirm('¿Aprobar la revisión? Quedará firmada por la dirección y no podrá editarse.');">
+                <input type="hidden" name="_token" value="{{ csrf_token('approve' ~ review.id) }}">
+                <button class="btn" type="submit">Aprobar (firmar) la revisión</button>
+            </form>
+        </div>
+    {% endif %}
+
+    <div class="card">
+        <form method="post" action="{{ path('management_review_delete', { id: review.id }) }}" onsubmit="return confirm('¿Eliminar esta revisión por la dirección?');">
+            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ review.id) }}">
+            <button class="btn danger" type="submit">Eliminar</button>
+        </form>
+    </div>
+{% endblock %}

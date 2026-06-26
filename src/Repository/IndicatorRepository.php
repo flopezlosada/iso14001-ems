@@ -27,4 +27,21 @@ class IndicatorRepository extends ServiceEntityRepository
     {
         return $this->findBy([], ['process' => 'ASC', 'name' => 'ASC']);
     }
+
+    /**
+     * All indicators with their measurements eagerly fetched, to summarise the year's results
+     * without an N+1 over each indicator's measurements.
+     *
+     * @return Indicator[] all indicators, measurements preloaded
+     */
+    public function findAllWithMeasurements(): array
+    {
+        return $this->createQueryBuilder('i')
+            ->addSelect('m')
+            ->leftJoin('i.measurements', 'm')
+            ->orderBy('i.process', 'ASC')
+            ->addOrderBy('i.name', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
 }
