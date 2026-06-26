@@ -40,6 +40,12 @@ class GoogleAuthenticator extends OAuth2Authenticator
         return 'connect_google_check' === $request->attributes->get('_route');
     }
 
+    /**
+     * Reaching this point means Google already completed the OAuth flow, so the e-mail is
+     * verified by Google (the standard OAuth/OIDC flow never issues a token for an unverified
+     * address); hence no explicit $googleUser->isEmailTrustworthy() check is needed. The
+     * allow-list lookup below is the actual access control.
+     */
     public function authenticate(Request $request): Passport
     {
         $client = $this->clientRegistry->getClient('google');

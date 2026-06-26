@@ -16,7 +16,8 @@ use Symfony\Component\Routing\Attribute\Route;
 class GoogleController extends AbstractController
 {
     /**
-     * Redirects the user to Google's consent screen, restricted to the institutional domain.
+     * Redirects the user to Google's consent screen. Any Google account may start the flow;
+     * access is decided afterwards by the allow-list in {@see \App\Security\GoogleAuthenticator}.
      */
     #[Route('/connect/google', name: 'connect_google', methods: ['GET'])]
     public function connect(ClientRegistry $clientRegistry): RedirectResponse
