@@ -52,6 +52,7 @@ class InterestedPartyController extends AbstractController
         return $this->render('interested_party/index.html.twig', [
             'year' => $year,
             'parties' => $parties->findForYear($year),
+            'previousYearCount' => $parties->countForYear($year - 1),
         ]);
     }
 
@@ -110,6 +111,65 @@ class InterestedPartyController extends AbstractController
         $this->addFlash('success', sprintf('Parte interesada «%s» eliminada.', $name));
 
         return $this->redirectToRoute('interested_party_year', ['year' => $year]);
+    }
+
+    /**
+     * Copies the interested parties of the previous review year into this one, as an editable draft.
+     * Only parties whose name is not already present in the current year are brought over (matched
+     * case-insensitively, trimmed), so it is safe to run with the year empty or half-filled and it
+     * never creates duplicates. CSRF-protected POST.
+     */
+    #[Route('/{year}/copy-previous', name: 'interested_party_copy_previous', requirements: ['year' => '\d{4}'], methods: ['POST'])]
+    public function copyFromPreviousYear(int $year, Request $request, EntityManagerInterface $em, InterestedPartyRepository $parties): Response
+    {
+        $this->denyAccessUnlessGranted(AreaVoter::WRITE, Area::INTERESTED_PARTY);
+
+        if (!$this->isCsrfTokenValid('copy_previous_interested_party'.(string) $year, (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Invalid CSRF token.');
+        }
+
+        $existingNames = array_map(
+            static fn (InterestedParty $p): string => self::normaliseName($p->getName()),
+            $parties->findForYear($year),
+        );
+
+        $toCopy = array_filter(
+            $parties->findForYear($year - 1),
+            static fn (InterestedParty $p): bool => !\in_array(self::normaliseName($p->getName()), $existingNames, true),
+        );
+
+        foreach ($toCopy as $party) {
+            $em->persist($party->copyForYear($year));
+        }
+        $em->flush();
+
+        $copied = \count($toCopy);
+        if ($copied > 0) {
+            $this->auditLogger->log(
+                'interestedparty.copied_from_previous',
+                'InterestedParty',
+                (string) $year,
+                sprintf('%d partes copiadas de %d a %d', $copied, $year - 1, $year),
+            );
+            $this->addFlash('success', sprintf('Se han copiado %d partes interesadas de %d.', $copied, $year - 1));
+        } else {
+            $this->addFlash('success', sprintf('No había nada nuevo que copiar de %d.', $year - 1));
+        }
+
+        return $this->redirectToRoute('interested_party_year', ['year' => $year]);
+    }
+
+    /**
+     * Normalises an interested party's name for duplicate detection: trimmed and lower-cased so
+     * "Proveedores" and " proveedores " are treated as the same party.
+     *
+     * @param string $name the raw party name
+     *
+     * @return string the normalised key
+     */
+    private static function normaliseName(string $name): string
+    {
+        return mb_strtolower(trim($name));
     }
 
     /**

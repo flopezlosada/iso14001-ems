@@ -33,4 +33,17 @@ class InterestedPartyRepository extends ServiceEntityRepository
             ['name' => 'ASC', 'id' => 'ASC'],
         );
     }
+
+    /**
+     * Counts how many interested parties are recorded for a given review year. Used to decide
+     * whether the "copy from previous year" action has a source to copy from.
+     *
+     * @param int $year the review year
+     *
+     * @return int the number of interested parties recorded for that year
+     */
+    public function countForYear(int $year): int
+    {
+        return $this->count(['reviewYear' => $year]);
+    }
 }
