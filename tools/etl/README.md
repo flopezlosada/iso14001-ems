@@ -34,6 +34,12 @@ python3 tools/etl/normalize_nc.py \
 python3 tools/etl/normalize_aspects.py \
   "$DOC/00.PLAN/.../RG-06.01.01 Evaluación Aspectos Ambientales ...xlsx" \
   fixtures/real/aspects.csv   # [año] opcional; por defecto el de la cabecera "Fecha: ... 20XX"
+
+python3 tools/etl/normalize_risks.py \
+  "$DOC/00.PLAN/.../F.08.0 GESTIÓN DE RIESGOS Y OPORTUNIDADES ....xlsx" \
+  fixtures/real/risks.csv     # procesa todas las hojas de "Determinación" (una por curso) e
+                              # IGNORA la hoja "Criterios" (rúbrica ISO 9001 contaminante); el
+                              # curso se deriva del nombre de hoja/fichero. [curso] opcional.
 ```
 
 (Los normalizadores de requisitos legales, objetivos, proveedores e indicadores siguen el mismo
@@ -57,10 +63,12 @@ Propiedades:
 
 - **Idempotente**: se puede re-ejecutar. Clave natural por dataset — consumos `(tipo, año, mes)`,
   residuos hash del contenido de la fila, NC la referencia `NC.<origen>.<año>.<NN>`, aspectos el
-  nombre del aspecto y su evaluación por `(aspecto, año)`. La significancia del aspecto NO se lee de
-  la hoja: la recalcula `AspectSignificanceCalculator` (la regla de la app, fuente única de verdad).
+  nombre del aspecto y su evaluación por `(aspecto, año)`, riesgos `(tipo, descripción)` con su
+  valoración por `(riesgo, curso)`. La significancia del aspecto NO se lee de la hoja: la recalcula
+  `AspectSignificanceCalculator`; análogamente, el score y la categoría del riesgo NO se leen de la
+  hoja (que incluso se contradice): los recalcula `RiskScoreCalculator` (la regla de la app, fuente
+  única de verdad).
 - **Validado**: cada entidad pasa por el Validator antes de persistir.
 - **Cuarentena**: las filas que no validan se escriben en `fixtures/real/<dataset>.rejected.csv`
   con el motivo, y el comando termina con código de error. Nada se descarta en silencio.
 - No requiere PhpSpreadsheet: el comando solo lee CSV.
-```
