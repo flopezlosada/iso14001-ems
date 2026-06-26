@@ -1,0 +1,24 @@
+{% extends 'app_shell.html.twig' %}
+{% import '_macros/form.html.twig' as f %}
+
+{% block title %}{{ isNew ? 'Añadir' : 'Editar' }} parte interesada{% endblock %}
+
+{% block breadcrumb %}
+    <a href="{{ path('app_homepage') }}">Inicio</a><span class="sep">/</span>
+    <a href="{{ path('interested_party_year', { year: year }) }}">Partes interesadas {{ year }}</a><span class="sep">/</span>
+    {{ isNew ? 'Añadir' : party.name }}
+{% endblock %}
+
+{% block body %}
+    <div class="page-head">
+        <h1>{{ isNew ? 'Añadir parte interesada' : 'Editar ' ~ party.name }}</h1>
+    </div>
+
+    <div class="card form-card">
+        {{ form_start(form, { 'attr': { 'novalidate': 'novalidate' } }) }}
+            {{ form_errors(form) }}
+            {{ f.fields([form.name, form.needsAndExpectations, form.incidents]) }}
+            {{ f.actions(path('interested_party_year', { year: year })) }}
+        {{ form_end(form) }}
+    </div>
+{% endblock %}
