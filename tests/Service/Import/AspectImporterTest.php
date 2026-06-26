@@ -16,8 +16,8 @@ use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 /**
  * Integration tests for the aspects importer over a real test database (rolled back per test).
  * Covers creating each aspect kind with its evaluation, the computed significance (recomputed by
- * the calculator, not read from the sheet), catalogue-only rows with no evaluation, the "Nula"
- * influence with no enum case, idempotent re-import (no duplicate, no unique clash) and rejection
+ * the calculator, not read from the sheet), catalogue-only rows with no evaluation, the explicit
+ * "Nula" influence level (0), idempotent re-import (no duplicate, no unique clash) and rejection
  * of an unknown type.
  */
 final class AspectImporterTest extends KernelTestCase
@@ -85,11 +85,11 @@ final class AspectImporterTest extends KernelTestCase
 
     /**
      * Realistic boundary case from the real register: "Restos de tóner" (residuos) scores 2 + 4 + 4
-     * = 10, which the sheet marks SIGNIFICATIVO (it uses >=). The app's rule is strict ">" over the
-     * configurable waste threshold (10), so the recomputed flag is NOT significant. This documents
-     * the divergence rather than hiding it; the significance is always the app's, never the sheet's.
+     * = 10 = waste threshold (10), which the certified sheet marks SIGNIFICATIVO. The app now uses
+     * the inclusive ">=" boundary, so the recomputed flag matches the sheet (it was a false negative
+     * before, when the rule was a strict ">").
      */
-    public function testWasteBoundaryRecomputesAgainstAppThreshold(): void
+    public function testWasteBoundaryAtThresholdIsSignificant(): void
     {
         $this->importer->import([
             $this->row([
@@ -102,12 +102,12 @@ final class AspectImporterTest extends KernelTestCase
         $evaluation = $this->aspects->findOneBy(['name' => 'Restos de tóner'])?->getLatestEvaluation();
         self::assertNotNull($evaluation);
         self::assertSame(10, $evaluation->getSignificanceScore());
-        self::assertFalse($evaluation->isSignificant(), 'La app usa > estricto sobre el umbral de residuos (10).');
+        self::assertTrue($evaluation->isSignificant(), 'La app usa >= sobre el umbral de residuos (10).');
     }
 
-    public function testDischargeIgnoresIntensityInScore(): void
+    public function testDischargeIncludesIntensityInScore(): void
     {
-        // Vertidos: la suma de la app NO incluye intensidad (Anexo I) -> 2 + 2 = 4, no 6.
+        // Vertidos: RG-06.01.01 Rev 02 añadió intensidad -> la suma incluye los tres criterios: 2 + 2 + 2 = 6.
         $this->importer->import([
             $this->row([
                 'name' => 'Vertidos a la red municipal', 'category' => 'discharge', 'unit' => 'Litros',
@@ -118,7 +118,7 @@ final class AspectImporterTest extends KernelTestCase
 
         $evaluation = $this->aspects->findOneBy(['name' => 'Vertidos a la red municipal'])?->getLatestEvaluation();
         self::assertNotNull($evaluation);
-        self::assertSame(4, $evaluation->getSignificanceScore());
+        self::assertSame(6, $evaluation->getSignificanceScore());
     }
 
     public function testCatalogueOnlyRowCreatesAspectWithoutEvaluation(): void
@@ -147,9 +147,9 @@ final class AspectImporterTest extends KernelTestCase
         self::assertCount(0, $aspect->getEvaluations());
     }
 
-    public function testIndirectNulaInfluenceIsEvaluatedWithZeroScore(): void
+    public function testIndirectNulaInfluenceMapsToNoneLevelWithZeroScore(): void
     {
-        // Capacidad de influencia "Nula" (0) no tiene caso en el enum: se evalúa con score 0.
+        // Capacidad de influencia "Nula" (0) ahora es un nivel explícito del enum (NONE), no null; score 0.
         $this->importer->import([
             $this->row([
                 'type' => 'indirect', 'category' => '', 'name' => 'Consumo de combustible trabajadores',
@@ -160,7 +160,7 @@ final class AspectImporterTest extends KernelTestCase
 
         $evaluation = $this->aspects->findOneBy(['name' => 'Consumo de combustible trabajadores'])?->getLatestEvaluation();
         self::assertNotNull($evaluation);
-        self::assertNull($evaluation->getInfluence());
+        self::assertSame(InfluenceLevel::NONE, $evaluation->getInfluence());
         self::assertSame(0, $evaluation->getSignificanceScore());
     }
 
@@ -182,7 +182,7 @@ final class AspectImporterTest extends KernelTestCase
 
     public function testAbnormalAspectComputesSignificance(): void
     {
-        // Incendio: 2 + 2 + 4 = 8 <= umbral anormal (10) -> no significativo.
+        // Incendio: 2 + 2 + 4 = 8 < umbral anormal (10) -> no significativo.
         $this->importer->import([
             $this->row([
                 'type' => 'abnormal', 'category' => '', 'name' => 'Incendio', 'unit' => 'Nº de accidentes',

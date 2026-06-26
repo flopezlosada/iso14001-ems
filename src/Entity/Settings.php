@@ -28,7 +28,7 @@ class Settings
     private ?int $id = null;
 
     // Per-category significance thresholds for direct aspects (PG-06.01 Anexo I): significant when
-    // the score strictly exceeds the value. The score is the sum of three 2/4/6 criteria (max 18).
+    // the score REACHES OR EXCEEDS the value. The score is the sum of three 2/4/6 criteria (max 18).
     #[ORM\Column]
     #[Assert\Range(min: 1, max: 18)]
     private int $consumptionThreshold = 12;
@@ -43,7 +43,7 @@ class Settings
 
     #[ORM\Column]
     #[Assert\Range(min: 1, max: 18)]
-    private int $dischargeThreshold = 8;
+    private int $dischargeThreshold = 12;
 
     /**
      * Threshold for abnormal aspects (Anexo III) and the fallback for a direct aspect with no category.
