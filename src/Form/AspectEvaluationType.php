@@ -63,7 +63,8 @@ class AspectEvaluationType extends AbstractType
                 ]);
         } else {
             // Discharges (vertidos) only define BAJA/ALTA for hazard (PG-06.01 Anexo I); the rest
-            // use the full scale. With no category yet, offer all levels.
+            // use the full scale. Intensity, by contrast, now applies to every category (incl.
+            // discharges, since RG-06.01.01 Rev 02). With no category yet, offer all levels.
             $category = $options['category'];
             $hazardChoices = $category instanceof DirectAspectCategory ? $category->hazardLevels() : ScoreLevel::cases();
 
@@ -75,7 +76,7 @@ class AspectEvaluationType extends AbstractType
                 ->add('intensity', EnumType::class, [
                     'class' => ScoreLevel::class, 'label' => 'Intensidad',
                     'required' => false, 'placeholder' => 'Sin dato (se computa como 4)', 'choice_label' => $scoreLabel,
-                    'help' => 'Para vertidos no aplica. En consumos/residuos, déjalo vacío si no hay dato del año anterior (cuenta como 4).',
+                    'help' => 'Déjalo vacío si no hay dato del año anterior: cuenta como 4 («Media»).',
                 ])
                 ->add('hazard', EnumType::class, [
                     'class' => ScoreLevel::class, 'label' => 'Peligrosidad',

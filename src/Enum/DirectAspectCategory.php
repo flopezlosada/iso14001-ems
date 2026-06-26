@@ -6,9 +6,9 @@ namespace App\Enum;
 
 /**
  * Category of a direct environmental aspect (PG-06.01 Anexo I). The significance of all four is
- * the sum of frequency + intensity + hazard, except discharges (vertidos), which have no
- * intensity criterion. Each category has its own significance threshold, now configurable in
- * {@see \App\Entity\Settings::thresholdFor()}.
+ * the sum of frequency + intensity + hazard (RG-06.01.01 Rev 02 added the intensity criterion to
+ * discharges/vertidos as well). Each category has its own significance threshold, now configurable
+ * in {@see \App\Entity\Settings::thresholdFor()}.
  */
 enum DirectAspectCategory: string
 {
@@ -16,16 +16,6 @@ enum DirectAspectCategory: string
     case EMISSION = 'emission';
     case WASTE = 'waste';
     case DISCHARGE = 'discharge';
-
-    /**
-     * Whether this category scores the intensity criterion. Discharges (vertidos) do not.
-     *
-     * @return bool true for all categories except discharge
-     */
-    public function usesIntensity(): bool
-    {
-        return self::DISCHARGE !== $this;
-    }
 
     /**
      * Hazard levels offered for this category (PG-06.01 Anexo I, criterio "Peligrosidad").

@@ -25,6 +25,8 @@ enum Area: string
     case INDICATOR = 'indicator';
     case OPERATIONAL_CONTROL = 'operational_control';
     case MANAGEMENT_REVIEW = 'management_review';
+    case INTERESTED_PARTY = 'interested_party';
+    case DAFO = 'dafo';
 
     /**
      * Human-facing area name (Spanish), used in the permissions matrix.
@@ -45,6 +47,8 @@ enum Area: string
             self::INDICATOR => 'Indicadores',
             self::OPERATIONAL_CONTROL => 'Control operacional',
             self::MANAGEMENT_REVIEW => 'Revisión por la dirección',
+            self::INTERESTED_PARTY => 'Partes interesadas',
+            self::DAFO => 'Análisis DAFO',
         };
     }
 
@@ -71,6 +75,8 @@ enum Area: string
             self::INDICATOR => 'indicator_index',
             self::OPERATIONAL_CONTROL => 'operational_control_index',
             self::MANAGEMENT_REVIEW => 'management_review_index',
+            self::INTERESTED_PARTY => 'interested_party_index',
+            self::DAFO => 'dafo_index',
         };
     }
 }

@@ -40,8 +40,9 @@ class AspectEvaluation
     private ?ScoreLevel $frequency = null;
 
     /**
-     * Intensity score. Null is meaningful: for consumption/waste it means "no prior-year data",
-     * which the calculator treats as 4 ("Media"); for discharges it is simply not used.
+     * Intensity score, scored for every direct category (discharges included since RG-06.01.01
+     * Rev 02). Null is meaningful: it means "no prior-year data", which the calculator treats as
+     * 4 ("Media").
      */
     #[ORM\Column(type: Types::SMALLINT, nullable: true, enumType: ScoreLevel::class)]
     private ?ScoreLevel $intensity = null;

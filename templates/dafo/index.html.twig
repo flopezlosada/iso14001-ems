@@ -1,0 +1,59 @@
+{% extends 'app_shell.html.twig' %}
+
+{% block title %}Análisis DAFO{% endblock %}
+
+{% block breadcrumb %}<a href="{{ path('app_homepage') }}">Inicio</a><span class="sep">/</span>Análisis DAFO{% endblock %}
+
+{% set canWrite = is_granted('AREA_WRITE', constant('App\\Enum\\Area::DAFO')) %}
+
+{% block body %}
+    <div class="page-head">
+        <div>
+            <h1>Análisis DAFO</h1>
+            <p class="lead">Debilidades, amenazas, fortalezas y oportunidades ambientales del centro por ejercicio (F.06.0, contexto ISO 14001).</p>
+        </div>
+        {% if canWrite %}
+            <a class="btn" href="{{ path('dafo_new') }}">+ Nuevo análisis</a>
+        {% endif %}
+    </div>
+
+    <div class="card">
+        {% if analyses is empty %}
+            <div class="empty-state">
+                <h2>Aún no hay análisis DAFO</h2>
+                <p>Registra el análisis del ejercicio en curso.</p>
+                {% if canWrite %}
+                    <a class="btn" href="{{ path('dafo_new') }}">Registrar el primero</a>
+                {% endif %}
+            </div>
+        {% else %}
+            <table data-list-tools>
+                <thead>
+                    <tr>
+                        <th>Ejercicio</th><th>Actualizado</th><th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for analysis in analyses %}
+                        <tr>
+                            <td class="mono">{{ analysis.schoolYear }}</td>
+                            <td class="muted">{{ analysis.updatedAt|date('d/m/Y') }}</td>
+                            <td>
+                                {% if canWrite %}
+                                    <a href="{{ path('dafo_edit', { id: analysis.id }) }}">Editar</a>
+                                    <span aria-hidden="true">·</span>
+                                    <form method="post" action="{{ path('dafo_delete', { id: analysis.id }) }}" class="inline-form" onsubmit="return confirm('¿Eliminar el análisis DAFO {{ analysis.schoolYear }}?');">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('dafo_delete' ~ analysis.id) }}">
+                                        <button type="submit" class="btn danger">Borrar</button>
+                                    </form>
+                                {% else %}
+                                    <span class="muted">—</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    </div>
+{% endblock %}

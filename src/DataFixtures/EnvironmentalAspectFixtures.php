@@ -138,10 +138,10 @@ final class EnvironmentalAspectFixtures extends AbstractGoldenFixture
                 'category' => DirectAspectCategory::DISCHARGE,
                 'unit' => 'm³',
                 'impact' => 'Contaminación del agua',
-                // Discharges have no intensity criterion (see the calculator).
+                // Discharges now carry intensity too (RG-06.01.01 Rev 02): freq + intensity + hazard.
                 'scores' => [
-                    2025 => ['frequency' => $lo, 'hazard' => $lo],
-                    2026 => ['frequency' => $lo, 'hazard' => $lo],
+                    2025 => ['frequency' => $lo, 'intensity' => $lo, 'hazard' => $lo],
+                    2026 => ['frequency' => $lo, 'intensity' => $lo, 'hazard' => $lo],
                 ],
             ],
             'concienciacion-alumnado' => [

@@ -205,8 +205,9 @@ final class AspectImporter extends AbstractDatasetImporter implements DatasetImp
     }
 
     /**
-     * Maps a raw capacity-of-influence cell to an influence level, or null for "0" (Nula, which the
-     * enum does not model) or a blank cell; the calculator records a 0 significance for those.
+     * Maps a raw capacity-of-influence cell to an influence level (0 = Nula, 1 = Baja, 2 = Media,
+     * 3 = Alta; RG-06.01.01 Rev 02), or null for a blank/unevaluated cell. "Nula" and a blank cell
+     * both yield a 0 significance, but "Nula" is preserved as an explicit level, not collapsed to null.
      */
     private function influenceLevel(string $value): ?InfluenceLevel
     {
