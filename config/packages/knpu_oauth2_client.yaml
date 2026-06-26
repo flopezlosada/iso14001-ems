@@ -8,6 +8,3 @@ knpu_oauth2_client:
             client_secret: '%env(GOOGLE_CLIENT_SECRET)%'
             redirect_route: connect_google_check
             redirect_params: {}
-            # Ask Google to restrict the account chooser to the institutional domain. The
-            # authenticator double-checks the e-mail domain server-side as well.
-            hosted_domain: educa.madrid.org

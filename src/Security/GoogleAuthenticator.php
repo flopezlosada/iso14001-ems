@@ -22,14 +22,12 @@ use Symfony\Component\Security\Http\Authenticator\Passport\Passport;
 use Symfony\Component\Security\Http\Authenticator\Passport\SelfValidatingPassport;
 
 /**
- * Authenticates "Entrar con Educamadrid" (Google OAuth). Two gates:
- *  1. the Google account must belong to the @educa.madrid.org domain, and
- *  2. the user must already be registered and active (allow-list) — SSO never creates users.
+ * Authenticates "Entrar con Educamadrid" (Google OAuth). Any Google account can attempt sign-in,
+ * but access is granted only to users already registered and active (allow-list) — SSO never
+ * creates users. The allow-list is the access control: membership, not e-mail domain, decides.
  */
 class GoogleAuthenticator extends OAuth2Authenticator
 {
-    private const ALLOWED_DOMAIN = 'educa.madrid.org';
-
     public function __construct(
         private readonly ClientRegistry $clientRegistry,
         private readonly UserRepository $users,
@@ -52,12 +50,6 @@ class GoogleAuthenticator extends OAuth2Authenticator
         }
 
         $email = strtolower(trim((string) $googleUser->getEmail()));
-
-        // Exact domain match (no subdomains): compare the part after the last "@".
-        $atPos = strrpos($email, '@');
-        if (false === $atPos || substr($email, $atPos + 1) !== self::ALLOWED_DOMAIN) {
-            throw new CustomUserMessageAuthenticationException('Solo se permite el acceso con cuentas @educa.madrid.org.');
-        }
 
         return new SelfValidatingPassport(new UserBadge($email, function (string $identifier): User {
             $user = $this->users->findActiveByEmail($identifier);
