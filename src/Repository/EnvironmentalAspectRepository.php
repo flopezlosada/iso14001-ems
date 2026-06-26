@@ -29,6 +29,23 @@ class EnvironmentalAspectRepository extends ServiceEntityRepository
     }
 
     /**
+     * All aspects with their evaluations eagerly fetched, to summarise significance per year without
+     * an N+1 over each aspect's evaluations.
+     *
+     * @return EnvironmentalAspect[] all aspects, evaluations preloaded
+     */
+    public function findAllWithEvaluations(): array
+    {
+        return $this->createQueryBuilder('a')
+            ->addSelect('e')
+            ->leftJoin('a.evaluations', 'e')
+            ->orderBy('a.category', 'ASC')
+            ->addOrderBy('a.name', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
      * Active aspects with an auto-intensity source — a linked consumption utility or a set of LER
      * codes (waste) — i.e. the ones whose intensity can be estimated and watched automatically. Used
      * to build the cockpit's "aspectos a vigilar" list. The LER-codes condition is applied in PHP to
