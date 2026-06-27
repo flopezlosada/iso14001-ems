@@ -27,6 +27,7 @@ enum Area: string
     case MANAGEMENT_REVIEW = 'management_review';
     case INTERESTED_PARTY = 'interested_party';
     case DAFO = 'dafo';
+    case COMMUNICATION = 'communication';
 
     /**
      * Human-facing area name (Spanish), used in the permissions matrix.
@@ -49,6 +50,7 @@ enum Area: string
             self::MANAGEMENT_REVIEW => 'Revisión por la dirección',
             self::INTERESTED_PARTY => 'Partes interesadas',
             self::DAFO => 'Análisis DAFO',
+            self::COMMUNICATION => 'Comunicaciones',
         };
     }
 
@@ -77,6 +79,7 @@ enum Area: string
             self::MANAGEMENT_REVIEW => 'management_review_index',
             self::INTERESTED_PARTY => 'interested_party_index',
             self::DAFO => 'dafo_index',
+            self::COMMUNICATION => 'communication_index',
         };
     }
 }
