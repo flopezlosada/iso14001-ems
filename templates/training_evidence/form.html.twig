@@ -1,0 +1,25 @@
+{% extends 'app_shell.html.twig' %}
+{% import '_macros/form.html.twig' as f %}
+
+{% block title %}{{ isNew ? 'Registrar' : 'Editar' }} evidencia de formación{% endblock %}
+
+{% block breadcrumb %}
+    <a href="{{ path('app_homepage') }}">Inicio</a><span class="sep">/</span>
+    <a href="{{ path('training_evidence_index') }}">Evidencias de formación</a><span class="sep">/</span>
+    {{ isNew ? 'Registrar' : evidence.personName }}
+{% endblock %}
+
+{% block body %}
+    <div class="page-head">
+        <h1>{{ isNew ? 'Registrar evidencia de formación' : 'Editar evidencia de formación' }}</h1>
+    </div>
+
+    <div class="card form-card">
+        {{ form_start(form, { 'attr': { 'novalidate': 'novalidate' } }) }}
+            {{ form_errors(form) }}
+            {{ f.section('Evidencia', [form.personName, form.trainingDescription, form.trainingDate, form.questionnaireCompleted]) }}
+            {{ f.section('Plan de formación', [form.trainingAction]) }}
+            {{ f.actions(path('training_evidence_index')) }}
+        {{ form_end(form) }}
+    </div>
+{% endblock %}

@@ -1,0 +1,67 @@
+{% extends 'app_shell.html.twig' %}
+
+{% set can_write = is_granted('AREA_WRITE', constant('App\\Enum\\Area::TRAINING')) %}
+
+{% block title %}Evidencias de formación{% endblock %}
+
+{% block breadcrumb %}<a href="{{ path('app_homepage') }}">Inicio</a><span class="sep">/</span>Evidencias de formación{% endblock %}
+
+{% block body %}
+    <div class="page-head">
+        <div>
+            <h1>Evidencias de formación</h1>
+            <p class="lead">Registro de quién recibió cada formación ambiental, con su fecha y el cuestionario de aprovechamiento (§7.2/§7.3).</p>
+        </div>
+        {% if can_write %}
+            <div>
+                <a class="btn" href="{{ path('training_evidence_new') }}">+ Registrar evidencia</a>
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="toolbar">
+        <span class="mono muted">
+            <a class="btn secondary" href="{{ path('training_index') }}">Plan de formación</a>
+        </span>
+    </div>
+
+    <div class="card">
+        {% if evidences is empty %}
+            <div class="empty-state">
+                <h2>Aún no hay evidencias registradas</h2>
+                <p>Registra la primera evidencia de formación del centro.</p>
+                {% if can_write %}
+                    <a class="btn" href="{{ path('training_evidence_new') }}">Registrar la primera</a>
+                {% endif %}
+            </div>
+        {% else %}
+            <table data-list-tools>
+                <thead>
+                    <tr>
+                        <th>Fecha</th><th>Nombre</th><th>Tipo de formación</th><th>Cuestionario</th><th>Acción del plan</th><th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for evidence in evidences %}
+                        <tr>
+                            <td class="mono">{{ evidence.trainingDate|date('d/m/Y') }}</td>
+                            <td>{{ evidence.personName }}</td>
+                            <td>{{ evidence.trainingDescription }}</td>
+                            <td>{{ evidence.questionnaireCompleted ? 'Sí' : 'No' }}</td>
+                            <td class="muted">{{ evidence.trainingAction ? evidence.trainingAction.description : '—' }}</td>
+                            <td>
+                                {% if can_write %}
+                                    <a href="{{ path('training_evidence_edit', { id: evidence.id }) }}">Editar</a>
+                                    <form method="post" action="{{ path('training_evidence_delete', { id: evidence.id }) }}" onsubmit="return confirm('¿Eliminar la evidencia de «{{ evidence.personName|e('js') }}»?');" style="display:inline">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('delete_training_evidence' ~ evidence.id) }}">
+                                        <button type="submit" class="btn secondary">Eliminar</button>
+                                    </form>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    </div>
+{% endblock %}
