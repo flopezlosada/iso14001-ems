@@ -32,7 +32,7 @@
             <table>
                 <thead>
                     <tr>
-                        <th>Curso</th><th>{{ item.type.firstFactorLabel }}</th><th>Impacto</th><th>PxI</th><th>Categoría</th><th>Rev.</th><th>Acciones</th><th></th>
+                        <th>Curso</th><th>{{ item.type.firstFactorLabel }}</th><th>Impacto</th><th>PxI</th><th>Categoría</th><th>Rev.</th><th>Acciones</th><th>Aprobación</th><th></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -45,6 +45,18 @@
                             <td>{{ assessment.category ? assessment.category.label(item.type) : '—' }}</td>
                             <td class="mono">{{ assessment.revisionNumber }}</td>
                             <td class="muted">{{ assessment.actions|length }}</td>
+                            <td>
+                                {%- if assessment.approvedBy -%}
+                                    {{ assessment.approvedBy.fullName }} <span class="muted">· {{ assessment.approvedAt|date('d/m/Y') }}</span>
+                                {%- elseif is_granted('RISK_ASSESSMENT_APPROVE', assessment) -%}
+                                    <form method="post" action="{{ path('risk_assessment_approve', { id: item.id, assessmentId: assessment.id }) }}" class="inline-form">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('risk_assessment_approve' ~ assessment.id) }}">
+                                        <button class="btn secondary" type="submit">Aprobar</button>
+                                    </form>
+                                {%- else -%}
+                                    <span class="muted">Pendiente</span>
+                                {%- endif -%}
+                            </td>
                             <td><a href="{{ path('risk_assessment_edit', { id: item.id, assessmentId: assessment.id }) }}">Editar</a></td>
                         </tr>
                     {% endfor %}

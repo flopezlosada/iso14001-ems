@@ -16,9 +16,11 @@ use Symfony\Component\Security\Core\Authorization\Voter\Voter;
  *    for policy/manual/procedures, RSGMA for forms) — {@see \App\Enum\DocumentType::approverRoleCode()}.
  *  - COMPLETE: closing an obligation's review cycle is done by its responsible role (same as ISSUE):
  *    the responsible is who confirms the periodic review is done for this period.
+ *  - LIFECYCLE: cancelling / archiving / restoring a document is done by the RSGMA (Responsable del
+ *    SGA), who owns document control (PC.01.0).
  *
- * ROLE_ADMIN bypasses both. Elaborator and approver are deliberately separate: e.g. the RSGMA drafts
- * a procedure but Dirección approves it.
+ * ROLE_ADMIN bypasses all of them. Elaborator and approver are deliberately separate: e.g. the RSGMA
+ * drafts a procedure but Dirección approves it.
  *
  * @extends Voter<string, Document>
  */
@@ -27,10 +29,17 @@ class DocumentVoter extends Voter
     public const ISSUE = 'DOCUMENT_ISSUE';
     public const APPROVE = 'DOCUMENT_APPROVE';
     public const COMPLETE = 'DOCUMENT_COMPLETE';
+    public const LIFECYCLE = 'DOCUMENT_LIFECYCLE';
+
+    /**
+     * Code of the role that owns document control (the RSGMA). Holding it grants the lifecycle
+     * actions on any document, regardless of who is its responsible/approver.
+     */
+    private const string DOCUMENT_CONTROL_ROLE = 'ems_manager';
 
     protected function supports(string $attribute, mixed $subject): bool
     {
-        return \in_array($attribute, [self::ISSUE, self::APPROVE, self::COMPLETE], true) && $subject instanceof Document;
+        return \in_array($attribute, [self::ISSUE, self::APPROVE, self::COMPLETE, self::LIFECYCLE], true) && $subject instanceof Document;
     }
 
     protected function voteOnAttribute(string $attribute, mixed $subject, TokenInterface $token): bool
@@ -48,6 +57,7 @@ class DocumentVoter extends Voter
         return match ($attribute) {
             self::ISSUE, self::COMPLETE => null !== $subject->getResponsibleRole() && $user->holdsRole($subject->getResponsibleRole()),
             self::APPROVE => null !== ($code = $subject->getType()->approverRoleCode()) && $user->holdsRoleCode($code),
+            self::LIFECYCLE => $user->holdsRoleCode(self::DOCUMENT_CONTROL_ROLE),
             default => false,
         };
     }

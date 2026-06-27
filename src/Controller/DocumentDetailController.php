@@ -29,9 +29,10 @@ use Symfony\Component\Routing\Attribute\Route;
  *
  * Reading is granted to any authenticated user (ROLE_USER), with no area gating: the document
  * register is a transparency artefact, consistent with the obligations cockpit. The write actions
- * are gated: lifecycle changes (cancel/archive/restore) need ROLE_ADMIN; issuing a revision needs
- * {@see DocumentVoter::ISSUE} (the responsible role); approving needs {@see DocumentVoter::APPROVE}
- * (the role that approves that document type, PC.01.0).
+ * are gated: lifecycle changes (cancel/archive/restore) need {@see DocumentVoter::LIFECYCLE} (the
+ * RSGMA, owner of document control); issuing a revision needs {@see DocumentVoter::ISSUE} (the
+ * responsible role); approving needs {@see DocumentVoter::APPROVE} (the role that approves that
+ * document type, PC.01.0).
  */
 final class DocumentDetailController extends AbstractController
 {
@@ -97,7 +98,7 @@ final class DocumentDetailController extends AbstractController
     #[Route('/documentos/{id}/estado', name: 'document_lifecycle', requirements: ['id' => '\d+'], methods: ['POST'])]
     public function changeLifecycle(Request $request, Document $document, EntityManagerInterface $em): Response
     {
-        $this->denyAccessUnlessGranted('ROLE_ADMIN');
+        $this->denyAccessUnlessGranted(DocumentVoter::LIFECYCLE, $document);
         if (!$this->isCsrfTokenValid('document_lifecycle'.(string) $document->getId(), (string) $request->request->get('_token'))) {
             throw $this->createAccessDeniedException('Token CSRF inválido.');
         }

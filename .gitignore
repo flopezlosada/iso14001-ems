@@ -8,6 +8,10 @@
 tools/etl/__pycache__/
 *.pyc
 
+# Maquetas de diseño (scratch) servidas desde public/: no deben publicarse ni
+# colarse en los PR. Las páginas reales son plantillas Twig, no HTML estático.
+/public/_*-preview.html
+
 ###> symfony/framework-bundle ###
 /.env.local
 /.env.local.php
