@@ -37,6 +37,16 @@ class Objective
     private int $sequence;
 
     /**
+     * School year the objective belongs to, as text (e.g. "2025-2026"); the period key. Objectives
+     * are redacted anew each course (PG-06.04), so the year is part of the record and each course can
+     * be listed and cloned on its own, mirroring the sibling annual registers (F.04.0, F.06.0).
+     */
+    #[ORM\Column(name: 'school_year', length: 9)]
+    #[Assert\NotBlank]
+    #[Assert\Regex(pattern: '/^\d{4}-\d{4}$/', message: 'Usa el formato de curso escolar, p. ej. 2025-2026.')]
+    private string $schoolYear;
+
+    /**
      * The objective and its target ("Descripción objetivo"), e.g. "Reducir el consumo de agua 5%".
      */
     #[ORM\Column(type: Types::TEXT)]
@@ -100,6 +110,29 @@ class Objective
         return ObjectiveStatus::NOT_ACHIEVED === $this->status;
     }
 
+    /**
+     * Creates a fresh copy of this objective for another school year, to seed the new course from the
+     * previous one as an editable draft. It carries over the description, responsible, related aspect
+     * and notes, but starts in progress and unreviewed (a new course re-evaluates it). The target
+     * period is deliberately NOT copied: it encodes dates of the previous course (e.g. "enero 2025 a
+     * marzo 2026"), so it is left blank for the user to set for the new course. The copy is a
+     * brand-new entity (no id, own timestamps); its reference and sequence are assigned by the
+     * controller on save, like a freshly registered objective.
+     *
+     * @param string $schoolYear the school year the copy belongs to, in "YYYY-YYYY" format
+     *
+     * @return self a new, unpersisted objective for the given school year
+     */
+    public function copyForSchoolYear(string $schoolYear): self
+    {
+        return (new self())
+            ->setSchoolYear($schoolYear)
+            ->setDescription($this->description)
+            ->setResponsible($this->responsible)
+            ->setRelatedAspect($this->relatedAspect)
+            ->setNotes($this->notes);
+    }
+
     public function getId(): ?int
     {
         return $this->id;
@@ -125,6 +158,18 @@ class Objective
     public function setSequence(int $sequence): static
     {
         $this->sequence = $sequence;
+
+        return $this;
+    }
+
+    public function getSchoolYear(): string
+    {
+        return $this->schoolYear;
+    }
+
+    public function setSchoolYear(string $schoolYear): static
+    {
+        $this->schoolYear = $schoolYear;
 
         return $this;
     }

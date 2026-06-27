@@ -5,20 +5,20 @@
 
 {% block breadcrumb %}
     <a href="{{ path('app_homepage') }}">Inicio</a><span class="sep">/</span>
-    <a href="{{ path('objective_index') }}">Objetivos</a><span class="sep">/</span>
+    <a href="{{ path('objective_year', { schoolYear: schoolYear }) }}">Objetivos {{ schoolYear }}</a><span class="sep">/</span>
     {{ isNew ? 'Registrar' : objective.reference }}
 {% endblock %}
 
 {% block body %}
     <div class="page-head">
-        <h1>{{ isNew ? 'Registrar objetivo' : 'Editar ' ~ objective.reference }}</h1>
+        <h1>{{ isNew ? 'Registrar objetivo' : 'Editar ' ~ objective.reference }} <span class="muted">· {{ schoolYear }}</span></h1>
     </div>
 
     <div class="card form-card">
         {{ form_start(form, { 'attr': { 'novalidate': 'novalidate' } }) }}
             {{ form_errors(form) }}
             {{ f.fields([form.description, form.responsible, form.relatedAspect, form.targetPeriod, form.status, form.lastReviewedOn, form.notes]) }}
-            {{ f.actions(path('objective_index')) }}
+            {{ f.actions(path('objective_year', { schoolYear: schoolYear })) }}
         {{ form_end(form) }}
     </div>
 {% endblock %}

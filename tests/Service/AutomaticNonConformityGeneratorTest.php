@@ -57,12 +57,13 @@ final class AutomaticNonConformityGeneratorTest extends KernelTestCase
         $this->em->persist($measurement);
     }
 
-    private function objective(string $reference, ObjectiveStatus $status): void
+    private function objective(string $reference, ObjectiveStatus $status, string $schoolYear = '2025-2026'): void
     {
         $repo = $this->em->getRepository(Objective::class);
         $objective = (new Objective())
             ->setReference($reference)
             ->setSequence($repo->nextSequence())
+            ->setSchoolYear($schoolYear)
             ->setDescription('Reducir el consumo de agua un 5%')
             ->setStatus($status);
         $this->em->persist($objective);
@@ -108,6 +109,21 @@ final class AutomaticNonConformityGeneratorTest extends KernelTestCase
             self::assertSame(NonConformityOrigin::INTERNAL, $nc->getOrigin());
             self::assertNotSame('', $nc->getReference());
         }
+    }
+
+    public function testUnmetObjectivesOfOtherCoursesAreIgnored(): void
+    {
+        // Only the current course (2025-2026 for a June 2026 run) is evaluated: an unmet objective of
+        // a closed course must not reopen a non-conformity (PG-06.04).
+        $this->saveSettings(false, true);
+        $this->objective('OBJ-10', ObjectiveStatus::NOT_ACHIEVED, '2024-2025'); // closed course -> ignored
+        $this->objective('OBJ-11', ObjectiveStatus::NOT_ACHIEVED, '2025-2026'); // current course -> qualifies
+        $this->em->flush();
+
+        $summary = $this->generator()->generate(new \DateTimeImmutable('2026-06-27'));
+
+        self::assertSame(1, $summary['candidates']);
+        self::assertSame(1, $summary['created']);
     }
 
     public function testIsIdempotent(): void

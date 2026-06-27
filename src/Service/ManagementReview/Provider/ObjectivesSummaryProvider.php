@@ -13,7 +13,7 @@ use App\Service\ManagementReview\SectionSummaryProvider;
  * Summarises the environmental objectives and their degree of achievement (PG-06.04), for the
  * "objectives; degree of achievement" section of the management review.
  *
- * Objectives are not stored per course, so the whole active catalogue is listed with its current
+ * Objectives are stored per course, so only the reviewed exercise's objectives are listed with their
  * status (mirroring how the real RG-09.03.01 reports "the objectives for this year… in progress").
  */
 final class ObjectivesSummaryProvider implements SectionSummaryProvider
@@ -30,7 +30,10 @@ final class ObjectivesSummaryProvider implements SectionSummaryProvider
 
     public function summarize(string $exercise): string
     {
-        $all = $this->objectives->findAllOrdered();
+        // The persisted school year is always hyphenated (entity regex), but the review exercise may
+        // carry a slash in historical/seed data, so normalise before matching (as the sibling
+        // providers do).
+        $all = $this->objectives->findForSchoolYear(str_replace('/', '-', $exercise));
         if ([] === $all) {
             return '';
         }

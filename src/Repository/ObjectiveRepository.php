@@ -20,17 +20,48 @@ class ObjectiveRepository extends ServiceEntityRepository
     }
 
     /**
-     * All objectives ordered by their sequence, ready to render the list.
+     * The objectives of a single school year, ordered by sequence, ready to render that course's list.
      *
-     * @return Objective[] all objectives
+     * @param string $schoolYear the school year in "YYYY-YYYY" format
+     *
+     * @return Objective[] the objectives of that course
      */
-    public function findAllOrdered(): array
+    public function findForSchoolYear(string $schoolYear): array
     {
-        return $this->findBy([], ['sequence' => 'ASC']);
+        return $this->findBy(['schoolYear' => $schoolYear], ['sequence' => 'ASC']);
     }
 
     /**
-     * Next sequential number for a new objective (current maximum plus one; 1 when none exist).
+     * How many objectives are recorded for a school year. Used to decide whether the previous course
+     * has anything to copy forward.
+     *
+     * @param string $schoolYear the school year in "YYYY-YYYY" format
+     *
+     * @return int the number of objectives in that course
+     */
+    public function countForSchoolYear(string $schoolYear): int
+    {
+        return $this->count(['schoolYear' => $schoolYear]);
+    }
+
+    /**
+     * The most recent school year that has any objective, or null when none exist.
+     *
+     * @return string|null the latest school year in "YYYY-YYYY" format, or null
+     */
+    public function findLatestSchoolYear(): ?string
+    {
+        $latest = $this->createQueryBuilder('o')
+            ->select('MAX(o.schoolYear)')
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        return null !== $latest ? (string) $latest : null;
+    }
+
+    /**
+     * Next sequential number for a new objective (current maximum plus one; 1 when none exist). The
+     * sequence is global across courses, so references (OBJ-NN) stay unique.
      *
      * @return int the next sequence number (>= 1)
      */
@@ -45,13 +76,19 @@ class ObjectiveRepository extends ServiceEntityRepository
     }
 
     /**
-     * The objectives marked as not achieved (PG-06.04), ordered by sequence. Used by the
-     * auto-non-conformity engine.
+     * The objectives of a course marked as not achieved (PG-06.04), ordered by sequence. Used by the
+     * auto-non-conformity engine, scoped to the course being evaluated so closed courses are not
+     * reopened indefinitely.
      *
-     * @return Objective[] the unmet objectives
+     * @param string $schoolYear the school year in "YYYY-YYYY" format
+     *
+     * @return Objective[] the unmet objectives of that course
      */
-    public function findNotAchieved(): array
+    public function findNotAchievedForSchoolYear(string $schoolYear): array
     {
-        return $this->findBy(['status' => ObjectiveStatus::NOT_ACHIEVED], ['sequence' => 'ASC']);
+        return $this->findBy(
+            ['status' => ObjectiveStatus::NOT_ACHIEVED, 'schoolYear' => $schoolYear],
+            ['sequence' => 'ASC'],
+        );
     }
 }

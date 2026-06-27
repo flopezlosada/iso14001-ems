@@ -10,6 +10,7 @@ use App\Form\InterestedPartyType;
 use App\Repository\InterestedPartyRepository;
 use App\Security\Voter\AreaVoter;
 use App\Service\AuditLogger;
+use App\Util\CopyForward;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -128,14 +129,10 @@ class InterestedPartyController extends AbstractController
             throw $this->createAccessDeniedException('Invalid CSRF token.');
         }
 
-        $existingNames = array_map(
-            static fn (InterestedParty $p): string => self::normaliseName($p->getName()),
-            $parties->findForYear($year),
-        );
-
-        $toCopy = array_filter(
+        $toCopy = CopyForward::missing(
             $parties->findForYear($year - 1),
-            static fn (InterestedParty $p): bool => !\in_array(self::normaliseName($p->getName()), $existingNames, true),
+            $parties->findForYear($year),
+            static fn (InterestedParty $p): string => self::normaliseName($p->getName()),
         );
 
         foreach ($toCopy as $party) {
