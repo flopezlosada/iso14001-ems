@@ -5,6 +5,8 @@
 {% block breadcrumb %}<a href="{{ path('app_homepage') }}">Inicio</a><span class="sep">/</span>Análisis DAFO{% endblock %}
 
 {% set canWrite = is_granted('AREA_WRITE', constant('App\\Enum\\Area::DAFO')) %}
+{# Cursos ya registrados, para ofrecer "clonar al siguiente" solo cuando ese curso aún no existe. #}
+{% set existingYears = analyses|map(a => a.schoolYear) %}
 
 {% block body %}
     <div class="page-head">
@@ -42,6 +44,13 @@
                                 {% if canWrite %}
                                     <a href="{{ path('dafo_edit', { id: analysis.id }) }}">Editar</a>
                                     <span aria-hidden="true">·</span>
+                                    {% if analysis.nextSchoolYear not in existingYears %}
+                                        <form method="post" action="{{ path('dafo_clone_next', { id: analysis.id }) }}" class="inline-form" onsubmit="return confirm('¿Crear un borrador del análisis DAFO {{ analysis.nextSchoolYear }} copiando el de {{ analysis.schoolYear }}?');">
+                                            <input type="hidden" name="_token" value="{{ csrf_token('dafo_clone_next' ~ analysis.id) }}">
+                                            <button type="submit" class="btn secondary">Clonar para {{ analysis.nextSchoolYear }}</button>
+                                        </form>
+                                        <span aria-hidden="true">·</span>
+                                    {% endif %}
                                     <form method="post" action="{{ path('dafo_delete', { id: analysis.id }) }}" class="inline-form" onsubmit="return confirm('¿Eliminar el análisis DAFO {{ analysis.schoolYear }}?');">
                                         <input type="hidden" name="_token" value="{{ csrf_token('dafo_delete' ~ analysis.id) }}">
                                         <button type="submit" class="btn danger">Borrar</button>

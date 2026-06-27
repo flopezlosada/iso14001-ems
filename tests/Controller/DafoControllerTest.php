@@ -209,6 +209,117 @@ final class DafoControllerTest extends WebTestCase
         );
     }
 
+    public function testCloneToNextYearCreatesEditableDraftCopy(): void
+    {
+        $client = $this->loggedInClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+
+        // A realistic source: some quadrants filled, one (strengths) left empty/null.
+        $source = new DafoAnalysis();
+        $source->setSchoolYear('2024-2025')
+            ->setWeaknesses("Falta de formación.\nBurocracia.")
+            ->setThreats('Normativa cambiante.')
+            ->setOpportunities('Prestigio por la certificación.');
+        $em->persist($source);
+        $em->flush();
+        $sourceId = $source->getId();
+
+        $client->request('GET', '/dafo');
+        $client->submitForm('Clonar para 2025-2026');
+
+        $repository = static::getContainer()->get(DafoAnalysisRepository::class);
+        $copy = $repository->findOneBy(['schoolYear' => '2025-2026']);
+        self::assertNotNull($copy);
+        self::assertResponseRedirects('/dafo/'.$copy->getId().'/edit');
+
+        // The quadrants are carried over verbatim into the new draft; the empty one stays null.
+        self::assertSame("Falta de formación.\nBurocracia.", $copy->getWeaknesses());
+        self::assertSame('Normativa cambiante.', $copy->getThreats());
+        self::assertNull($copy->getStrengths());
+        self::assertSame('Prestigio por la certificación.', $copy->getOpportunities());
+        self::assertNotSame($sourceId, $copy->getId());
+
+        // The source year is left untouched.
+        $reloadedSource = $repository->find($sourceId);
+        self::assertNotNull($reloadedSource);
+        self::assertSame('2024-2025', $reloadedSource->getSchoolYear());
+        self::assertSame("Falta de formación.\nBurocracia.", $reloadedSource->getWeaknesses());
+
+        self::assertNotNull(
+            static::getContainer()->get(AuditLogRepository::class)->findOneBy(['action' => 'dafo.cloned_from_previous'])
+        );
+    }
+
+    public function testCloneToNextYearDoesNotOverwriteExisting(): void
+    {
+        $client = $this->loggedInClient();
+        $source = $this->seedAnalysis('2024-2025');
+
+        // Render the listing while the next year is still free, so the clone form (with a valid CSRF
+        // token) is present; then create the conflicting year before submitting.
+        $client->request('GET', '/dafo');
+
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $existing = new DafoAnalysis();
+        $existing->setSchoolYear('2025-2026')->setWeaknesses('Contenido ya editado.');
+        $em->persist($existing);
+        $em->flush();
+        $existingId = $existing->getId();
+
+        $client->submitForm('Clonar para 2025-2026');
+
+        self::assertResponseRedirects('/dafo');
+
+        $repository = static::getContainer()->get(DafoAnalysisRepository::class);
+        // Still exactly two analyses: the clone was refused, nothing duplicated.
+        self::assertCount(2, $repository->findAll());
+        // The pre-existing 2025-2026 keeps its own content (not overwritten by the source's quadrants).
+        $reloaded = $repository->find($existingId);
+        self::assertNotNull($reloaded);
+        self::assertSame('Contenido ya editado.', $reloaded->getWeaknesses());
+        self::assertSame('Algo', $source->getWeaknesses());
+
+        self::assertNull(
+            static::getContainer()->get(AuditLogRepository::class)->findOneBy(['action' => 'dafo.cloned_from_previous'])
+        );
+    }
+
+    public function testCloneButtonHiddenWhenNextYearAlreadyExists(): void
+    {
+        $client = $this->loggedInClient();
+        $this->seedAnalysis('2024-2025');
+        $this->seedAnalysis('2025-2026');
+
+        $crawler = $client->request('GET', '/dafo');
+
+        self::assertResponseIsSuccessful();
+        // 2024-2025 -> next 2025-2026 exists (hidden); 2025-2026 -> next 2026-2027 free (shown). One button.
+        self::assertCount(1, $crawler->filter('button:contains("Clonar para 2026-2027")'));
+        self::assertCount(0, $crawler->filter('button:contains("Clonar para 2025-2026")'));
+    }
+
+    public function testReadOnlyUserCannotClone(): void
+    {
+        $client = $this->loggedInClient(PermissionLevel::READ);
+        $source = $this->seedAnalysis('2024-2025');
+
+        $client->request('POST', '/dafo/'.$source->getId().'/clone-next');
+
+        self::assertResponseStatusCodeSame(403);
+        self::assertNull(static::getContainer()->get(DafoAnalysisRepository::class)->findOneBy(['schoolYear' => '2025-2026']));
+    }
+
+    public function testCloneWithoutTokenDoesNotCreate(): void
+    {
+        $client = $this->loggedInClient();
+        $source = $this->seedAnalysis('2024-2025');
+
+        $client->request('POST', '/dafo/'.$source->getId().'/clone-next');
+
+        self::assertResponseStatusCodeSame(403);
+        self::assertNull(static::getContainer()->get(DafoAnalysisRepository::class)->findOneBy(['schoolYear' => '2025-2026']));
+    }
+
     public function testDeleteWithoutTokenDoesNotRemove(): void
     {
         $client = $this->loggedInClient();

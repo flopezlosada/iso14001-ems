@@ -27,4 +27,17 @@ class DafoAnalysisRepository extends ServiceEntityRepository
     {
         return $this->findBy([], ['schoolYear' => 'DESC']);
     }
+
+    /**
+     * Whether an analysis already exists for a school year. Used to decide if the "clone to next
+     * year" action has a free target, so cloning never overwrites an existing year.
+     *
+     * @param string $schoolYear the school year in "YYYY-YYYY" format
+     *
+     * @return bool true if an analysis is already registered for that school year
+     */
+    public function existsForSchoolYear(string $schoolYear): bool
+    {
+        return $this->count(['schoolYear' => $schoolYear]) > 0;
+    }
 }
