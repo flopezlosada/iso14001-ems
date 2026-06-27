@@ -81,6 +81,39 @@ class DafoAnalysis
         $this->updatedAt = new \DateTimeImmutable();
     }
 
+    /**
+     * Derives the following school year from this one, shifting the window by one year
+     * (e.g. "2025-2026" -> "2026-2027"). The school year is always stored in the "YYYY-YYYY"
+     * format enforced by validation, so the start year is the first four digits.
+     *
+     * @return string the next school year in "YYYY-YYYY" format
+     */
+    public function nextSchoolYear(): string
+    {
+        $start = (int) substr($this->schoolYear, 0, 4);
+
+        return sprintf('%d-%d', $start + 1, $start + 2);
+    }
+
+    /**
+     * Creates a fresh copy of this analysis for another school year, carrying over the four SWOT
+     * quadrants. Used to seed a new year's DAFO from the previous one as an editable draft; the copy
+     * is a brand-new entity (no id, own timestamps) and the source is left untouched.
+     *
+     * @param string $schoolYear the school year the copy belongs to, in "YYYY-YYYY" format
+     *
+     * @return self a new, unpersisted analysis for the given school year
+     */
+    public function copyForSchoolYear(string $schoolYear): self
+    {
+        return (new self())
+            ->setSchoolYear($schoolYear)
+            ->setWeaknesses($this->weaknesses)
+            ->setThreats($this->threats)
+            ->setStrengths($this->strengths)
+            ->setOpportunities($this->opportunities);
+    }
+
     public function getId(): ?int
     {
         return $this->id;

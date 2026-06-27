@@ -55,6 +55,44 @@ class DafoController extends AbstractController
     }
 
     /**
+     * Clones a DAFO analysis into the following school year as an editable draft, carrying over the
+     * four SWOT quadrants without touching the source. Does nothing if an analysis already exists for
+     * that next year, so it never overwrites. The user lands on the edit form to review the draft.
+     * CSRF-protected POST.
+     */
+    #[Route('/{id}/clone-next', name: 'dafo_clone_next', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function cloneToNextYear(DafoAnalysis $analysis, Request $request, EntityManagerInterface $em, DafoAnalysisRepository $repository): Response
+    {
+        $this->denyAccessUnlessGranted(AreaVoter::WRITE, Area::DAFO);
+
+        if (!$this->isCsrfTokenValid('dafo_clone_next'.(string) $analysis->getId(), (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Token CSRF inválido.');
+        }
+
+        $nextSchoolYear = $analysis->nextSchoolYear();
+
+        if ($repository->existsForSchoolYear($nextSchoolYear)) {
+            $this->addFlash('success', sprintf('Ya existe un análisis DAFO para %s; no se ha sobrescrito.', $nextSchoolYear));
+
+            return $this->redirectToRoute('dafo_index');
+        }
+
+        $copy = $analysis->copyForSchoolYear($nextSchoolYear);
+        $em->persist($copy);
+        $em->flush();
+
+        $this->auditLogger->log(
+            'dafo.cloned_from_previous',
+            'DafoAnalysis',
+            (string) $copy->getId(),
+            sprintf('Clonado de %s a %s', $analysis->getSchoolYear(), $nextSchoolYear),
+        );
+        $this->addFlash('success', sprintf('Borrador del análisis DAFO %s creado a partir de %s. Revísalo y guárdalo.', $nextSchoolYear, $analysis->getSchoolYear()));
+
+        return $this->redirectToRoute('dafo_edit', ['id' => $copy->getId()]);
+    }
+
+    /**
      * Shows a single DAFO analysis read-only, as the 2x2 SWOT matrix.
      */
     #[Route('/{id}', name: 'dafo_show', requirements: ['id' => '\d+'], methods: ['GET'])]
