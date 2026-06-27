@@ -19,22 +19,6 @@ class RiskAssessmentRepository extends ServiceEntityRepository
     }
 
     /**
-     * The most recent exercise (school year) that has any valuation, or null when none exist. Used as
-     * the source course of the "clone valuations into the next course" action.
-     *
-     * @return string|null the latest exercise in "YYYY-YYYY" format, or null
-     */
-    public function findLatestExercise(): ?string
-    {
-        $latest = $this->createQueryBuilder('a')
-            ->select('MAX(a.exercise)')
-            ->getQuery()
-            ->getSingleScalarResult();
-
-        return null !== $latest ? (string) $latest : null;
-    }
-
-    /**
      * The valuations of a single exercise, with their risk/opportunity eagerly fetched to avoid an
      * N+1 (one query per row) while cloning.
      *

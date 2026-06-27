@@ -5,13 +5,12 @@ declare(strict_types=1);
 namespace App\Tests\Util;
 
 use App\Util\SchoolYear;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class SchoolYearTest extends TestCase
 {
-    /**
-     * @dataProvider currentCases
-     */
+    #[DataProvider('currentCases')]
     public function testCurrent(string $date, string $expected): void
     {
         self::assertSame($expected, SchoolYear::current(new \DateTimeImmutable($date)));

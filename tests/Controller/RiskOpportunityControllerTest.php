@@ -17,6 +17,7 @@ use App\Enum\RiskOpportunityType;
 use App\Repository\AuditLogRepository;
 use App\Repository\RiskAssessmentRepository;
 use App\Repository\RiskOpportunityRepository;
+use App\Util\SchoolYear;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
@@ -111,22 +112,23 @@ final class RiskOpportunityControllerTest extends WebTestCase
         $client->request('GET', '/risks');
 
         self::assertResponseIsSuccessful();
-        self::assertSelectorNotExists('form[action$="/risks/clone-assessments"] button');
+        self::assertSelectorNotExists('form[action*="/risks/clone-assessments"] button');
     }
 
     public function testCloneCreatesDraftsForUnvaluedRisks(): void
     {
         $client = $this->loggedInClient();
-        $this->valuedRisk('Falta de formación', '2024-2025', RiskLevel::MEDIUM, RiskLevel::HIGH, 'Plan A');
-        $this->valuedRisk('Cambios normativos', '2024-2025', RiskLevel::LOW, RiskLevel::LOW, null);
+        [$current, $previous] = $this->currentAndPreviousCourses();
+        $this->valuedRisk('Falta de formación', $previous, RiskLevel::MEDIUM, RiskLevel::HIGH, 'Plan A');
+        $this->valuedRisk('Cambios normativos', $previous, RiskLevel::LOW, RiskLevel::LOW, null);
 
         $client->request('GET', '/risks');
-        $client->submitForm('Clonar valoraciones a 2025-2026');
+        $client->submitForm('Clonar valoraciones a '.$current);
 
         self::assertResponseRedirects('/risks');
 
         $assessments = static::getContainer()->get(RiskAssessmentRepository::class);
-        $next = $assessments->findByExercise('2025-2026');
+        $next = $assessments->findByExercise($current);
         self::assertCount(2, $next);
         // Every clone is an unapproved Rev. 01 with a recomputed score (probability × impact).
         foreach ($next as $assessment) {
@@ -148,22 +150,36 @@ final class RiskOpportunityControllerTest extends WebTestCase
         );
     }
 
-    public function testCloneSkipsRisksAlreadyValuedForTheNextCourse(): void
+    public function testCloneSkipsRisksAlreadyValuedForTheCurrentCourse(): void
     {
         $client = $this->loggedInClient();
-        // Risk A is already valued in both courses; risk B only in the source course.
-        $riskA = $this->valuedRisk('Riesgo A', '2024-2025', RiskLevel::HIGH, RiskLevel::HIGH, null);
-        $this->addAssessment($riskA, '2025-2026', RiskLevel::LOW, RiskLevel::LOW);
-        $this->valuedRisk('Riesgo B', '2024-2025', RiskLevel::MEDIUM, RiskLevel::MEDIUM, null);
+        [$current, $previous] = $this->currentAndPreviousCourses();
+        // Risk A is already valued in both courses; risk B only in the previous (source) course.
+        $riskA = $this->valuedRisk('Riesgo A', $previous, RiskLevel::HIGH, RiskLevel::HIGH, null);
+        $this->addAssessment($riskA, $current, RiskLevel::LOW, RiskLevel::LOW);
+        $this->valuedRisk('Riesgo B', $previous, RiskLevel::MEDIUM, RiskLevel::MEDIUM, null);
 
         $client->request('GET', '/risks');
-        $client->submitForm('Clonar valoraciones a 2025-2026');
+        $client->submitForm('Clonar valoraciones a '.$current);
 
-        $next = static::getContainer()->get(RiskAssessmentRepository::class)->findByExercise('2025-2026');
-        // Risk A keeps its single (pre-existing) 2025-2026 valuation; only risk B gets a fresh one.
+        $next = static::getContainer()->get(RiskAssessmentRepository::class)->findByExercise($current);
+        // Risk A keeps its single (pre-existing) current valuation; only risk B gets a fresh one.
         self::assertCount(2, $next);
         $aNext = array_filter($next, static fn (RiskAssessment $a): bool => 'Riesgo A' === $a->getRiskOpportunity()->getDescription());
-        self::assertCount(1, $aNext, 'risk A is not duplicated for the next course');
+        self::assertCount(1, $aNext, 'risk A is not duplicated for the current course');
+    }
+
+    /**
+     * The current school year and the previous one, so the clone scenarios stay independent of when
+     * the suite runs (the controller anchors on today's course).
+     *
+     * @return array{string, string} [current, previous]
+     */
+    private function currentAndPreviousCourses(): array
+    {
+        $current = SchoolYear::current(new \DateTimeImmutable());
+
+        return [$current, SchoolYear::previous($current)];
     }
 
     private function persistRisk(string $description): RiskOpportunity
