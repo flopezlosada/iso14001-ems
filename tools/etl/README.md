@@ -40,6 +40,15 @@ python3 tools/etl/normalize_risks.py \
   fixtures/real/risks.csv     # procesa todas las hojas de "Determinación" (una por curso) e
                               # IGNORA la hoja "Criterios" (rúbrica ISO 9001 contaminante); el
                               # curso se deriva del nombre de hoja/fichero. [curso] opcional.
+
+python3 tools/etl/normalize_operational_control.py \
+  "$DOC/01.IMPLEMENTACIÓN (Hacer)/.../CONTROL OPERACIONAL /CONTROLES INTERNOS" \
+  fixtures/real/operational_control.csv   # recorre el DIRECTORIO recursivamente (un .xlsx por mes);
+                              # el período se toma del NOMBRE del fichero (el header suele estar
+                              # estancado en una plantilla, p. ej. "FEBRERO" en medio 2024); los
+                              # desajustes y los meses duplicados (NOV. 2025 vs NOV. 2025(1)) se
+                              # avisan por stderr para que el centro los confirme. Una fila por ítem
+                              # marcado; los ítems sin marcar no generan fila.
 ```
 
 (Los normalizadores de requisitos legales, objetivos, proveedores e indicadores siguen el mismo
@@ -67,7 +76,9 @@ Propiedades:
   valoración por `(riesgo, curso)`. La significancia del aspecto NO se lee de la hoja: la recalcula
   `AspectSignificanceCalculator`; análogamente, el score y la categoría del riesgo NO se leen de la
   hoja (que incluso se contradice): los recalcula `RiskScoreCalculator` (la regla de la app, fuente
-  única de verdad).
+  única de verdad). Control operacional: el catálogo de ítems se siembra desde el texto real de la
+  hoja `(sección, etiqueta)`, la inspección por `(año, mes)` y cada respuesta por `(inspección,
+  ítem)`; las observaciones por línea se pliegan en la nota de la inspección (`label: observación`).
 - **Validado**: cada entidad pasa por el Validator antes de persistir.
 - **Cuarentena**: las filas que no validan se escriben en `fixtures/real/<dataset>.rejected.csv`
   con el motivo, y el comando termina con código de error. Nada se descarta en silencio.
