@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace App\Form;
 
 use App\Entity\NonConformity;
+use App\Entity\SystemAudit;
 use App\Entity\User;
 use App\Enum\NonConformityOrigin;
 use App\Enum\NonConformityStatus;
 use App\Enum\ProcessType;
+use App\Repository\SystemAuditRepository;
 use App\Repository\UserRepository;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
@@ -46,6 +48,22 @@ class NonConformityType extends AbstractType
                 'label' => 'Detalle del origen',
                 'required' => false,
                 'help' => 'P. ej. la fase de la auditoría ("Fase I") o la iniciativa interna.',
+            ])
+            ->add('audit', EntityType::class, [
+                'class' => SystemAudit::class,
+                'label' => 'Auditoría de origen',
+                'required' => false,
+                'placeholder' => 'Ninguna',
+                'help' => 'Si proviene de una auditoría, vincúlala para que quede trazada en su informe.',
+                'choice_label' => static fn (SystemAudit $a): string => sprintf(
+                    'Auditoría %s %d%s',
+                    $a->getType()->label(),
+                    $a->getYear(),
+                    null !== $a->getConductedOn() ? ' ('.$a->getConductedOn()->format('d/m/Y').')' : '',
+                ),
+                'query_builder' => static fn (SystemAuditRepository $r) => $r->createQueryBuilder('a')
+                    ->orderBy('a.year', 'DESC')
+                    ->addOrderBy('a.conductedOn', 'DESC'),
             ])
             ->add('affectedProcess', EnumType::class, [
                 'class' => ProcessType::class,
