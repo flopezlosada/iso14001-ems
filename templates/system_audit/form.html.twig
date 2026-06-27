@@ -1,0 +1,24 @@
+{% extends 'app_shell.html.twig' %}
+{% import '_macros/form.html.twig' as f %}
+
+{% block title %}{{ isNew ? 'Registrar' : 'Editar' }} auditoría{% endblock %}
+
+{% block breadcrumb %}
+    <a href="{{ path('app_homepage') }}">Inicio</a><span class="sep">/</span>
+    <a href="{{ path('system_audit_index') }}">Auditorías</a><span class="sep">/</span>
+    {{ isNew ? 'Registrar' : 'Editar' }}
+{% endblock %}
+
+{% block body %}
+    <div class="page-head">
+        <h1>{{ isNew ? 'Registrar auditoría' : 'Editar auditoría' }}</h1>
+    </div>
+
+    <div class="card form-card">
+        {{ form_start(form, { 'attr': { 'novalidate': 'novalidate' } }) }}
+            {{ form_errors(form) }}
+            {{ f.fields([form.year, form.type, form.conductedOn, form.auditor, form.objective, form.scope, form.conclusions, form.reportFile]) }}
+            {{ f.actions(path('system_audit_index')) }}
+        {{ form_end(form) }}
+    </div>
+{% endblock %}

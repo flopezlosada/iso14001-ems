@@ -1,0 +1,62 @@
+{% extends 'app_shell.html.twig' %}
+
+{% set can_write = is_granted('AREA_WRITE', constant('App\\Enum\\Area::SYSTEM_AUDIT')) %}
+
+{% block title %}Auditorías{% endblock %}
+
+{% block breadcrumb %}<a href="{{ path('app_homepage') }}">Inicio</a><span class="sep">/</span>Auditorías{% endblock %}
+
+{% block body %}
+    <div class="page-head">
+        <div>
+            <h1>Auditorías</h1>
+            <p class="lead">Auditorías internas y externas del sistema de gestión ambiental (PC.09.0).</p>
+        </div>
+        {% if can_write %}
+            <div><a class="btn" href="{{ path('system_audit_new') }}">+ Registrar auditoría</a></div>
+        {% endif %}
+    </div>
+
+    <div class="card">
+        {% if audits is empty %}
+            <div class="empty-state">
+                <h2>Aún no hay auditorías registradas</h2>
+                <p>Registra la primera auditoría interna o externa del sistema de gestión.</p>
+                {% if can_write %}<a class="btn" href="{{ path('system_audit_new') }}">Registrar la primera</a>{% endif %}
+            </div>
+        {% else %}
+            <table data-list-tools>
+                <thead>
+                    <tr><th>Año</th><th>Tipo</th><th>Fecha</th><th>Auditor</th><th>Informe</th><th></th></tr>
+                </thead>
+                <tbody>
+                    {% for audit in audits %}
+                        <tr>
+                            <td>{{ audit.year }}</td>
+                            <td><a href="{{ path('system_audit_show', { id: audit.id }) }}">Auditoría {{ audit.type.label|lower }}</a></td>
+                            <td class="muted">{{ audit.conductedOn ? audit.conductedOn|date('d/m/Y') : '—' }}</td>
+                            <td>{{ audit.auditor }}</td>
+                            <td>
+                                {% if audit.hasReport %}
+                                    <a href="{{ path('system_audit_report', { id: audit.id }) }}">Descargar</a>
+                                {% else %}
+                                    <span class="muted">—</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{{ path('system_audit_show', { id: audit.id }) }}">Ver</a>
+                                {% if can_write %}
+                                    <a href="{{ path('system_audit_edit', { id: audit.id }) }}">Editar</a>
+                                    <form method="post" action="{{ path('system_audit_delete', { id: audit.id }) }}" onsubmit="return confirm('¿Eliminar la auditoría {{ audit.type.label|lower|e('js') }} {{ audit.year }}? Sus no conformidades se conservan, solo se desvinculan.');" style="display:inline">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('delete_system_audit' ~ audit.id) }}">
+                                        <button type="submit" class="btn secondary">Eliminar</button>
+                                    </form>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    </div>
+{% endblock %}

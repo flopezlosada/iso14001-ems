@@ -9,6 +9,7 @@
 {% endblock %}
 
 {% block body %}
+    {% set can_write = is_granted('AREA_WRITE', constant('App\\Enum\\Area::MANAGEMENT_REVIEW')) %}
     <div class="page-head">
         <div>
             <h1>Revisión por la dirección · {{ review.exercise }}</h1>
@@ -49,6 +50,39 @@
             {% endif %}
         </div>
     {% endfor %}
+
+    <div class="card">
+        <h2>Documento oficial (RG-09.03.01)</h2>
+        <p>
+            <a href="{{ path('management_review_pdf', { id: review.id }) }}" target="_blank" rel="noopener">
+                {{ review.approved ? 'PDF oficial' : 'Vista previa del PDF' }}
+            </a>
+            {% if review.approved and review.integrityHash %}
+                <span class="mono muted" title="Hash de integridad: {{ review.integrityHash|e('html_attr') }}">· {{ review.integrityHash|slice(0, 10) }}…</span>
+            {% endif %}
+        </p>
+        {% if review.approved %}
+            {% if review.digitallySigned %}
+                <p>
+                    <span class="badge badge--success" title="Firma digital adjunta">Firmada</span>
+                    · <a href="{{ path('management_review_signed_download', { id: review.id }) }}">PDF firmado</a>
+                </p>
+                {% if can_write %}
+                    <form method="post" enctype="multipart/form-data" action="{{ path('management_review_sign', { id: review.id }) }}">
+                        <input type="hidden" name="_token" value="{{ csrf_token('sign' ~ review.id) }}">
+                        <input type="file" name="signedPdf" accept="application/pdf" aria-label="Reemplazar el PDF firmado">
+                        <button class="btn secondary" type="submit">Reemplazar firma</button>
+                    </form>
+                {% endif %}
+            {% elseif can_write %}
+                <form method="post" enctype="multipart/form-data" action="{{ path('management_review_sign', { id: review.id }) }}">
+                    <input type="hidden" name="_token" value="{{ csrf_token('sign' ~ review.id) }}">
+                    <input type="file" name="signedPdf" accept="application/pdf" aria-label="PDF firmado">
+                    <button class="btn secondary" type="submit">Adjuntar firma</button>
+                </form>
+            {% endif %}
+        {% endif %}
+    </div>
 
     {% if not review.approved %}
         <div class="card">

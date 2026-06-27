@@ -56,6 +56,16 @@ class NonConformity
     private ?string $originDetail = null;
 
     /**
+     * The specific audit (PC.09.0) this non-conformity was raised in, when it comes from one. Only
+     * meaningful for the audit origins; null otherwise. The finding itself lives here (not in the
+     * audit), so an audit's non-conformities stay traceable without being entered twice. The FK is
+     * SET NULL on delete: removing an audit must not cascade-delete its non-conformities.
+     */
+    #[ORM\ManyToOne(targetEntity: SystemAudit::class)]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
+    private ?SystemAudit $audit = null;
+
+    /**
      * Year the reference belongs to (the sequence resets each year). Set together with
      * {@see $sequence} by the reference generator.
      */
@@ -174,6 +184,28 @@ class NonConformity
     public function setOriginDetail(?string $originDetail): static
     {
         $this->originDetail = $originDetail;
+
+        return $this;
+    }
+
+    /**
+     * The audit this non-conformity was raised in, or null if it does not come from one.
+     *
+     * @return SystemAudit|null the originating audit, or null
+     */
+    public function getAudit(): ?SystemAudit
+    {
+        return $this->audit;
+    }
+
+    /**
+     * Links the non-conformity to the audit it was raised in.
+     *
+     * @param SystemAudit|null $audit the originating audit, or null to unlink it
+     */
+    public function setAudit(?SystemAudit $audit): static
+    {
+        $this->audit = $audit;
 
         return $this;
     }
