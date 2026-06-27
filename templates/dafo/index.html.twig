@@ -36,7 +36,7 @@
                 <tbody>
                     {% for analysis in analyses %}
                         <tr>
-                            <td class="mono">{{ analysis.schoolYear }}</td>
+                            <td class="mono"><a class="cell-link" href="{{ path('dafo_show', { id: analysis.id }) }}">{{ analysis.schoolYear }}</a></td>
                             <td class="muted">{{ analysis.updatedAt|date('d/m/Y') }}</td>
                             <td>
                                 {% if canWrite %}

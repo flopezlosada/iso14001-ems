@@ -55,6 +55,19 @@ class DafoController extends AbstractController
     }
 
     /**
+     * Shows a single DAFO analysis read-only, as the 2x2 SWOT matrix.
+     */
+    #[Route('/{id}', name: 'dafo_show', requirements: ['id' => '\d+'], methods: ['GET'])]
+    public function show(DafoAnalysis $analysis): Response
+    {
+        $this->denyAccessUnlessGranted(AreaVoter::READ, Area::DAFO);
+
+        return $this->render('dafo/show.html.twig', [
+            'analysis' => $analysis,
+        ]);
+    }
+
+    /**
      * Edits an existing DAFO analysis.
      */
     #[Route('/{id}/edit', name: 'dafo_edit', requirements: ['id' => '\d+'], methods: ['GET', 'POST'])]

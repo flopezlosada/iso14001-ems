@@ -1,0 +1,53 @@
+{% extends 'app_shell.html.twig' %}
+
+{% import _self as dafo %}
+
+{% block title %}DAFO {{ analysis.schoolYear }}{% endblock %}
+
+{% block breadcrumb %}
+    <a href="{{ path('app_homepage') }}">Inicio</a><span class="sep">/</span>
+    <a href="{{ path('dafo_index') }}">Análisis DAFO</a><span class="sep">/</span>
+    {{ analysis.schoolYear }}
+{% endblock %}
+
+{% set canWrite = is_granted('AREA_WRITE', constant('App\\Enum\\Area::DAFO')) %}
+
+{#
+    Renders a SWOT quadrant: its free-text content is split into one list item per line,
+    trimming whitespace and dropping blank lines. `kind` carries the internal/external and
+    negative/positive classes so the FE can lay the four cells out as a 2x2 matrix.
+#}
+{% macro quadrant(title, kind, content) %}
+    {% set items = content|default('')|split('\n')|map(line => line|trim)|filter(line => line != '') %}
+    <section class="dafo-cell {{ kind }}">
+        <h2>{{ title }}</h2>
+        {% if items is empty %}
+            <p class="muted">Sin elementos.</p>
+        {% else %}
+            <ul>
+                {% for item in items %}<li>{{ item }}</li>{% endfor %}
+            </ul>
+        {% endif %}
+    </section>
+{% endmacro %}
+
+{% block body %}
+    <div class="page-head">
+        <div>
+            <h1>Análisis DAFO {{ analysis.schoolYear }}</h1>
+            <p class="lead">Debilidades, amenazas, fortalezas y oportunidades ambientales del centro (F.06.0, contexto ISO 14001).</p>
+        </div>
+        {% if canWrite %}
+            <a class="btn secondary" href="{{ path('dafo_edit', { id: analysis.id }) }}">Editar</a>
+        {% endif %}
+    </div>
+
+    <div class="card">
+        <div class="dafo-matrix">
+            {{ dafo.quadrant('Debilidades', 'internal negative', analysis.weaknesses) }}
+            {{ dafo.quadrant('Amenazas', 'external negative', analysis.threats) }}
+            {{ dafo.quadrant('Fortalezas', 'internal positive', analysis.strengths) }}
+            {{ dafo.quadrant('Oportunidades', 'external positive', analysis.opportunities) }}
+        </div>
+    </div>
+{% endblock %}
