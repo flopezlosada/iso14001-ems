@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+{#
+  Official management review report (RG-09.03.01, ISO 14001:2015 §9.3) rendered to PDF by
+  ManagementReviewPdfGenerator with dompdf. Standalone document: dompdf does not load the app
+  stylesheet, so all styling is inline here and limited to what dompdf supports (tables, block
+  layout — no flexbox/grid). It deliberately does NOT print the integrity hash, so the bytes can be
+  hashed without circularity.
+#}
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <style>
+        @page { margin: 2.2cm 1.8cm 2.4cm 1.8cm; }
+        body { font-family: "DejaVu Sans", sans-serif; font-size: 10pt; color: #1a1a1a; line-height: 1.4; }
+
+        /* Per-page footer: register code · course · "x de y", repeated on every page. */
+        .page-footer {
+            position: fixed; bottom: -1.6cm; left: 0; right: 0;
+            font-size: 8pt; color: #555; border-top: 0.5pt solid #bbb; padding-top: 4px;
+        }
+        .page-footer .right { float: right; }
+        .page-footer .pages:after { content: counter(page) " de " counter(pages); }
+
+        .cover { text-align: center; padding-top: 5cm; }
+        .cover .org { font-size: 11pt; letter-spacing: 1pt; text-transform: uppercase; color: #555; }
+        .cover .seal { margin: 0.6cm 0; font-size: 9pt; color: #2f6f4f; letter-spacing: 2pt; }
+        .cover h1 { font-size: 22pt; margin: 1cm 2cm; }
+        .cover .meta { margin-top: 1.5cm; font-size: 11pt; }
+        .cover .meta strong { display: inline-block; min-width: 3cm; text-align: right; color: #555; font-weight: normal; }
+
+        h2 { font-size: 12pt; border-bottom: 1pt solid #2f6f4f; padding-bottom: 3px; margin: 0.8cm 0 0.3cm; color: #2f6f4f; }
+        h3 { font-size: 10.5pt; margin: 0.5cm 0 0.15cm; color: #1a1a1a; }
+        table.control { width: 100%; border-collapse: collapse; margin-bottom: 0.4cm; }
+        table.control th, table.control td { border: 0.5pt solid #bbb; padding: 5px 7px; text-align: left; vertical-align: top; }
+        table.control th { background: #f0f4f1; font-weight: bold; width: 30%; }
+        .section-body { white-space: pre-line; margin: 0 0 0.3cm; text-align: justify; }
+        .muted { color: #777; }
+        .mono { font-family: "DejaVu Sans Mono", monospace; }
+    </style>
+</head>
+<body>
+    <div class="page-footer">
+        <span>RG-09.03.01 · Curso {{ review.exercise }}</span>
+        <span class="right"><span class="pages"></span></span>
+    </div>
+
+    {# ---------- Cover ---------- #}
+    <div class="cover">
+        <div class="org">{{ organizationName }}</div>
+        <div class="seal">● SISTEMA DE GESTIÓN AMBIENTAL · ISO 14001 ●</div>
+        <h1>Acta de revisión por la dirección</h1>
+        <div class="meta">
+            <p><strong>Código:</strong> <span class="mono">RG-09.03.01</span></p>
+            <p><strong>Curso:</strong> {{ review.exercise }}</p>
+            <p><strong>Reunión:</strong> {{ review.meetingDate ? review.meetingDate|date('d/m/Y') : '—' }}</p>
+            <p><strong>Estado:</strong> {{ review.approved ? 'Aprobada' : 'Borrador' }}</p>
+        </div>
+    </div>
+
+    <div style="page-break-after: always;"></div>
+
+    {# ---------- Review data ---------- #}
+    <h2>1. Datos de la revisión</h2>
+    <table class="control">
+        <tr><th>Curso</th><td>{{ review.exercise }}</td></tr>
+        <tr><th>Fecha de la reunión</th><td>{{ review.meetingDate ? review.meetingDate|date('d/m/Y') : '—' }}</td></tr>
+        <tr>
+            <th>Participantes</th>
+            <td>
+                {%- if review.participants is empty -%}
+                    <span class="muted">—</span>
+                {%- else -%}
+                    {{ review.participants|map(p => p.fullName)|join(', ') }}
+                {%- endif -%}
+            </td>
+        </tr>
+        <tr>
+            <th>Aprobación</th>
+            <td>
+                {%- if review.approved -%}
+                    {{ review.approvedBy ? review.approvedBy.fullName : '—' }}{% if review.approvedAt %} · {{ review.approvedAt|date('d/m/Y') }}{% endif %}
+                {%- else -%}
+                    <span class="muted">Pendiente</span>
+                {%- endif -%}
+            </td>
+        </tr>
+    </table>
+
+    {# ---------- Inputs (§9.3.2) ---------- #}
+    <h2>2. Elementos de entrada (§9.3.2)</h2>
+    {% for section in inputs %}
+        <h3>2.{{ loop.index }}. {{ section.sectionKey.label }}</h3>
+        {% if section.content %}
+            <p class="section-body">{{ section.content }}</p>
+        {% else %}
+            <p class="section-body muted">Sin contenido.</p>
+        {% endif %}
+    {% endfor %}
+
+    {# ---------- Outputs (§9.3.3) ---------- #}
+    <h2>3. Elementos de salida (§9.3.3)</h2>
+    {% for section in outputs %}
+        <h3>3.{{ loop.index }}. {{ section.sectionKey.label }}</h3>
+        {% if section.content %}
+            <p class="section-body">{{ section.content }}</p>
+        {% else %}
+            <p class="section-body muted">Sin contenido.</p>
+        {% endif %}
+    {% endfor %}
+</body>
+</html>

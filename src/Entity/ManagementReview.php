@@ -67,6 +67,28 @@ class ManagementReview
     private ?\DateTimeImmutable $approvedAt = null;
 
     /**
+     * Storage-relative path of the official PDF sealed when the review was approved. Null while a
+     * draft; the PDF is served from here so its certified bytes never change.
+     */
+    #[ORM\Column(length: 1024, nullable: true)]
+    private ?string $storagePath = null;
+
+    /**
+     * SHA-256 of the sealed PDF's exact bytes, recorded at approval as tamper-evidence. Null while a
+     * draft.
+     */
+    #[ORM\Column(length: 128, nullable: true)]
+    private ?string $integrityHash = null;
+
+    /**
+     * Storage-relative path of the PDF signed by Direction with their own certificate (level 1a,
+     * AutoFirma "upload the signed PDF"). Optional and attached after approval; additional to the
+     * sealed PDF, never replacing it.
+     */
+    #[ORM\Column(length: 1024, nullable: true)]
+    private ?string $signedPdfPath = null;
+
+    /**
      * @var Collection<int, ManagementReviewSection>
      */
     #[ORM\OneToMany(targetEntity: ManagementReviewSection::class, mappedBy: 'review', cascade: ['persist', 'remove'], orphanRemoval: true)]
@@ -179,6 +201,52 @@ class ManagementReview
     public function isApproved(): bool
     {
         return null !== $this->approvedAt;
+    }
+
+    public function getStoragePath(): ?string
+    {
+        return $this->storagePath;
+    }
+
+    public function setStoragePath(?string $storagePath): static
+    {
+        $this->storagePath = $storagePath;
+
+        return $this;
+    }
+
+    public function getIntegrityHash(): ?string
+    {
+        return $this->integrityHash;
+    }
+
+    public function setIntegrityHash(?string $integrityHash): static
+    {
+        $this->integrityHash = $integrityHash;
+
+        return $this;
+    }
+
+    public function getSignedPdfPath(): ?string
+    {
+        return $this->signedPdfPath;
+    }
+
+    public function setSignedPdfPath(?string $signedPdfPath): static
+    {
+        $this->signedPdfPath = $signedPdfPath;
+
+        return $this;
+    }
+
+    /**
+     * Whether a PDF signed by Direction (level 1a) has been attached to this review.
+     *
+     * @return bool true once a signed PDF path has been recorded
+     */
+    public function isDigitallySigned(): bool
+    {
+        return null !== $this->signedPdfPath;
     }
 
     /**

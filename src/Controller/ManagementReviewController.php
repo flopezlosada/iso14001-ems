@@ -11,9 +11,12 @@ use App\Form\ManagementReviewType;
 use App\Repository\ManagementReviewRepository;
 use App\Security\Voter\AreaVoter;
 use App\Service\AuditLogger;
+use App\Service\FileUploader;
+use App\Service\ManagementReview\ManagementReviewPdfGenerator;
 use App\Service\ManagementReview\ManagementReviewPrefiller;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -32,6 +35,8 @@ class ManagementReviewController extends AbstractController
     public function __construct(
         private readonly AuditLogger $auditLogger,
         private readonly ManagementReviewPrefiller $prefiller,
+        private readonly ManagementReviewPdfGenerator $pdfGenerator,
+        private readonly FileUploader $fileUploader,
     ) {
     }
 
@@ -102,9 +107,15 @@ class ManagementReviewController extends AbstractController
      * is left unchanged.
      */
     #[Route('/{id}/approve', name: 'management_review_approve', requirements: ['id' => '\d+'], methods: ['POST'])]
-    public function approve(ManagementReview $review, Request $request, EntityManagerInterface $em): Response
+    public function approve(int $id, ManagementReviewRepository $repository, Request $request, EntityManagerInterface $em): Response
     {
         $this->denyAccessUnlessGranted(AreaVoter::WRITE, Area::MANAGEMENT_REVIEW);
+
+        // Eager-load sections and participants: sealing renders the PDF, which reads both.
+        $review = $repository->findWithSections($id);
+        if (null === $review) {
+            throw $this->createNotFoundException();
+        }
 
         $user = $this->getUser();
         if ($this->isCsrfTokenValid('approve'.$review->getId(), (string) $request->request->get('_token'))
@@ -113,6 +124,14 @@ class ManagementReviewController extends AbstractController
         ) {
             $review->setApprovedBy($user);
             $review->setApprovedAt(new \DateTimeImmutable());
+
+            // Seal the official PDF (RG-09.03.01): persist it as the immutable artefact and hash its
+            // bytes. The integrity hash certifies this exact stored file, which is why it is saved
+            // rather than regenerated on demand (dompdf output is not byte-for-byte reproducible).
+            $pdf = $this->pdfGenerator->render($review);
+            $review->setStoragePath($this->fileUploader->store($pdf, 'management-review-pdfs', 'pdf'));
+            $review->setIntegrityHash(hash('sha256', $pdf));
+
             $em->flush();
 
             $this->auditLogger->log(
@@ -137,8 +156,17 @@ class ManagementReviewController extends AbstractController
 
         if ($this->isCsrfTokenValid('delete'.$review->getId(), (string) $request->request->get('_token'))) {
             $exercise = $review->getExercise();
+            // Capture the on-disk artefacts before the entity is gone, then remove them only after a
+            // successful flush: the shared hosting's hard limit is inodes, so orphan PDFs must not pile up.
+            $storagePath = $review->getStoragePath();
+            $signedPath = $review->getSignedPdfPath();
+
             $em->remove($review);
             $em->flush();
+
+            foreach (array_filter([$storagePath, $signedPath]) as $path) {
+                $this->fileUploader->remove($path);
+            }
 
             $this->auditLogger->log(
                 'managementreview.deleted',
@@ -150,6 +178,100 @@ class ManagementReviewController extends AbstractController
         }
 
         return $this->redirectToRoute('management_review_index');
+    }
+
+    /**
+     * Serves the official report (RG-09.03.01) of a review as a PDF. An approved review serves the
+     * sealed PDF that its integrity hash certifies; a draft gets a live preview so it can be reviewed
+     * before approval.
+     */
+    #[Route('/{id}/pdf', name: 'management_review_pdf', requirements: ['id' => '\d+'], methods: ['GET'])]
+    public function downloadPdf(int $id, ManagementReviewRepository $repository): Response
+    {
+        $this->denyAccessUnlessGranted(AreaVoter::READ, Area::MANAGEMENT_REVIEW);
+
+        $review = $repository->findWithSections($id);
+        if (null === $review) {
+            throw $this->createNotFoundException();
+        }
+
+        $stored = $review->getStoragePath();
+        if (null !== $stored && $review->isApproved()) {
+            return $this->file($this->fileUploader->absolutePath($stored), $this->pdfFilename($review));
+        }
+
+        return new Response($this->pdfGenerator->render($review), Response::HTTP_OK, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="'.$this->pdfFilename($review).'"',
+        ]);
+    }
+
+    /**
+     * Attaches the PDF signed by Direction with their own certificate (level 1a, "upload the signed
+     * PDF" via AutoFirma). Only an already-approved review can carry a signature.
+     */
+    #[Route('/{id}/firma', name: 'management_review_sign', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function uploadSignedPdf(ManagementReview $review, Request $request, EntityManagerInterface $em): Response
+    {
+        $this->denyAccessUnlessGranted(AreaVoter::WRITE, Area::MANAGEMENT_REVIEW);
+
+        $redirect = $this->redirectToRoute('management_review_show', ['id' => $review->getId()]);
+        if (!$this->isCsrfTokenValid('sign'.$review->getId(), (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Token CSRF inválido.');
+        }
+        if (!$review->isApproved()) {
+            $this->addFlash('error', 'Solo se puede adjuntar la firma de una revisión ya aprobada.');
+
+            return $redirect;
+        }
+
+        $file = $request->files->get('signedPdf');
+        if (!$file instanceof UploadedFile || 'application/pdf' !== $file->getMimeType()) {
+            $this->addFlash('error', 'Adjunta el PDF firmado (formato PDF).');
+
+            return $redirect;
+        }
+
+        $previous = $review->getSignedPdfPath();
+        $review->setSignedPdfPath($this->fileUploader->upload($file, 'management-review-signed'));
+        if (null !== $previous) {
+            $this->fileUploader->remove($previous);
+        }
+
+        $em->flush();
+        $this->auditLogger->log(
+            'managementreview.signed',
+            'ManagementReview',
+            (string) $review->getId(),
+            sprintf('Firma adjunta a la revisión por la dirección del curso %s.', $review->getExercise()),
+        );
+        $this->addFlash('success', 'PDF firmado adjuntado a la revisión.');
+
+        return $redirect;
+    }
+
+    /**
+     * Serves the level-1a signed PDF attached to a review.
+     */
+    #[Route('/{id}/firma', name: 'management_review_signed_download', requirements: ['id' => '\d+'], methods: ['GET'])]
+    public function downloadSignedPdf(ManagementReview $review): Response
+    {
+        $this->denyAccessUnlessGranted(AreaVoter::READ, Area::MANAGEMENT_REVIEW);
+
+        $signed = $review->getSignedPdfPath();
+        if (null === $signed) {
+            throw $this->createNotFoundException('No hay PDF firmado para esta revisión.');
+        }
+
+        return $this->file($this->fileUploader->absolutePath($signed), $this->pdfFilename($review, 'firmado'));
+    }
+
+    /**
+     * A human-readable download name for a review's PDF, e.g. "RG-09.03.01-2025-2026.pdf".
+     */
+    private function pdfFilename(ManagementReview $review, ?string $suffix = null): string
+    {
+        return 'RG-09.03.01-'.$review->getExercise().(null !== $suffix ? '-'.$suffix : '').'.pdf';
     }
 
     /**
