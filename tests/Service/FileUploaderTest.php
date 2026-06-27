@@ -50,6 +50,19 @@ final class FileUploaderTest extends TestCase
         self::assertStringNotContainsString('mi factura', $relativePath);
     }
 
+    public function testStorePersistsRawContentsUnderSubdir(): void
+    {
+        $uploader = new FileUploader($this->baseDir);
+
+        $relativePath = $uploader->store("%PDF-1.4\nhola\n%%EOF", 'document-pdfs', 'pdf');
+
+        self::assertStringStartsWith('document-pdfs/', $relativePath);
+        self::assertStringEndsWith('.pdf', $relativePath);
+        $absolute = $uploader->absolutePath($relativePath);
+        self::assertFileExists($absolute);
+        self::assertStringStartsWith('%PDF', (string) file_get_contents($absolute));
+    }
+
     public function testRemoveDeletesStoredFile(): void
     {
         $uploader = new FileUploader($this->baseDir);

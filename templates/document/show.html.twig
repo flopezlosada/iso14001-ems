@@ -97,7 +97,7 @@
         {% else %}
             <table>
                 <thead>
-                    <tr><th>Rev.</th><th>Fecha</th><th>Estado</th><th>Autor</th><th>Cambios</th><th>Aprobación</th></tr>
+                    <tr><th>Rev.</th><th>Fecha</th><th>Estado</th><th>Autor</th><th>Cambios</th><th>Aprobación</th><th>Documento</th></tr>
                 </thead>
                 <tbody>
                     {% for v in versions %}
@@ -122,6 +122,22 @@
                                 {%- else -%}
                                     <span class="muted">Pendiente</span>
                                 {%- endif -%}
+                            </td>
+                            <td>
+                                <a href="{{ path('document_revision_pdf', { id: document.id, versionId: v.id }) }}" target="_blank" rel="noopener">
+                                    {{ ap ? 'PDF oficial' : 'Vista previa' }}
+                                </a>
+                                {%- if ap %}
+                                    {% if ap.digitallySigned %}
+                                        <span class="muted"> · </span><a href="{{ path('document_revision_signed_download', { id: document.id, versionId: v.id }) }}">PDF firmado</a>
+                                    {% elseif can_approve %}
+                                        <form method="post" enctype="multipart/form-data" action="{{ path('document_revision_sign', { id: document.id, versionId: v.id }) }}" class="inline-form">
+                                            <input type="hidden" name="_token" value="{{ csrf_token('document_sign' ~ document.id) }}">
+                                            <input type="file" name="signedPdf" accept="application/pdf" aria-label="PDF firmado">
+                                            <button class="btn secondary" type="submit">Adjuntar firma</button>
+                                        </form>
+                                    {% endif %}
+                                {% endif -%}
                             </td>
                         </tr>
                     {% endfor %}

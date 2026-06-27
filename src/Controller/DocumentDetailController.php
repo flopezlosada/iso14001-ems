@@ -13,9 +13,12 @@ use App\Enum\VersionStatus;
 use App\Repository\DocumentRepository;
 use App\Security\Voter\DocumentVoter;
 use App\Service\AuditLogger;
+use App\Service\Document\DocumentPdfGenerator;
+use App\Service\FileUploader;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -36,8 +39,11 @@ use Symfony\Component\Routing\Attribute\Route;
  */
 final class DocumentDetailController extends AbstractController
 {
-    public function __construct(private readonly AuditLogger $auditLogger)
-    {
+    public function __construct(
+        private readonly AuditLogger $auditLogger,
+        private readonly DocumentPdfGenerator $pdfGenerator,
+        private readonly FileUploader $fileUploader,
+    ) {
     }
 
     /**
@@ -229,10 +235,15 @@ final class DocumentDetailController extends AbstractController
         }
 
         $version->setStatus(VersionStatus::APPROVED);
-        $event = (new ApprovalEvent())
-            ->setApprover($approver)
-            ->setIntegrityHash($this->integrityHash($document, $version));
+        $event = (new ApprovalEvent())->setApprover($approver);
         $version->addApprovalEvent($event);
+
+        // Generate the official PDF (PC.01.0), persist it as the sealed artefact and hash its bytes:
+        // the integrity hash certifies this exact stored file, which is why it is saved rather than
+        // regenerated on demand (dompdf output is not byte-for-byte reproducible).
+        $pdf = $this->pdfGenerator->render($document, $version);
+        $version->setStoragePath($this->fileUploader->store($pdf, 'document-pdfs', 'pdf'));
+        $event->setIntegrityHash(hash('sha256', $pdf));
 
         $em->persist($event);
         $em->flush();
@@ -243,18 +254,122 @@ final class DocumentDetailController extends AbstractController
     }
 
     /**
-     * Tamper-evidence hash of an approved revision. With no generated PDF yet, it hashes a canonical
-     * representation of the revision; once PDF generation exists this should hash the PDF itself.
+     * Serves the official control sheet (PC.01.0) of a revision as a PDF. An approved revision serves
+     * the sealed PDF that its integrity hash certifies; a draft gets a live preview so the approver
+     * can review the sheet before approving.
+     *
+     * @param Document               $document  the document
+     * @param int                    $versionId the revision to render
+     * @param EntityManagerInterface $em        to resolve the revision
+     *
+     * @return Response the PDF, inline
      */
-    private function integrityHash(Document $document, DocumentVersion $version): string
+    #[Route('/documentos/{id}/revision/{versionId}/pdf', name: 'document_revision_pdf', requirements: ['id' => '\d+', 'versionId' => '\d+'], methods: ['GET'])]
+    public function downloadPdf(Document $document, int $versionId, EntityManagerInterface $em): Response
     {
-        return hash('sha256', implode('|', [
-            // The document id (immutable), not its code (which could be edited and break the hash).
-            (string) $document->getId(),
-            '#'.$version->getRevisionNumber(),
-            $version->getIssueDate()->format('Y-m-d'),
-            (string) $version->getAuthor(),
-            (string) $version->getChangeSummary(),
-        ]));
+        $version = $this->resolveVersion($document, $versionId, $em);
+
+        $stored = $version->getStoragePath();
+        if (null !== $stored && VersionStatus::APPROVED === $version->getStatus()) {
+            return $this->file($this->fileUploader->absolutePath($stored), $this->pdfFilename($document, $version));
+        }
+
+        return new Response($this->pdfGenerator->render($document, $version), Response::HTTP_OK, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="'.$this->pdfFilename($document, $version).'"',
+        ]);
+    }
+
+    /**
+     * Attaches the PDF signed by the approver with their own certificate (level 1a, "upload the
+     * signed PDF" via AutoFirma). Only an already-approved revision can carry a signature; gated to
+     * the role that approves this document's type.
+     *
+     * @param Request                $request   the POST request (signedPdf file, CSRF token)
+     * @param Document               $document  the document
+     * @param int                    $versionId the approved revision to sign
+     * @param EntityManagerInterface $em        to persist the signature path
+     *
+     * @return Response a redirect back to the document detail
+     */
+    #[Route('/documentos/{id}/revision/{versionId}/firma', name: 'document_revision_sign', requirements: ['id' => '\d+', 'versionId' => '\d+'], methods: ['POST'])]
+    public function uploadSignedPdf(Request $request, Document $document, int $versionId, EntityManagerInterface $em): Response
+    {
+        $this->denyAccessUnlessGranted(DocumentVoter::APPROVE, $document);
+        if (!$this->isCsrfTokenValid('document_sign'.(string) $document->getId(), (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Token CSRF inválido.');
+        }
+
+        $version = $this->resolveVersion($document, $versionId, $em);
+        $approval = $version->getLatestApproval();
+        $redirect = $this->redirectToRoute('document_show', ['id' => $document->getId()]);
+        if (null === $approval) {
+            $this->addFlash('error', 'Solo se puede adjuntar la firma de una revisión ya aprobada.');
+
+            return $redirect;
+        }
+
+        $file = $request->files->get('signedPdf');
+        if (!$file instanceof UploadedFile || 'application/pdf' !== $file->getMimeType()) {
+            $this->addFlash('error', 'Adjunta el PDF firmado (formato PDF).');
+
+            return $redirect;
+        }
+
+        $previous = $approval->getSignedPdfPath();
+        $approval->setSignedPdfPath($this->fileUploader->upload($file, 'document-signed'));
+        if (null !== $previous) {
+            $this->fileUploader->remove($previous);
+        }
+
+        $em->flush();
+        $this->auditLogger->log('document.revision_signed', 'Document', (string) $document->getId(), 'Firma adjunta a la revisión '.$version->getRevisionNumber());
+        $this->addFlash('success', 'PDF firmado adjuntado a la revisión '.$version->getRevisionNumber().'.');
+
+        return $redirect;
+    }
+
+    /**
+     * Serves the signed PDF attached to a revision's approval (level 1a).
+     *
+     * @param Document               $document  the document
+     * @param int                    $versionId the revision whose signed PDF to serve
+     * @param EntityManagerInterface $em        to resolve the revision
+     *
+     * @return Response the signed PDF as a download
+     */
+    #[Route('/documentos/{id}/revision/{versionId}/firma', name: 'document_revision_signed_download', requirements: ['id' => '\d+', 'versionId' => '\d+'], methods: ['GET'])]
+    public function downloadSignedPdf(Document $document, int $versionId, EntityManagerInterface $em): Response
+    {
+        $version = $this->resolveVersion($document, $versionId, $em);
+        $signed = $version->getLatestApproval()?->getSignedPdfPath();
+        if (null === $signed) {
+            throw $this->createNotFoundException('No hay PDF firmado para esta revisión.');
+        }
+
+        return $this->file($this->fileUploader->absolutePath($signed), $this->pdfFilename($document, $version, 'firmado'));
+    }
+
+    /**
+     * Resolves a revision that belongs to the given document, or 404s.
+     */
+    private function resolveVersion(Document $document, int $versionId, EntityManagerInterface $em): DocumentVersion
+    {
+        $version = $em->find(DocumentVersion::class, $versionId);
+        if (null === $version || $version->getDocument() !== $document) {
+            throw $this->createNotFoundException('Revisión no encontrada.');
+        }
+
+        return $version;
+    }
+
+    /**
+     * A human-readable download name for a revision's PDF, e.g. "PC.01.0-rev2.pdf".
+     */
+    private function pdfFilename(Document $document, DocumentVersion $version, ?string $suffix = null): string
+    {
+        $base = $document->getCode() ?? ('documento-'.(string) $document->getId());
+
+        return $base.'-rev'.$version->getRevisionNumber().(null !== $suffix ? '-'.$suffix : '').'.pdf';
     }
 }

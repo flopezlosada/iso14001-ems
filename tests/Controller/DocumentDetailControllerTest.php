@@ -12,8 +12,10 @@ use App\Entity\User;
 use App\Enum\DocumentType;
 use App\Enum\ObligationStatus;
 use App\Enum\VersionStatus;
+use App\Service\FileUploader;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Component\DomCrawler\Field\FileFormField;
 
 /**
  * Functional tests for the read-only document detail (version history + approval trail), the
@@ -354,5 +356,102 @@ final class DocumentDetailControllerTest extends WebTestCase
         $client->request('POST', '/documentos/'.$document->getId().'/revision/'.$version->getId().'/aprobar');
 
         self::assertResponseStatusCodeSame(403);
+    }
+
+    /**
+     * Persists a procedure with a draft revision pending Dirección's approval.
+     *
+     * @return array{0: Document, 1: DocumentVersion, 2: User} the document, its draft revision and the approver
+     */
+    private function procedurePendingApproval(EntityManagerInterface $em, string $code, string $approverEmail): array
+    {
+        $document = $this->persistProcedure($em, $code, (new Role())->setCode('ems_manager')->setName('RSGMA'));
+        $direction = (new Role())->setCode('direction')->setName('Dirección');
+        $em->persist($direction);
+        $approver = (new User())->setFullName('Marta Directora')->setEmail($approverEmail)->setActive(true)->addAssignedRole($direction);
+        $em->persist($approver);
+        $version = (new DocumentVersion())->setRevisionNumber(0)->setStatus(VersionStatus::DRAFT)->setChangeSummary('Edición inicial.');
+        $document->addVersion($version);
+        $em->persist($version);
+        $em->flush();
+
+        return [$document, $version, $approver];
+    }
+
+    public function testApprovingSealsOfficialPdfAndHashesItsBytes(): void
+    {
+        $client = static::createClient();
+        $em = $this->em();
+        [$document, $version, $approver] = $this->procedurePendingApproval($em, 'PG-06.10', 'direccion-seal@example.test');
+        $versionId = $version->getId();
+        $client->loginUser($approver);
+
+        $client->request('GET', '/documentos/'.$document->getId());
+        $client->submitForm('Aprobar');
+
+        $em->clear();
+        $reloaded = $em->find(DocumentVersion::class, $versionId);
+        self::assertNotNull($reloaded);
+        self::assertNotNull($reloaded->getStoragePath(), 'Approval must persist the generated PDF path.');
+        $approval = $reloaded->getLatestApproval();
+        self::assertNotNull($approval);
+
+        $uploader = static::getContainer()->get(FileUploader::class);
+        $absolute = $uploader->absolutePath((string) $reloaded->getStoragePath());
+        self::assertFileExists($absolute);
+        $bytes = (string) file_get_contents($absolute);
+        self::assertStringStartsWith('%PDF', $bytes);
+        // The integrity hash certifies the exact stored bytes (tamper-evidence over the sealed PDF).
+        self::assertSame(hash('sha256', $bytes), $approval->getIntegrityHash());
+    }
+
+    public function testDownloadPdfPreviewsADraftRevision(): void
+    {
+        $client = static::createClient();
+        $em = $this->em();
+        $document = $this->persistDocument($em, 'PC.30.0');
+        $version = (new DocumentVersion())->setRevisionNumber(0)->setStatus(VersionStatus::DRAFT)->setChangeSummary('Borrador.');
+        $document->addVersion($version);
+        $em->persist($version);
+        $reader = (new User())->setFullName('Lectora')->setEmail('lectora-pdf@example.test')->setActive(true);
+        $em->persist($reader);
+        $em->flush();
+        $client->loginUser($reader);
+
+        $client->request('GET', '/documentos/'.$document->getId().'/revision/'.$version->getId().'/pdf');
+
+        self::assertResponseIsSuccessful();
+        self::assertResponseHeaderSame('Content-Type', 'application/pdf');
+        self::assertStringStartsWith('%PDF', (string) $client->getResponse()->getContent());
+    }
+
+    public function testApproverAttachesSignedPdf(): void
+    {
+        $client = static::createClient();
+        $em = $this->em();
+        [$document, $version, $approver] = $this->procedurePendingApproval($em, 'PG-06.11', 'direccion-sign@example.test');
+        $client->loginUser($approver);
+
+        // Approve first: the signature can only be attached to an already-approved revision.
+        $client->request('GET', '/documentos/'.$document->getId());
+        $client->submitForm('Aprobar');
+        $crawler = $client->followRedirect();
+
+        $signedPath = tempnam(sys_get_temp_dir(), 'signed').'.pdf';
+        file_put_contents($signedPath, "%PDF-1.4\nfirmado por la directora\n%%EOF");
+        $form = $crawler->selectButton('Adjuntar firma')->form();
+        $field = $form['signedPdf'];
+        self::assertInstanceOf(FileFormField::class, $field);
+        $field->upload($signedPath);
+        $client->submit($form);
+
+        self::assertResponseRedirects('/documentos/'.$document->getId());
+        $client->followRedirect();
+        // The trail now offers the signed PDF and flags the revision as signed.
+        self::assertSelectorExists('a:contains("PDF firmado")');
+
+        $em->clear();
+        $reloaded = $em->find(DocumentVersion::class, $version->getId());
+        self::assertNotNull($reloaded?->getLatestApproval()?->getSignedPdfPath());
     }
 }
