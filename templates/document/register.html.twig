@@ -10,7 +10,10 @@
             <h1>Documentos</h1>
             <p class="lead">El registro de toda la documentación del sistema de gestión (la Lista de Documentación Vigente, F.01): qué hay, su versión en vigor y quién es responsable.</p>
         </div>
-        <a class="btn secondary" href="{{ path('obligation_structure') }}">Ver estructura del SGA</a>
+        <div class="actions">
+            <a class="btn secondary" href="{{ path('document_register_export') }}">Descargar CSV</a>
+            <a class="btn secondary" href="{{ path('obligation_structure') }}">Ver estructura del SGA</a>
+        </div>
     </div>
 
     <div class="card">

@@ -160,6 +160,107 @@ final class DocumentDetailControllerTest extends WebTestCase
         $client->loginUser($admin);
     }
 
+    public function testRegisterExportRequiresAuthentication(): void
+    {
+        $client = static::createClient();
+
+        $client->request('GET', '/documentos/export.csv');
+
+        self::assertResponseRedirects('/login');
+    }
+
+    public function testRegisterExportsCsvWithHeaderAndRows(): void
+    {
+        $client = static::createClient();
+        $em = $this->em();
+        $document = (new Document())
+            ->setCode('PC.01.0')
+            ->setTitle('Gestión de la Información Documentada')
+            ->setType(DocumentType::PROCEDURE)
+            ->setStatus(ObligationStatus::DONE);
+        $document->addVersion((new DocumentVersion())->setRevisionNumber(0)->setStatus(VersionStatus::APPROVED));
+        $em->persist($document);
+        $reader = (new User())->setFullName('Lectora')->setEmail('lectora-export@example.test')->setActive(true);
+        $em->persist($reader);
+        $em->flush();
+        $client->loginUser($reader);
+
+        $rows = $this->exportRows($client);
+
+        self::assertResponseIsSuccessful();
+        self::assertResponseHeaderSame('Content-Type', 'text/csv; charset=UTF-8');
+        self::assertStringContainsString('registro-documental-F01.csv', (string) $client->getResponse()->headers->get('Content-Disposition'));
+        // Parsed back field by field, so the assertion is immune to how fputcsv quotes fields.
+        self::assertSame(['Código', 'Documento', 'Tipo', 'Área', 'Responsable', 'Revisión en vigor', 'Fecha en vigor', 'Estado', 'Ciclo de vida'], $rows[0]);
+        $row = $this->rowByCode($rows, 'PC.01.0');
+        self::assertSame('Gestión de la Información Documentada', $row[1]);
+        self::assertSame('Procedimiento', $row[2]);
+        self::assertSame('Rev. 0', $row[5]);
+        // An in-force document reads as "Activo" in the lifecycle column.
+        self::assertSame('Activo', $row[8]);
+    }
+
+    public function testRegisterExportHandlesDocumentWithoutCurrentVersion(): void
+    {
+        $client = static::createClient();
+        $em = $this->em();
+        // Realistic register row: a form with only a DRAFT revision has no in-force version, so the
+        // revision and date columns must come out empty without blowing up the stream.
+        $document = (new Document())->setCode('F.99.0')->setTitle('Formato sin emitir')->setType(DocumentType::FORM)->setStatus(ObligationStatus::PENDING);
+        $document->addVersion((new DocumentVersion())->setRevisionNumber(0)->setStatus(VersionStatus::DRAFT));
+        $em->persist($document);
+        $reader = (new User())->setFullName('Lectora')->setEmail('lectora-export-novers@example.test')->setActive(true);
+        $em->persist($reader);
+        $em->flush();
+        $client->loginUser($reader);
+
+        $rows = $this->exportRows($client);
+
+        self::assertResponseIsSuccessful();
+        // No in-force revision: revision and date columns come out empty; lifecycle still reads "Activo".
+        $row = $this->rowByCode($rows, 'F.99.0');
+        self::assertSame('Formato sin emitir', $row[1]);
+        self::assertSame('', $row[5], 'revision column must be empty without an in-force version');
+        self::assertSame('', $row[6], 'date column must be empty without an in-force version');
+        self::assertSame('Activo', $row[8]);
+    }
+
+    /**
+     * Requests the CSV export and parses it back into rows (BOM stripped, ';' separator) so the
+     * assertions are immune to how fputcsv quotes individual fields.
+     *
+     * @return list<list<string>> the parsed CSV rows
+     */
+    private function exportRows(object $client): array
+    {
+        $client->request('GET', '/documentos/export.csv');
+        $content = (string) preg_replace('/^\xEF\xBB\xBF/', '', (string) $client->getResponse()->getContent());
+        $lines = array_filter(explode("\n", trim($content)), static fn (string $line): bool => '' !== $line);
+
+        return array_values(array_map(
+            static fn (string $line): array => array_map(static fn (?string $field): string => (string) $field, str_getcsv($line, ';')),
+            $lines,
+        ));
+    }
+
+    /**
+     * Finds the export row for a document code.
+     *
+     * @param list<list<string>> $rows the parsed CSV rows
+     *
+     * @return list<string> the matching row's fields
+     */
+    private function rowByCode(array $rows, string $code): array
+    {
+        foreach ($rows as $row) {
+            if (($row[0] ?? null) === $code) {
+                return $row;
+            }
+        }
+
+        self::fail(sprintf('No CSV row found for code %s', $code));
+    }
+
     public function testAdminCancelsDocumentWithReason(): void
     {
         $client = static::createClient();
