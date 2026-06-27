@@ -6,6 +6,7 @@ namespace App\DataFixtures;
 
 use App\Entity\CorrectiveAction;
 use App\Entity\NonConformity;
+use App\Entity\SystemAudit;
 use App\Entity\User;
 use App\Enum\Efficacy;
 use App\Enum\NonConformityOrigin;
@@ -42,6 +43,9 @@ final class NonConformityFixtures extends AbstractDemoFixture implements Depende
                 ->setStatus($finding['status'])
                 ->setOpenedAt(new \DateTimeImmutable($finding['openedAt']))
                 ->setClosedAt(null !== $finding['closedAt'] ? new \DateTimeImmutable($finding['closedAt']) : null);
+            if (null !== $finding['audit']) {
+                $nc->setAudit($this->getReference(SystemAuditFixtures::ref($finding['audit']), SystemAudit::class));
+            }
             $manager->persist($nc);
 
             foreach ($finding['actions'] as $actionData) {
@@ -91,6 +95,7 @@ final class NonConformityFixtures extends AbstractDemoFixture implements Depende
             'description' => 'El almacenamiento temporal de residuos peligrosos supera los 6 meses permitidos.',
             'rootCause' => 'Falta de un calendario de recogidas con el gestor autorizado.',
             'responsible' => 'calidad', 'status' => NonConformityStatus::CLOSED,
+            'audit' => 'external-2025',
             'openedAt' => '2025-03-18', 'closedAt' => '2025-06-30',
             'actions' => [
                 ['sequence' => 1, 'responsible' => 'mantenimiento', 'plannedDate' => '2025-04-30',
@@ -112,6 +117,7 @@ final class NonConformityFixtures extends AbstractDemoFixture implements Depende
             'description' => 'Varios registros del SGA no están en su última versión vigente.',
             'rootCause' => 'No se revisó la lista de documentación vigente tras los últimos cambios.',
             'responsible' => 'sga', 'status' => NonConformityStatus::IN_TREATMENT,
+            'audit' => 'internal-2026',
             'openedAt' => '2026-01-22', 'closedAt' => null,
             'actions' => [
                 ['sequence' => 1, 'responsible' => 'sga', 'plannedDate' => '2026-03-15',
@@ -132,6 +138,7 @@ final class NonConformityFixtures extends AbstractDemoFixture implements Depende
             'description' => 'Pequeño derrame de producto de limpieza en el almacén sin contención disponible.',
             'rootCause' => null,
             'responsible' => 'mantenimiento', 'status' => NonConformityStatus::OPEN,
+            'audit' => null,
             'openedAt' => '2026-05-09', 'closedAt' => null,
             'actions' => [],
         ];
@@ -139,6 +146,6 @@ final class NonConformityFixtures extends AbstractDemoFixture implements Depende
 
     public function getDependencies(): array
     {
-        return [UserFixtures::class];
+        return [UserFixtures::class, SystemAuditFixtures::class];
     }
 }
