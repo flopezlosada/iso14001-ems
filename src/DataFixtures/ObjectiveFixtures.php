@@ -12,12 +12,14 @@ use Doctrine\Common\DataFixtures\DependentFixtureInterface;
 use Doctrine\Persistence\ObjectManager;
 
 /**
- * The environmental objectives and targets (PG-06.04). Part of the GOLDEN backbone.
+ * The environmental objectives and targets (PG-06.04). DEMO layer only: the real objectives are
+ * loaded by the ETL ('objectives' importer), so seeding them here as part of the GOLDEN backbone
+ * would duplicate them against the real data.
  *
  * Each objective is tied to a responsible person and, where it applies, to the significant
  * aspect that motivates it, so the planning views show realistic links.
  */
-final class ObjectiveFixtures extends AbstractGoldenFixture implements DependentFixtureInterface
+final class ObjectiveFixtures extends AbstractDemoFixture implements DependentFixtureInterface
 {
     public function load(ObjectManager $manager): void
     {

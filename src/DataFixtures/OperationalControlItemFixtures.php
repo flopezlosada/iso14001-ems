@@ -9,11 +9,12 @@ use App\Enum\OperationalControlSection;
 use Doctrine\Persistence\ObjectManager;
 
 /**
- * The catalogue of operational-control checklist items (PG-08.01 / RG-08.01.01). Part of the GOLDEN
- * backbone: the items are structural (they define the inspection), not sample data. Synthetic but
+ * The catalogue of operational-control checklist items (PG-08.01 / RG-08.01.01). DEMO layer only:
+ * the real catalogue is seeded from the centre's sheets by the ETL ('operational_control' importer),
+ * so keeping these in the GOLDEN backbone would duplicate them against the real data. Synthetic but
  * faithful to the centre's internal checklist, grouped by section.
  */
-final class OperationalControlItemFixtures extends AbstractGoldenFixture
+final class OperationalControlItemFixtures extends AbstractDemoFixture
 {
     public function load(ObjectManager $manager): void
     {

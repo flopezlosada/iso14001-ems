@@ -16,15 +16,16 @@ use Doctrine\Common\DataFixtures\DependentFixtureInterface;
 use Doctrine\Persistence\ObjectManager;
 
 /**
- * The risks and opportunities register and its valuations (PC.03.0 / F.08.0). Part of the GOLDEN
- * backbone.
+ * The risks and opportunities register and its valuations (PC.03.0 / F.08.0). DEMO layer only: the
+ * real register is loaded by the ETL ('risks' importer), so seeding it here as part of the GOLDEN
+ * backbone would duplicate it against the real data.
  *
  * Synthetic but realistic for a school. The valuation score and category are NOT hand-written:
  * they are computed by the real {@see RiskScoreCalculator} (score = probability × impact, banded
  * into trivial/moderate/critical), so the seeded data satisfies the same invariant the app
  * enforces. Critical entries carry an action plan.
  */
-final class RiskOpportunityFixtures extends AbstractGoldenFixture implements DependentFixtureInterface
+final class RiskOpportunityFixtures extends AbstractDemoFixture implements DependentFixtureInterface
 {
     private const string EXERCISE = '2025/2026';
 

@@ -11,12 +11,14 @@ use App\Enum\LegalScope;
 use Doctrine\Persistence\ObjectManager;
 
 /**
- * The register of legal and other requirements (PC-06.03). Part of the GOLDEN backbone.
+ * The register of legal and other requirements (PC-06.03). DEMO layer only: the real register is
+ * loaded by the ETL ('legal-requirements' importer), so seeding it here as part of the GOLDEN
+ * backbone would duplicate it against the real data.
  *
  * Real Spanish/EU environmental provisions applicable to a school, with synthetic compliance
  * evidence and review dates so the compliance and next-review views have something to show.
  */
-final class LegalRequirementFixtures extends AbstractGoldenFixture
+final class LegalRequirementFixtures extends AbstractDemoFixture
 {
     public function load(ObjectManager $manager): void
     {
