@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+{#
+  Official control sheet (PC.01.0) rendered to PDF by DocumentPdfGenerator with dompdf.
+  Standalone document: dompdf does not load the app stylesheet, so all styling is inline here and
+  limited to what dompdf supports (tables, block layout — no flexbox/grid). It deliberately does
+  NOT print the integrity hash, so the bytes can be hashed without circularity.
+#}
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <style>
+        @page { margin: 2.2cm 1.8cm 2.4cm 1.8cm; }
+        body { font-family: "DejaVu Sans", sans-serif; font-size: 10pt; color: #1a1a1a; line-height: 1.4; }
+
+        /* Per-page footer: code · version · "x de y", repeated on every page via fixed position. */
+        .page-footer {
+            position: fixed; bottom: -1.6cm; left: 0; right: 0;
+            font-size: 8pt; color: #555; border-top: 0.5pt solid #bbb; padding-top: 4px;
+        }
+        .page-footer .right { float: right; }
+        .page-footer .pages:after { content: counter(page) " de " counter(pages); }
+
+        .cover { text-align: center; padding-top: 5cm; }
+        .cover .org { font-size: 11pt; letter-spacing: 1pt; text-transform: uppercase; color: #555; }
+        .cover .seal { margin: 0.6cm 0; font-size: 9pt; color: #2f6f4f; letter-spacing: 2pt; }
+        .cover h1 { font-size: 22pt; margin: 1cm 2cm; }
+        .cover .meta { margin-top: 1.5cm; font-size: 11pt; }
+        .cover .meta strong { display: inline-block; min-width: 3cm; text-align: right; color: #555; font-weight: normal; }
+
+        h2 { font-size: 12pt; border-bottom: 1pt solid #2f6f4f; padding-bottom: 3px; margin: 0.8cm 0 0.3cm; color: #2f6f4f; }
+        table.control { width: 100%; border-collapse: collapse; margin-bottom: 0.4cm; }
+        table.control th, table.control td { border: 0.5pt solid #bbb; padding: 5px 7px; text-align: left; vertical-align: top; }
+        table.control th { background: #f0f4f1; font-weight: bold; width: 30%; }
+        table.control thead th { background: #2f6f4f; color: #fff; width: auto; text-align: left; }
+        .muted { color: #777; }
+        .mono { font-family: "DejaVu Sans Mono", monospace; }
+        .center { text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="page-footer">
+        <span>{% if document.code %}{{ document.code }} · {% endif %}Rev. {{ version.revisionNumber }}</span>
+        <span class="right"><span class="pages"></span></span>
+    </div>
+
+    {# ---------- Cover ---------- #}
+    <div class="cover">
+        <div class="org">{{ organizationName }}</div>
+        <div class="seal">● SISTEMA DE GESTIÓN AMBIENTAL · ISO 14001 ●</div>
+        <h1>{{ document.title }}</h1>
+        <div class="meta">
+            {% if document.code %}<p><strong>Código:</strong> <span class="mono">{{ document.code }}</span></p>{% endif %}
+            <p><strong>Tipo:</strong> {{ document.type.label }}</p>
+            <p><strong>Revisión:</strong> {{ version.revisionNumber }}</p>
+            <p><strong>Fecha:</strong> {{ version.issueDate|date('d/m/Y') }}</p>
+        </div>
+    </div>
+
+    <div style="page-break-after: always;"></div>
+
+    {# ---------- Control page ---------- #}
+    <h2>1. Identificación del documento</h2>
+    <table class="control">
+        <tr><th>Código</th><td class="mono">{{ document.code ?? '—' }}</td></tr>
+        <tr><th>Título</th><td>{{ document.title }}</td></tr>
+        <tr><th>Tipo</th><td>{{ document.type.label }}</td></tr>
+        {% if document.linkedArea %}<tr><th>Área / módulo</th><td>{{ document.linkedArea.label }}</td></tr>{% endif %}
+        {% if document.process %}<tr><th>Proceso</th><td>{{ document.process }}</td></tr>{% endif %}
+        <tr><th>Responsable</th><td>{{ document.responsibleRole ? document.responsibleRole.name : '—' }}</td></tr>
+        <tr><th>Retención</th><td>{{ document.retentionYears ? document.retentionYears ~ ' años' : 'Indefinida' }}</td></tr>
+    </table>
+
+    <h2>2. Elaboración, revisión y aprobación</h2>
+    <table class="control">
+        <thead><tr><th>Fase</th><th>Responsable</th><th>Fecha</th></tr></thead>
+        <tbody>
+            <tr><td>Elaboración</td><td>{{ version.author ?? '—' }}</td><td>{{ version.issueDate|date('d/m/Y') }}</td></tr>
+            <tr><td>Revisión</td><td class="muted">—</td><td class="muted">—</td></tr>
+            <tr>
+                <td>Aprobación</td>
+                <td>{{ approval ? approval.approver.fullName : '—' }}</td>
+                <td>{{ approval ? approval.approvedAt|date('d/m/Y') : '—' }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>3. Historial de revisiones</h2>
+    <table class="control">
+        <thead><tr><th>Rev.</th><th>Fecha</th><th>Descripción del cambio</th><th>Estado</th></tr></thead>
+        <tbody>
+            {% for v in history %}
+                <tr>
+                    <td class="center mono">{{ v.revisionNumber }}</td>
+                    <td>{{ v.issueDate|date('d/m/Y') }}</td>
+                    <td>{{ v.changeSummary ?? '—' }}</td>
+                    <td>{{ v.status.label }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

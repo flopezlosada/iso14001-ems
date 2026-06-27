@@ -39,12 +39,43 @@ final class FileUploader
     public function upload(UploadedFile $file, string $subdir): string
     {
         $extension = $file->guessExtension() ?: $file->getClientOriginalExtension();
-        $name = Uuid::v4()->toRfc4122().('' !== $extension ? '.'.$extension : '');
+        $name = $this->randomName($extension);
 
         $relativeDir = trim($subdir, '/');
         $file->move($this->uploadsDir.'/'.$relativeDir, $name);
 
         return $relativeDir.'/'.$name;
+    }
+
+    /**
+     * Stores raw file contents (e.g. a generated PDF) under the given subdirectory and returns its
+     * storage-relative path. The in-memory counterpart of {@see upload()} for artefacts the app
+     * generates rather than receives.
+     *
+     * @param string $contents  the raw bytes to persist
+     * @param string $subdir    feature subdirectory (e.g. "document-pdfs")
+     * @param string $extension file extension without the dot (e.g. "pdf")
+     *
+     * @return string the relative path under the uploads dir (e.g. "document-pdfs/<uuid>.pdf")
+     */
+    public function store(string $contents, string $subdir, string $extension): string
+    {
+        $name = $this->randomName($extension);
+        $relativeDir = trim($subdir, '/');
+        $this->filesystem->dumpFile($this->uploadsDir.'/'.$relativeDir.'/'.$name, $contents);
+
+        return $relativeDir.'/'.$name;
+    }
+
+    /**
+     * A collision-free, opaque file name (random UUID) so the client filename never reaches the
+     * filesystem and path traversal is not possible.
+     */
+    private function randomName(string $extension): string
+    {
+        $extension = ltrim($extension, '.');
+
+        return Uuid::v4()->toRfc4122().('' !== $extension ? '.'.$extension : '');
     }
 
     /**

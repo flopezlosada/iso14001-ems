@@ -14,6 +14,10 @@ parameters:
     # (editable from /admin/settings), so they are no longer hard-coded parameters here.
     # "From" address for the obligation reminder e-mails. Override per environment via MAILER_FROM.
     app.mailer_from: '%env(MAILER_FROM)%'
+    # Organisation name printed on the cover of generated official PDFs. Generic by default; the
+    # centre overrides it per environment via APP_ORG_NAME (kept out of the repo on purpose).
+    app.organization_name: '%env(default:app_organization_name_default:APP_ORG_NAME)%'
+    app_organization_name_default: 'Centro educativo'
 
 services:
     # default configuration for services in *this* file
@@ -22,6 +26,7 @@ services:
         autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
         bind:
             string $uploadsDir: '%app.uploads_dir%'
+            string $organizationName: '%app.organization_name%'
 
     # makes classes in src/ available to be used as services
     # this creates a service per class whose id is the fully-qualified class name
