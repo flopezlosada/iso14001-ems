@@ -42,6 +42,12 @@ final class LegalRequirementImporter extends AbstractDatasetImporter implements 
         $report = new ImportReport();
         $line = 1; // header is line 1
 
+        // In-call identity map by reference: a requirement created earlier in this run is not
+        // flushed yet, so findOneBy would not see it and a repeated reference in the same CSV would
+        // be persisted twice, tripping the unique reference on flush. The normalizer already folds
+        // repeated references, but the importer must not crash if a hand-made CSV slips one through.
+        $seen = [];
+
         foreach ($rows as $row) {
             ++$line;
 
@@ -52,7 +58,7 @@ final class LegalRequirementImporter extends AbstractDatasetImporter implements 
             }
 
             $reference = trim($row['reference'] ?? '');
-            $requirement = $this->requirements->findOneBy(['reference' => $reference]);
+            $requirement = $seen[$reference] ?? $this->requirements->findOneBy(['reference' => $reference]);
             $isNew = null === $requirement;
             $requirement ??= new LegalRequirement();
 
@@ -79,6 +85,7 @@ final class LegalRequirementImporter extends AbstractDatasetImporter implements 
             } else {
                 $report->updated();
             }
+            $seen[$reference] = $requirement;
         }
 
         if (!$dryRun) {
