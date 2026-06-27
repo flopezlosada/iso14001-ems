@@ -13,10 +13,13 @@ use Symfony\Component\Validator\Constraints as Assert;
  * A single training action of the annual training plan (form F.03.0). Training actions are
  * grouped by {@see $planYear} so each year's plan can be listed on its own page.
  *
- * NOTE: the planned/actual execution dates are modelled as calendar dates ({@see \DateTimeImmutable})
- * on purpose, as a provisional shape: the real F.03.0 sheet often holds free text there ("octubre
- * 2023", "23 al 27/10/23", "a la semana de su incorporación"). This is a deliberate strawman to
- * confirm with the centre whether a strict date fits; it is expected to change after their feedback.
+ * NOTE: the planned/actual execution dates are modelled as calendar dates ({@see \DateTimeImmutable}).
+ * This is a decision already taken internally (do NOT reopen the string-vs-date debate), still
+ * subject to the centre signing off at the cutover: if a strict date does not fit their reality,
+ * they will say so. The real F.03.0 sheet often holds free text there ("octubre 2023", "23 al
+ * 27/10/23", "a la semana de su incorporación"); rather than weaken the model to a string, that text
+ * is normalized in the real-data ETL by {@see \App\Service\Import\TrainingDateNormalizer} (month ->
+ * first day, range -> start day) and any non-normalizable row is sent to quarantine for manual entry.
  */
 #[ORM\Entity(repositoryClass: TrainingActionRepository::class)]
 #[ORM\Table(name: 'training_action')]
