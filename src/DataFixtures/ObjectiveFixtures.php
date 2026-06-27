@@ -21,22 +21,26 @@ final class ObjectiveFixtures extends AbstractGoldenFixture implements Dependent
 {
     public function load(ObjectManager $manager): void
     {
-        // [reference, description, responsible user key, related aspect key|null, status, notes|null]
+        // [reference, school year, description, responsible user key, related aspect key|null, status, notes|null]
         $objectives = [
-            ['OBJ.01', 'Reducir el consumo de energía eléctrica un 5% respecto al curso anterior.', 'mantenimiento', 'electricidad', ObjectiveStatus::IN_PROGRESS, 'Sustitución progresiva de luminarias por LED.'],
-            ['OBJ.02', 'Mejorar la segregación de residuos peligrosos en talleres y laboratorios.', 'calidad', 'residuos-peligrosos', ObjectiveStatus::ACHIEVED, 'Nuevos contenedores señalizados instalados.'],
-            ['OBJ.03', 'Realizar una campaña anual de concienciación ambiental con el alumnado.', 'secretaria', 'concienciacion-alumnado', ObjectiveStatus::IN_PROGRESS, null],
-            ['OBJ.04', 'Reducir el consumo de agua mediante revisión de la red y grifería.', 'mantenimiento', null, ObjectiveStatus::NOT_ACHIEVED, 'No se alcanzó el ahorro previsto; se replantea para el próximo curso.'],
+            // Previous course (2024-2025): seeds the "copy from previous course" button on 2025-2026.
+            ['OBJ.01', '2024-2025', 'Reducir el consumo de agua mediante revisión de la red y grifería.', 'mantenimiento', null, ObjectiveStatus::ACHIEVED, 'Cerrado el curso anterior.'],
+            // Current course (2025-2026).
+            ['OBJ.02', '2025-2026', 'Reducir el consumo de energía eléctrica un 5% respecto al curso anterior.', 'mantenimiento', 'electricidad', ObjectiveStatus::IN_PROGRESS, 'Sustitución progresiva de luminarias por LED.'],
+            ['OBJ.03', '2025-2026', 'Mejorar la segregación de residuos peligrosos en talleres y laboratorios.', 'calidad', 'residuos-peligrosos', ObjectiveStatus::ACHIEVED, 'Nuevos contenedores señalizados instalados.'],
+            ['OBJ.04', '2025-2026', 'Realizar una campaña anual de concienciación ambiental con el alumnado.', 'secretaria', 'concienciacion-alumnado', ObjectiveStatus::IN_PROGRESS, null],
+            ['OBJ.05', '2025-2026', 'Reducir el consumo de agua mediante revisión de la red y grifería.', 'mantenimiento', null, ObjectiveStatus::NOT_ACHIEVED, 'No se alcanzó el ahorro previsto; se replantea para el próximo curso.'],
         ];
 
         $sequence = 1;
-        foreach ($objectives as [$reference, $description, $userKey, $aspectKey, $status, $notes]) {
+        foreach ($objectives as [$reference, $schoolYear, $description, $userKey, $aspectKey, $status, $notes]) {
             $objective = new Objective();
             $objective->setReference($reference)
                 ->setSequence($sequence++)
+                ->setSchoolYear($schoolYear)
                 ->setDescription($description)
                 ->setResponsible($this->getReference(UserFixtures::ref($userKey), User::class))
-                ->setTargetPeriod('Curso 2025/2026')
+                ->setTargetPeriod(sprintf('Curso %s', $schoolYear))
                 ->setStatus($status)
                 ->setNotes($notes)
                 ->setLastReviewedOn(new \DateTimeImmutable('2026-02-01'));

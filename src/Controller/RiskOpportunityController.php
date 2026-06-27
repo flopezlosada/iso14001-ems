@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Entity\RiskAssessment;
 use App\Entity\RiskOpportunity;
 use App\Enum\Area;
 use App\Form\RiskOpportunityType;
+use App\Repository\RiskAssessmentRepository;
 use App\Repository\RiskOpportunityRepository;
 use App\Security\Voter\AreaVoter;
 use App\Service\AuditLogger;
+use App\Service\RiskScoreCalculator;
+use App\Util\SchoolYear;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -31,16 +35,80 @@ class RiskOpportunityController extends AbstractController
     }
 
     /**
-     * Lists every risk and opportunity with its area.
+     * Lists every risk and opportunity with its area. Surfaces the current course and the previous one
+     * so the template can offer cloning the previous course's valuations into the current one.
      */
     #[Route('', name: 'risk_index', methods: ['GET'])]
-    public function index(RiskOpportunityRepository $repository): Response
+    public function index(RiskOpportunityRepository $repository, RiskAssessmentRepository $assessments): Response
     {
         $this->denyAccessUnlessGranted(AreaVoter::READ, Area::RISK_OPPORTUNITY);
 
+        $currentExercise = SchoolYear::current(new \DateTimeImmutable());
+        $previousExercise = SchoolYear::previous($currentExercise);
+
         return $this->render('risk_opportunity/index.html.twig', [
             'items' => $repository->findAllOrdered(),
+            'currentExercise' => $currentExercise,
+            'previousExercise' => $previousExercise,
+            // Only offer cloning when the previous course actually has something to bring over.
+            'previousExerciseCount' => \count($assessments->findValuedRiskOpportunityIds($previousExercise)),
         ]);
+    }
+
+    /**
+     * Clones the previous course's valuations into the given (current) course as editable drafts: for
+     * every risk/opportunity valued in the previous course but not yet in the target one, it copies
+     * the valuation (scoring factors, justification and action plan) as an unapproved Rev. 01 and
+     * recomputes its score. Risks already valued for the target course are skipped, so it never
+     * overwrites and is safe to run with the course empty or half-filled. CSRF-protected POST.
+     *
+     * The target course is explicit in the route (deterministic, like the interested-parties register)
+     * rather than derived from the latest valuation, so a half-prepared course is filled in place
+     * instead of jumping a year ahead.
+     */
+    #[Route('/clone-assessments/{exercise}', name: 'risk_clone_assessments', requirements: ['exercise' => '\d{4}-\d{4}'], methods: ['POST'])]
+    public function cloneAssessmentsFromPreviousExercise(
+        string $exercise,
+        Request $request,
+        EntityManagerInterface $em,
+        RiskAssessmentRepository $assessments,
+        RiskScoreCalculator $calculator,
+    ): Response {
+        $this->denyAccessUnlessGranted(AreaVoter::WRITE, Area::RISK_OPPORTUNITY);
+
+        if (!$this->isCsrfTokenValid('risk_clone_assessments'.$exercise, (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Token CSRF inválido.');
+        }
+
+        $sourceExercise = SchoolYear::previous($exercise);
+        $alreadyValued = array_fill_keys($assessments->findValuedRiskOpportunityIds($exercise), true);
+
+        $toClone = array_filter(
+            $assessments->findByExercise($sourceExercise),
+            static fn (RiskAssessment $assessment): bool => !isset($alreadyValued[$assessment->getRiskOpportunity()->getId()]),
+        );
+
+        foreach ($toClone as $assessment) {
+            $copy = $assessment->copyForExercise($exercise);
+            $calculator->apply($copy);
+            $em->persist($copy);
+        }
+        $em->flush();
+
+        $cloned = \count($toClone);
+        if ($cloned > 0) {
+            $this->auditLogger->log(
+                'riskassessment.cloned_from_previous',
+                'RiskAssessment',
+                $exercise,
+                sprintf('%d valoraciones clonadas de %s a %s', $cloned, $sourceExercise, $exercise),
+            );
+            $this->addFlash('success', sprintf('Se han creado %d borradores de valoración para el curso %s a partir de %s.', $cloned, $exercise, $sourceExercise));
+        } else {
+            $this->addFlash('success', sprintf('No había valoraciones nuevas que clonar al curso %s.', $exercise));
+        }
+
+        return $this->redirectToRoute('risk_index');
     }
 
     /**

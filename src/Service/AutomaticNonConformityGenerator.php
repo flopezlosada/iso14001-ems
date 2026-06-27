@@ -9,6 +9,7 @@ use App\Enum\NonConformityOrigin;
 use App\Repository\IndicatorMeasurementRepository;
 use App\Repository\NonConformityRepository;
 use App\Repository\ObjectiveRepository;
+use App\Util\SchoolYear;
 use Doctrine\ORM\EntityManagerInterface;
 
 /**
@@ -54,7 +55,7 @@ final class AutomaticNonConformityGenerator
             $candidates = [...$candidates, ...$this->indicatorCandidates()];
         }
         if ($settings->isAutoNcFromUnmetObjectives()) {
-            $candidates = [...$candidates, ...$this->objectiveCandidates()];
+            $candidates = [...$candidates, ...$this->objectiveCandidates(SchoolYear::current($on))];
         }
 
         return [
@@ -149,14 +150,17 @@ final class AutomaticNonConformityGenerator
     }
 
     /**
-     * Candidate non-conformities for the objectives marked as not achieved.
+     * Candidate non-conformities for the objectives of a course marked as not achieved. Scoped to the
+     * current course so closed courses' objectives are not reopened indefinitely (PG-06.04).
+     *
+     * @param string $schoolYear the current school year, in "YYYY-YYYY" format
      *
      * @return list<array{key: string, originDetail: string, description: string, isoClause: string}>
      */
-    private function objectiveCandidates(): array
+    private function objectiveCandidates(string $schoolYear): array
     {
         $out = [];
-        foreach ($this->objectives->findNotAchieved() as $objective) {
+        foreach ($this->objectives->findNotAchievedForSchoolYear($schoolYear) as $objective) {
             $out[] = [
                 'key' => 'objective:'.$objective->getId(),
                 'originDetail' => sprintf('Objetivo %s', $objective->getReference()),

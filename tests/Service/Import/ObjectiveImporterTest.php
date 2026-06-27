@@ -58,6 +58,18 @@ final class ObjectiveImporterTest extends KernelTestCase
         self::assertNotNull($objective);
         self::assertSame(ObjectiveStatus::IN_PROGRESS, $objective->getStatus());
         self::assertSame('enero de 2025 a marzo de 2026', $objective->getTargetPeriod());
+        // Legacy exports carry no school year, so the current course is applied as a fallback.
+        self::assertSame('2025-2026', $objective->getSchoolYear());
+    }
+
+    public function testHonoursAnExplicitSchoolYearNormalisingTheSeparator(): void
+    {
+        // Source carries the slash form; it must be stored hyphenated like the entity expects.
+        $report = $this->importer->import([$this->row(['school_year' => '2024/2025'])], false);
+        $this->entityManager->clear();
+
+        self::assertSame(1, $report->getCreated());
+        self::assertSame('2024-2025', $this->objectives->findOneBy(['reference' => 'OBJ.01'])->getSchoolYear());
     }
 
     public function testReimportIsIdempotentByReference(): void

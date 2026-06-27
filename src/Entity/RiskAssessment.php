@@ -6,6 +6,7 @@ namespace App\Entity;
 
 use App\Enum\RiskCategory;
 use App\Enum\RiskLevel;
+use App\Repository\RiskAssessmentRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
@@ -20,7 +21,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  * The {@see $score} and {@see $category} are computed by {@see \App\Service\RiskScoreCalculator}
  * on save (single source of the rule) and are never edited directly.
  */
-#[ORM\Entity]
+#[ORM\Entity(repositoryClass: RiskAssessmentRepository::class)]
 #[ORM\Table(name: 'risk_assessment')]
 #[ORM\UniqueConstraint(name: 'uniq_risk_assessment_exercise', columns: ['risk_opportunity_id', 'exercise'])]
 #[ORM\HasLifecycleCallbacks]
@@ -112,6 +113,39 @@ class RiskAssessment
     public function touch(): void
     {
         $this->updatedAt = new \DateTimeImmutable();
+    }
+
+    /**
+     * Creates a fresh copy of this valuation for another school year, to seed the new course from the
+     * previous one as an editable draft. It carries over the two scoring factors, the justification
+     * and the action plan, but starts as an unapproved Rev. 01 (Dirección must sign it off again) and
+     * its actions reset their efficacy review (each course re-evaluates them). The copy stays attached
+     * to the same {@see RiskOpportunity}; its score/category are left for {@see RiskScoreCalculator}
+     * to recompute on save (single source of the rule).
+     *
+     * @param string $exercise the school year the copy belongs to, in "YYYY-YYYY" format
+     *
+     * @return self a new, unpersisted draft valuation for the given exercise
+     */
+    public function copyForExercise(string $exercise): self
+    {
+        $copy = (new self())
+            ->setRiskOpportunity($this->riskOpportunity)
+            ->setExercise($exercise)
+            ->setProbability($this->probability)
+            ->setImpact($this->impact)
+            ->setJustification($this->justification);
+
+        foreach ($this->actions as $action) {
+            $copy->addAction(
+                (new RiskAction())
+                    ->setDescription($action->getDescription())
+                    ->setResponsible($action->getResponsible())
+                    ->setDeadline($action->getDeadline()),
+            );
+        }
+
+        return $copy;
     }
 
     public function getId(): ?int

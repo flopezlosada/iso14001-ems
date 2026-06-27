@@ -23,7 +23,7 @@ final class ObjectivesSummaryProviderTest extends TestCase
     public function testListsObjectivesWithStatusBreakdown(): void
     {
         $repo = $this->createMock(ObjectiveRepository::class);
-        $repo->method('findAllOrdered')->willReturn([
+        $repo->method('findForSchoolYear')->with('2025-2026')->willReturn([
             $this->objective('OBJ-01', 'Reducir el consumo de agua 5%', ObjectiveStatus::IN_PROGRESS),
             $this->objective('OBJ-02', 'Reducir el consumo energético 5%', ObjectiveStatus::ACHIEVED),
         ]);
@@ -38,7 +38,7 @@ final class ObjectivesSummaryProviderTest extends TestCase
     public function testReturnsEmptyWhenNoObjectives(): void
     {
         $repo = $this->createMock(ObjectiveRepository::class);
-        $repo->method('findAllOrdered')->willReturn([]);
+        $repo->method('findForSchoolYear')->willReturn([]);
 
         self::assertSame('', (new ObjectivesSummaryProvider($repo))->summarize('2025-2026'));
     }
