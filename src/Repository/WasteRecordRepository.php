@@ -100,4 +100,47 @@ class WasteRecordRepository extends ServiceEntityRepository
         // MAX(date) over a DATE column comes back as a 'Y-m-d' scalar; take its month.
         return null === $last ? null : (int) (new \DateTimeImmutable((string) $last))->format('n');
     }
+
+    /**
+     * Yearly totals of waste removed (year => summed kilograms), ascending by year and only for years
+     * that have at least one weighed pick-up. Optionally filtered by the hazardous flag, so the trend
+     * can be split into peligrosos / no peligrosos.
+     *
+     * Records with no pick-up date (year unknown) or no weight in kilograms are skipped: they cannot
+     * be placed on a yearly axis. The real register holds plenty of both (free-text dates, amounts in
+     * non-weight units), so this null-tolerance is load-bearing, not theoretical.
+     *
+     * Aggregation is done in PHP over the (small) register to avoid needing a DQL YEAR() date-function
+     * extension, consistent with {@see sumKgForYearToDate()} and {@see lastRecordedMonth()}.
+     *
+     * @param bool|null $hazardous when not null, restrict to records with that hazardous flag
+     *
+     * @return array<int, float> summed kilograms per year, ascending by year
+     */
+    public function yearlyTotalsKg(?bool $hazardous = null): array
+    {
+        $qb = $this->createQueryBuilder('w')
+            ->select('w.pickupDate AS pickupDate, w.quantityKg AS quantityKg')
+            ->andWhere('w.pickupDate IS NOT NULL')
+            ->andWhere('w.quantityKg IS NOT NULL');
+
+        if (null !== $hazardous) {
+            $qb->andWhere('w.hazardous = :hazardous')->setParameter('hazardous', $hazardous);
+        }
+
+        // Selecting the field directly (not an aggregate like MAX) makes the ORM apply the column's
+        // date_immutable type, so pickupDate comes back hydrated as a DateTimeImmutable, not a string.
+        /** @var list<array{pickupDate: \DateTimeImmutable, quantityKg: numeric-string}> $rows */
+        $rows = $qb->getQuery()->getResult();
+
+        $totals = [];
+        foreach ($rows as $row) {
+            $year = (int) $row['pickupDate']->format('Y');
+            $totals[$year] = ($totals[$year] ?? 0.0) + (float) $row['quantityKg'];
+        }
+
+        ksort($totals);
+
+        return $totals;
+    }
 }

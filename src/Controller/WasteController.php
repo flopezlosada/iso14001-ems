@@ -10,6 +10,7 @@ use App\Form\WasteRecordType;
 use App\Repository\WasteRecordRepository;
 use App\Security\Voter\AreaVoter;
 use App\Service\AuditLogger;
+use App\Service\YearlyTrendChart;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -35,6 +36,44 @@ class WasteController extends AbstractController
 
         return $this->render('waste/index.html.twig', [
             'records' => $records->findRecent(),
+        ]);
+    }
+
+    /**
+     * Multi-year waste trend: the yearly total of kilograms removed over the last N years, split into
+     * all waste, hazardous and non-hazardous, as a simple bar chart. Exploratory view only — it does
+     * not feed the official aspect evaluation or alerts. (The interactive/styled chart is left to the
+     * frontend; this is the data + a minimal CSS chart, shared with the consumption trend.)
+     */
+    #[Route('/tendencia', name: 'waste_trend', methods: ['GET'])]
+    public function trend(Request $request, WasteRecordRepository $records, YearlyTrendChart $chart): Response
+    {
+        $this->denyAccessUnlessGranted(AreaVoter::READ, Area::WASTE);
+
+        $years = max(2, min(10, $request->query->getInt('years', 5)));
+
+        // Total plus the hazardous breakdown — the bounded, non-nullable classification that matters
+        // most for an EMS. Grouping by LER code is deliberately avoided: it is nullable in the real
+        // register and would explode into dozens of sparse series.
+        $breakdown = [
+            ['label' => 'Total de residuos', 'hazardous' => null],
+            ['label' => 'Residuos peligrosos', 'hazardous' => true],
+            ['label' => 'Residuos no peligrosos', 'hazardous' => false],
+        ];
+
+        $series = [];
+        foreach ($breakdown as $def) {
+            $points = $chart->points($records->yearlyTotalsKg($def['hazardous']), $years);
+            if ([] === $points) {
+                continue;
+            }
+
+            $series[] = ['label' => $def['label'], 'unit' => 'kg', 'points' => $points];
+        }
+
+        return $this->render('waste/trend.html.twig', [
+            'series' => $series,
+            'years' => $years,
         ]);
     }
 
