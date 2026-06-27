@@ -41,6 +41,14 @@ python3 tools/etl/normalize_risks.py \
                               # IGNORA la hoja "Criterios" (rúbrica ISO 9001 contaminante); el
                               # curso se deriva del nombre de hoja/fichero. [curso] opcional.
 
+python3 tools/etl/normalize_training.py \
+  "$DOC/01.IMPLEMENTACIÓN (Hacer)/.../RRHH/F.03.0 PLAN ANUAL DE FORMACIÓN 2023-26.xlsx" \
+  fixtures/real/training.csv   # una fila por acción formativa (una hoja por año). Las fechas E/G
+                              # vienen como texto sucio ("octubre 2023", "23 al 27/10/23", "a la
+                              # semana de su incorporación"): se pasan VERBATIM y la convención de
+                              # normalización (mes->día 1, rango->inicio, no normalizable->cuarentena)
+                              # vive en el importer PHP, donde está unit-testeada.
+
 python3 tools/etl/normalize_operational_control.py \
   "$DOC/01.IMPLEMENTACIÓN (Hacer)/.../CONTROL OPERACIONAL /CONTROLES INTERNOS" \
   fixtures/real/operational_control.csv   # recorre el DIRECTORIO recursivamente (un .xlsx por mes);
@@ -79,6 +87,11 @@ Propiedades:
   única de verdad). Control operacional: el catálogo de ítems se siembra desde el texto real de la
   hoja `(sección, etiqueta)`, la inspección por `(año, mes)` y cada respuesta por `(inspección,
   ítem)`; las observaciones por línea se pliegan en la nota de la inspección (`label: observación`).
+  Formación (F.03.0) `(año, descripción, destinatarios)`: la hoja no tiene código ni id y la misma
+  descripción ("curso iso 14001") se repite en un año para distintos destinatarios, así que el
+  destinatario forma parte de la identidad para no fundir acciones distintas; las fechas se
+  normalizan con la convención acordada (mes -> día 1, rango -> día de inicio) y una fecha no
+  normalizable manda la fila a cuarentena en vez de inventarla.
 - **Validado**: cada entidad pasa por el Validator antes de persistir.
 - **Cuarentena**: las filas que no validan se escriben en `fixtures/real/<dataset>.rejected.csv`
   con el motivo, y el comando termina con código de error. Nada se descarta en silencio.
