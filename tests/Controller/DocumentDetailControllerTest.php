@@ -220,18 +220,15 @@ final class DocumentDetailControllerTest extends WebTestCase
     }
 
     /**
-     * Captures the body of a StreamedResponse: WebTestCase does not buffer it, so getContent()
-     * would return false — sendContent() must be run through an output buffer to read the CSV.
+     * Requests the CSV export and returns its body.
      *
-     * @return string the streamed response body
+     * @return string the response body
      */
     private function captureCsv(object $client, string $uri): string
     {
         $client->request('GET', $uri);
-        ob_start();
-        $client->getResponse()->sendContent();
 
-        return (string) ob_get_clean();
+        return (string) $client->getResponse()->getContent();
     }
 
     public function testAdminCancelsDocumentWithReason(): void
