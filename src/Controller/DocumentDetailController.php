@@ -19,8 +19,10 @@ use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\HttpFoundation\HeaderUtils;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
@@ -58,16 +60,89 @@ final class DocumentDetailController extends AbstractController
     #[Route('/documentos', name: 'document_index', methods: ['GET'])]
     public function index(DocumentRepository $documents): Response
     {
-        // Order by the PC.01.0 type taxonomy (the declaration order of DocumentType), then by code,
-        // rather than the alphabetical enum value an SQL ORDER BY would give.
+        return $this->render('document/register.html.twig', [
+            'documents' => $this->orderedRegister($documents),
+        ]);
+    }
+
+    /**
+     * Downloads the full document register (F.01) as a CSV file, with the same columns and order
+     * the on-screen register shows. It is the offline/printable face of the live register: the
+     * artefact the auditor can be handed, replacing the legacy F.01 spreadsheet.
+     *
+     * Open to any authenticated user (ROLE_USER), consistent with the register being a transparency
+     * artefact with no area gating. The export itself is logged (clause 7.5).
+     *
+     * @param DocumentRepository $documents the document register repository
+     *
+     * @return StreamedResponse the CSV attachment, streamed row by row
+     */
+    #[Route('/documentos/export.csv', name: 'document_register_export', methods: ['GET'])]
+    public function exportCsv(DocumentRepository $documents): StreamedResponse
+    {
+        $register = $this->orderedRegister($documents);
+        $this->auditLogger->log(
+            'document.register.export',
+            'Document',
+            null,
+            sprintf('Exportación del registro documental F.01 (%d documentos)', count($register)),
+        );
+
+        $response = new StreamedResponse(static function () use ($register): void {
+            $out = fopen('php://output', 'wb');
+            // UTF-8 BOM so Excel (Windows, Spanish locale) detects the encoding instead of mojibake.
+            fwrite($out, "\xEF\xBB\xBF");
+            // Semicolon separator: what Excel expects under a Spanish locale, so each field lands in
+            // its own column instead of all in the first one.
+            fputcsv($out, ['Código', 'Documento', 'Tipo', 'Área', 'Responsable', 'Revisión en vigor', 'Fecha en vigor', 'Estado', 'Ciclo de vida'], ';');
+            foreach ($register as $document) {
+                $current = $document->getCurrentVersion();
+                fputcsv($out, [
+                    $document->getCode() ?? '',
+                    $document->getTitle(),
+                    $document->getType()->label(),
+                    $document->getLinkedArea()?->label() ?? '',
+                    $document->getResponsibleRole()?->getName() ?? '',
+                    null !== $current ? 'Rev. '.$current->getRevisionNumber() : '',
+                    null !== $current ? $current->getIssueDate()->format('d/m/Y') : '',
+                    $document->getStatus()->label(),
+                    // The CSV is handed to the auditor on its own, so spell out the lifecycle for
+                    // every row rather than leaving active documents blank as the on-screen table does.
+                    $document->isActive() ? 'Activo' : $document->getLifecycle()->label(),
+                ], ';');
+            }
+            fclose($out);
+        });
+
+        $response->headers->set('Content-Type', 'text/csv; charset=UTF-8');
+        $response->headers->set('Content-Disposition', HeaderUtils::makeDisposition(
+            HeaderUtils::DISPOSITION_ATTACHMENT,
+            'registro-documental-F01.csv',
+        ));
+        // Authenticated download on the centre's shared computers: never let it sit in the cache.
+        $response->setPrivate();
+        $response->headers->set('Cache-Control', 'no-store');
+
+        return $response;
+    }
+
+    /**
+     * Loads the full document register ordered by the PC.01.0 type taxonomy (the declaration order
+     * of {@see DocumentType}) and then by code — the order a plain SQL ORDER BY cannot give. Shared
+     * by the on-screen register and the CSV export so both stay in lockstep.
+     *
+     * @param DocumentRepository $documents the document register repository
+     *
+     * @return Document[] the register, ordered for presentation
+     */
+    private function orderedRegister(DocumentRepository $documents): array
+    {
         $rank = array_flip(array_map(static fn (DocumentType $t): string => $t->value, DocumentType::cases()));
         $register = $documents->findForRegister();
         usort($register, static fn (Document $a, Document $b): int => [$rank[$a->getType()->value], $a->getCode() ?? '']
             <=> [$rank[$b->getType()->value], $b->getCode() ?? '']);
 
-        return $this->render('document/register.html.twig', [
-            'documents' => $register,
-        ]);
+        return $register;
     }
 
     /**

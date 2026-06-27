@@ -160,6 +160,80 @@ final class DocumentDetailControllerTest extends WebTestCase
         $client->loginUser($admin);
     }
 
+    public function testRegisterExportRequiresAuthentication(): void
+    {
+        $client = static::createClient();
+
+        $client->request('GET', '/documentos/export.csv');
+
+        self::assertResponseRedirects('/login');
+    }
+
+    public function testRegisterExportsCsvWithHeaderAndRows(): void
+    {
+        $client = static::createClient();
+        $em = $this->em();
+        $document = (new Document())
+            ->setCode('PC.01.0')
+            ->setTitle('Gestión de la Información Documentada')
+            ->setType(DocumentType::PROCEDURE)
+            ->setStatus(ObligationStatus::DONE);
+        $document->addVersion((new DocumentVersion())->setRevisionNumber(0)->setStatus(VersionStatus::APPROVED));
+        $em->persist($document);
+        $reader = (new User())->setFullName('Lectora')->setEmail('lectora-export@example.test')->setActive(true);
+        $em->persist($reader);
+        $em->flush();
+        $client->loginUser($reader);
+
+        $content = $this->captureCsv($client, '/documentos/export.csv');
+
+        self::assertResponseIsSuccessful();
+        self::assertResponseHeaderSame('Content-Type', 'text/csv; charset=UTF-8');
+        self::assertStringContainsString('registro-documental-F01.csv', (string) $client->getResponse()->headers->get('Content-Disposition'));
+        // Header row (semicolon-separated) and the document's own row, with its in-force revision.
+        self::assertStringContainsString('Código;Documento;Tipo;Área;Responsable', $content);
+        self::assertStringContainsString('PC.01.0;Gestión de la Información Documentada;Procedimiento', $content);
+        self::assertStringContainsString('Rev. 0', $content);
+        // An in-force document reads as "Activo" in the lifecycle column.
+        self::assertStringContainsString('Activo', $content);
+    }
+
+    public function testRegisterExportHandlesDocumentWithoutCurrentVersion(): void
+    {
+        $client = static::createClient();
+        $em = $this->em();
+        // Realistic register row: a form with only a DRAFT revision has no in-force version, so the
+        // revision and date columns must come out empty without blowing up the stream.
+        $document = (new Document())->setCode('F.99.0')->setTitle('Formato sin emitir')->setType(DocumentType::FORM)->setStatus(ObligationStatus::PENDING);
+        $document->addVersion((new DocumentVersion())->setRevisionNumber(0)->setStatus(VersionStatus::DRAFT));
+        $em->persist($document);
+        $reader = (new User())->setFullName('Lectora')->setEmail('lectora-export-novers@example.test')->setActive(true);
+        $em->persist($reader);
+        $em->flush();
+        $client->loginUser($reader);
+
+        $content = $this->captureCsv($client, '/documentos/export.csv');
+
+        self::assertResponseIsSuccessful();
+        // No in-force revision: the row ends with empty rev/date columns, then status and lifecycle.
+        self::assertStringContainsString('F.99.0;Formato sin emitir;Formato;;;;;', $content);
+    }
+
+    /**
+     * Captures the body of a StreamedResponse: WebTestCase does not buffer it, so getContent()
+     * would return false — sendContent() must be run through an output buffer to read the CSV.
+     *
+     * @return string the streamed response body
+     */
+    private function captureCsv(object $client, string $uri): string
+    {
+        $client->request('GET', $uri);
+        ob_start();
+        $client->getResponse()->sendContent();
+
+        return (string) ob_get_clean();
+    }
+
     public function testAdminCancelsDocumentWithReason(): void
     {
         $client = static::createClient();
