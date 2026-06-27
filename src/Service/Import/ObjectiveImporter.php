@@ -13,15 +13,15 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 /**
  * Imports the general objectives register ("F.07.01") from the normalized CSV.
  *
- * Natural key is the reference (OBJ.NN). The responsible and the related aspect are left unset: the
- * source only records a role acronym (not a user) and no machine-readable aspect link. The school
- * year is taken from the row when present, falling back to the current course for legacy exports.
+ * The centre restarts the per-course numbering each year ("OBJ.01" appears once per course), so the
+ * natural key is (school year, source code), NOT the code alone — otherwise the three courses would
+ * collapse onto one another. The globally unique reference (OBJ-NN) is assigned here from a global
+ * sequence, exactly as the UI does, so imported and hand-entered objectives share one numbering. The
+ * responsible and the related aspect are left unset: the source only records a role acronym (not a
+ * user) and no machine-readable aspect link.
  */
 final class ObjectiveImporter extends AbstractDatasetImporter implements DatasetImporter
 {
-    /** Course assigned when the source row carries no school year (the historic F.07.01 25/26). */
-    private const string DEFAULT_SCHOOL_YEAR = '2025-2026';
-
     public function __construct(
         private readonly ObjectiveRepository $objectives,
         private readonly EntityManagerInterface $entityManager,
@@ -44,6 +44,16 @@ final class ObjectiveImporter extends AbstractDatasetImporter implements Dataset
         $report = new ImportReport();
         $line = 1; // header is line 1
 
+        // Reserve the global sequence once and increment in memory: nextSequence() reads the DB and
+        // would hand the same number to every new objective before the flush, breaking the unique
+        // reference (the same reasoning the UI clone-forward applies).
+        $sequence = $this->objectives->nextSequence();
+
+        // In-call identity map keyed by (school year, source code): an objective created earlier in
+        // this run is not flushed yet, so findOneBy would not see it and a repeated key in the same
+        // CSV would be persisted twice, tripping the unique (school_year, source_code) on flush.
+        $seen = [];
+
         foreach ($rows as $row) {
             ++$line;
 
@@ -53,17 +63,30 @@ final class ObjectiveImporter extends AbstractDatasetImporter implements Dataset
                 continue;
             }
 
-            $reference = trim($row['reference'] ?? '');
-            $objective = $this->objectives->findOneBy(['reference' => $reference]);
-            $isNew = null === $objective;
-            $objective ??= new Objective();
+            $sourceCode = trim($row['source_code'] ?? '');
+            if ('' === $sourceCode) {
+                $report->reject($line, 'Falta el código de objetivo (source_code).', $row);
+                continue;
+            }
 
-            // Normalise the separator: the source may carry a slash ("2025/2026"); the entity stores
-            // the hyphenated form.
+            // Normalise the separator: the source may carry a slash ("2024/2025"); the entity stores
+            // the hyphenated form. An empty/invalid course is caught by the entity validation below.
             $schoolYear = str_replace('/', '-', trim($row['school_year'] ?? ''));
-            $objective->setReference($reference)
-                ->setSequence((int) ($row['sequence'] ?? 0))
-                ->setSchoolYear('' !== $schoolYear ? $schoolYear : self::DEFAULT_SCHOOL_YEAR)
+
+            // Natural key: the centre's code is only unique within a course, so it must be scoped by
+            // the school year. New objectives get a fresh global reference; existing ones keep theirs.
+            $key = $schoolYear.'|'.$sourceCode;
+            $objective = $seen[$key] ?? $this->objectives->findOneBy(['schoolYear' => $schoolYear, 'sourceCode' => $sourceCode]);
+            $isNew = null === $objective;
+            if ($isNew) {
+                $objective = (new Objective())
+                    ->setReference(sprintf('OBJ-%02d', $sequence))
+                    ->setSequence($sequence)
+                    ->setSchoolYear($schoolYear)
+                    ->setSourceCode($sourceCode);
+            }
+
+            $objective
                 ->setDescription(trim($row['description'] ?? ''))
                 ->setTargetPeriod($this->nullable($row['target_period'] ?? ''))
                 ->setStatus($status);
@@ -76,10 +99,12 @@ final class ObjectiveImporter extends AbstractDatasetImporter implements Dataset
 
             if ($isNew) {
                 $this->entityManager->persist($objective);
+                ++$sequence;
                 $report->created();
             } else {
                 $report->updated();
             }
+            $seen[$key] = $objective;
         }
 
         if (!$dryRun) {
