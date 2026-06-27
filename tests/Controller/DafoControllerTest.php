@@ -67,6 +67,65 @@ final class DafoControllerTest extends WebTestCase
         self::assertSelectorTextContains('h1', 'Análisis DAFO');
     }
 
+    public function testShowRendersQuadrantsAsListsForReadOnlyUser(): void
+    {
+        $client = $this->loggedInClient(PermissionLevel::READ);
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+
+        $analysis = new DafoAnalysis();
+        $analysis->setSchoolYear('2025-2026')
+            ->setWeaknesses("Falta de formación ambiental.\n\nBurocracia.\n")
+            ->setOpportunities('Prestigio por la certificación.');
+        $em->persist($analysis);
+        $em->flush();
+
+        $crawler = $client->request('GET', '/dafo/'.$analysis->getId());
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('h1', 'Análisis DAFO 2025-2026');
+
+        // One list item per non-blank line; the empty line between the two items is dropped.
+        self::assertCount(2, $crawler->filter('.dafo-cell.internal.negative li'));
+        self::assertSelectorTextContains('.dafo-cell.internal.negative li', 'Falta de formación ambiental.');
+
+        // Empty quadrants (threats and strengths are null here) show the placeholder, not a list.
+        self::assertSelectorTextContains('.dafo-cell.external.negative', 'Sin elementos.');
+        self::assertCount(0, $crawler->filter('.dafo-cell.external.negative li'));
+        self::assertSelectorTextContains('.dafo-cell.internal.positive', 'Sin elementos.');
+    }
+
+    public function testShowOnMissingAnalysisReturns404(): void
+    {
+        $client = $this->loggedInClient(PermissionLevel::READ);
+        $client->request('GET', '/dafo/999999');
+
+        self::assertResponseStatusCodeSame(404);
+    }
+
+    public function testShowDeniedForUserWithoutDafoAccess(): void
+    {
+        $client = $this->loggedInClient(PermissionLevel::NONE);
+        $analysis = $this->seedAnalysis('2025-2026');
+
+        $client->request('GET', '/dafo/'.$analysis->getId());
+
+        self::assertResponseStatusCodeSame(403);
+    }
+
+    public function testIndexExerciseLinksToDetail(): void
+    {
+        $client = $this->loggedInClient(PermissionLevel::READ);
+        $analysis = $this->seedAnalysis('2025-2026');
+        self::assertNotNull($analysis->getId());
+
+        $crawler = $client->request('GET', '/dafo');
+
+        self::assertResponseIsSuccessful();
+        $link = $crawler->filter('a.cell-link');
+        self::assertCount(1, $link);
+        self::assertSame('/dafo/'.$analysis->getId(), $link->attr('href'));
+    }
+
     public function testNewFormRenders(): void
     {
         $client = $this->loggedInClient();
