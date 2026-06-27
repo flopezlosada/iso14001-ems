@@ -1,0 +1,25 @@
+{% extends 'app_shell.html.twig' %}
+
+{% block title %}Tendencia de residuos{% endblock %}
+
+{% block breadcrumb %}
+    <a href="{{ path('app_homepage') }}">Inicio</a><span class="sep">/</span>
+    <a href="{{ path('waste_index') }}">Residuos</a><span class="sep">/</span>
+    Tendencia
+{% endblock %}
+
+{% block body %}
+    <div class="page-head">
+        <div>
+            <h1>Tendencia de residuos</h1>
+            <p class="lead">Evolución del total anual de kilogramos retirados, con el desglose de peligrosos y no peligrosos. Vista exploratoria; no afecta a la evaluación ni a los avisos.</p>
+        </div>
+    </div>
+
+    {{ include('_trend_chart.html.twig', {
+        series: series,
+        years: years,
+        trend_route: 'waste_trend',
+        empty_message: 'Aún no hay residuos con fecha y peso registrados con los que dibujar la tendencia.',
+    }) }}
+{% endblock %}

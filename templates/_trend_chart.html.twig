@@ -1,0 +1,36 @@
+{#
+    Shared minimal CSS bar chart (no JS) for the multi-year trend views.
+
+    Expects:
+      - series:        list of { label, unit, points: [{ year, value, percent }] }
+      - years:         int, currently shown window
+      - trend_route:   route name of the trend view (for the years selector links)
+      - empty_message: text shown when there is no data to plot
+
+    The frontend can replace this with a real chart consuming the same `series` data.
+#}
+<p class="help">Años mostrados:
+    {% for n in [3, 5, 10] %}
+        {%- if n == years %}<strong>{{ n }}</strong>{% else %}<a href="{{ path(trend_route, { years: n }) }}">{{ n }}</a>{% endif -%}
+        {%- if not loop.last %} · {% endif -%}
+    {% endfor %}
+</p>
+
+{% if series is empty %}
+    <div class="card"><p class="help">{{ empty_message }}</p></div>
+{% else %}
+    {% for s in series %}
+        <div class="card" style="margin-bottom: 1rem;">
+            <h2>{{ s.label }} <span class="muted">({{ s.unit }})</span></h2>
+            <div style="display: flex; align-items: flex-end; gap: 16px; height: 180px; padding-top: 8px;">
+                {% for p in s.points %}
+                    <div style="display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%;">
+                        <span style="font-size: 12px;">{{ p.value|round }}</span>
+                        <div title="{{ p.year }}: {{ p.value|round }} {{ s.unit }}" style="width: 40px; height: {{ p.percent }}%; min-height: 2px; background: var(--accent, #2e7d32); border-radius: 4px 4px 0 0;"></div>
+                        <span style="font-size: 12px; margin-top: 4px;">{{ p.year }}</span>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endfor %}
+{% endif %}
