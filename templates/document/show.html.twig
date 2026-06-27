@@ -50,7 +50,7 @@
         {% endif %}
     </div>
 
-    {% if is_granted('ROLE_ADMIN') %}
+    {% if is_granted('DOCUMENT_LIFECYCLE', document) %}
         <div class="card">
             <h2>Control del documento</h2>
             <p class="muted">Los documentos no se borran: se anulan (con motivo) o se archivan, dejando rastro para la auditoría.</p>

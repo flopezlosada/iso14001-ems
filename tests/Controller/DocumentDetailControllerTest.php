@@ -235,6 +235,27 @@ final class DocumentDetailControllerTest extends WebTestCase
         self::assertResponseStatusCodeSame(403);
     }
 
+    public function testRsgmaCancelsDocument(): void
+    {
+        $client = static::createClient();
+        $em = $this->em();
+        $document = $this->persistDocument($em, 'PC.12.0');
+        // The RSGMA (ems_manager) owns document control: they can cancel/archive without being admin.
+        $role = (new Role())->setCode('ems_manager')->setName('Responsable del SGA');
+        $em->persist($role);
+        $rsgma = (new User())->setFullName('Carlos SGA')->setEmail('sga-lifecycle@example.test')->setActive(true)->addAssignedRole($role);
+        $em->persist($rsgma);
+        $em->flush();
+        $client->loginUser($rsgma);
+
+        $client->request('GET', '/documentos/'.$document->getId());
+        $client->submitForm('Anular', ['reason' => 'Sustituido por nueva versión']);
+
+        self::assertResponseRedirects('/documentos/'.$document->getId());
+        $client->followRedirect();
+        self::assertSelectorTextContains('.lifecycle-banner', 'Anulado');
+    }
+
     /** Persists a procedure owned by the given responsible role. */
     private function persistProcedure(EntityManagerInterface $em, string $code, Role $responsible): Document
     {
