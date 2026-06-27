@@ -14,6 +14,12 @@ use Doctrine\Persistence\ObjectManager;
  */
 final class InterestedPartyFixtures extends AbstractDemoFixture
 {
+    /** Reference name for the interested party with the given name, so other fixtures can wire to it. */
+    public static function ref(string $name): string
+    {
+        return 'interested-party-'.$name;
+    }
+
     public function load(ObjectManager $manager): void
     {
         // [review year, party name, needs and expectations, incidents|null]
@@ -51,6 +57,7 @@ final class InterestedPartyFixtures extends AbstractDemoFixture
                 ->setNeedsAndExpectations($needs)
                 ->setIncidents($incidents);
             $manager->persist($party);
+            $this->addReference(self::ref($name), $party);
         }
 
         $manager->flush();

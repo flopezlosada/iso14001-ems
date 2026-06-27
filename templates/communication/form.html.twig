@@ -1,0 +1,26 @@
+{% extends 'app_shell.html.twig' %}
+{% import '_macros/form.html.twig' as f %}
+
+{% block title %}{{ isNew ? 'Registrar' : 'Editar' }} comunicación{% endblock %}
+
+{% block breadcrumb %}
+    <a href="{{ path('app_homepage') }}">Inicio</a><span class="sep">/</span>
+    <a href="{{ path('communication_index') }}">Comunicaciones</a><span class="sep">/</span>
+    {{ isNew ? 'Registrar' : communication.subject }}
+{% endblock %}
+
+{% block body %}
+    <div class="page-head">
+        <h1>{{ isNew ? 'Registrar comunicación' : 'Editar comunicación' }}</h1>
+    </div>
+
+    <div class="card form-card">
+        {{ form_start(form, { 'attr': { 'novalidate': 'novalidate' } }) }}
+            {{ form_errors(form) }}
+            {{ f.section('Comunicación', [form.occurredOn, form.scope, form.category, form.channel, form.subject, form.details]) }}
+            {{ f.section('Emisor y receptor', [form.sender, form.recipient, form.interestedParty]) }}
+            {{ f.section('Respuesta', [form.response]) }}
+            {{ f.actions(path('communication_index')) }}
+        {{ form_end(form) }}
+    </div>
+{% endblock %}
