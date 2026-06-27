@@ -9,7 +9,7 @@ use App\Entity\InterestedParty;
 use App\Enum\CommunicationCategory;
 use App\Enum\CommunicationChannel;
 use App\Enum\CommunicationScope;
-use Doctrine\Bundle\FixturesBundle\DependentFixtureInterface;
+use Doctrine\Common\DataFixtures\DependentFixtureInterface;
 use Doctrine\Persistence\ObjectManager;
 
 /**

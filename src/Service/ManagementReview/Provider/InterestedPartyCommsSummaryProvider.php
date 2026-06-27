@@ -79,9 +79,20 @@ final class InterestedPartyCommsSummaryProvider implements SectionSummaryProvide
             $c->getCategory()->label(),
             $c->getSubject(),
             null !== $party ? sprintf(' — %s', $party->getName()) : '',
-            $c->isComplaint()
-                ? (null !== $c->getResponse() && '' !== trim($c->getResponse()) ? ' (respondida)' : ' (pendiente de respuesta)')
-                : '',
+            $c->isComplaint() ? self::responseNote($c->getResponse()) : '',
         );
+    }
+
+    /**
+     * Renders the response state of a complaint: complaints must be followed up, so a missing or
+     * blank response is flagged as pending. Mirrors the "NO"/blank handling of the sibling providers.
+     *
+     * @param string|null $response the recorded response, if any
+     *
+     * @return string " (respondida)" when a real response exists, " (pendiente de respuesta)" otherwise
+     */
+    private static function responseNote(?string $response): string
+    {
+        return '' !== trim((string) $response) ? ' (respondida)' : ' (pendiente de respuesta)';
     }
 }

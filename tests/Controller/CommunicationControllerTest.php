@@ -126,9 +126,11 @@ final class CommunicationControllerTest extends WebTestCase
 
         $all = static::getContainer()->get(CommunicationRepository::class)->findAllOrdered();
         self::assertCount(1, $all);
-        self::assertTrue($all[0]->isComplaint());
-        self::assertNotNull($all[0]->getInterestedParty());
-        self::assertSame('Gestores de residuos', $all[0]->getInterestedParty()->getName());
+        $communication = $all[0];
+        self::assertTrue($communication->isComplaint());
+        $linkedParty = $communication->getInterestedParty();
+        self::assertNotNull($linkedParty);
+        self::assertSame('Gestores de residuos', $linkedParty->getName());
     }
 
     public function testSubmittingInvalidCommunicationRedisplaysFormWithErrors(): void
