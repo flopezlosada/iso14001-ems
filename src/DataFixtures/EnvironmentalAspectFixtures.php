@@ -15,15 +15,16 @@ use App\Service\AspectSignificanceCalculator;
 use Doctrine\Persistence\ObjectManager;
 
 /**
- * The catalog of environmental aspects and their yearly evaluations (PG-06.01). Part of the
- * GOLDEN backbone.
+ * The catalog of environmental aspects and their yearly evaluations (PG-06.01). DEMO layer only:
+ * the real catalog and evaluations are loaded by the ETL ('aspects' importer), so seeding these
+ * here as part of the GOLDEN backbone would duplicate them against the real data.
  *
  * Synthetic but realistic for a secondary school (electricity, hazardous waste, boiler emissions,
  * waste-water discharge, an indirect aspect, an abnormal/accidental one). The significance score
  * and flag are NOT hand-written: they are computed by the real {@see AspectSignificanceCalculator}
  * so the seeded data always satisfies the same invariant the application enforces.
  */
-final class EnvironmentalAspectFixtures extends AbstractGoldenFixture
+final class EnvironmentalAspectFixtures extends AbstractDemoFixture
 {
     public function __construct(private readonly AspectSignificanceCalculator $calculator)
     {

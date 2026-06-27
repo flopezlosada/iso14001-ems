@@ -8,13 +8,14 @@ use App\Entity\DafoAnalysis;
 use Doctrine\Persistence\ObjectManager;
 
 /**
- * SWOT (DAFO) analyses of the centre's environmental context (register "F.06.0"). Part of the
- * GOLDEN backbone so the context module has something to show.
+ * SWOT (DAFO) analyses of the centre's environmental context (register "F.06.0"). DEMO layer only:
+ * there is no ETL source for the DAFO (in production it starts empty and is filled in from the UI
+ * or cloned from the previous year), so this is sample data, not GOLDEN backbone.
  *
  * The contents are synthetic, generic statements (no real centre data); two school years are
  * seeded so the list ordering (most recent first) has something to exercise.
  */
-final class DafoAnalysisFixtures extends AbstractGoldenFixture
+final class DafoAnalysisFixtures extends AbstractDemoFixture
 {
     public function load(ObjectManager $manager): void
     {
