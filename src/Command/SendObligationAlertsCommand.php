@@ -12,12 +12,14 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
 /**
- * Sends the obligation review reminders that are due today. Meant to run daily from cron:
+ * Sends the obligation review reminders that are due today. This is the canonical way to run the
+ * engine from an SSH/CLI cron:
  *
  *   php bin/console app:obligations:send-alerts
  *
- * On hosting where only HTTP cron is available (e.g. IONOS), this still needs an SSH/CLI cron or a
- * thin authenticated HTTP entry point that invokes it — to be decided when the hosting is settled.
+ * On hosting whose only scheduler is an HTTP cron (cdmon/IONOS cannot run a shell command), the same
+ * job is reachable over HTTP via {@see \App\Controller\ObligationAlertCronController}; both delegate
+ * to the same {@see ObligationAlertNotifier}.
  */
 #[AsCommand(
     name: 'app:obligations:send-alerts',

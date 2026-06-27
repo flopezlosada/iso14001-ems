@@ -70,6 +70,35 @@ ddev exec vendor/bin/phpstan analyse # static analysis (level 6)
 Both run in CI on every push and PR (`.github/workflows/tests.yml`), alongside secret
 scanning with gitleaks (`.github/workflows/gitleaks.yml`).
 
+## Scheduled reminders (cron)
+
+The obligation reminders (the core of the system's value) are sent by the
+`ObligationAlertNotifier`. It is idempotent: an alert is e-mailed once per cycle and stamped, so
+re-running it sends no duplicates. There are two interchangeable triggers — both call the same
+service:
+
+- **CLI** (SSH/shell cron): `php bin/console app:obligations:send-alerts`
+- **HTTP** (when the host's only scheduler is an HTTP cron — e.g. cdmon/IONOS, which cannot run a
+  shell command): `GET /cron/obligation-alerts?token=<CRON_SECRET>`
+
+The HTTP entry point is authenticated by the `CRON_SECRET` shared secret (constant-time compare),
+not by a logged-in session. It **fails closed**: with no `CRON_SECRET` set it returns `403`, so it
+stays disabled until configured. Set a strong secret (`openssl rand -hex 32`) in the production
+secrets/`.env.local`, never in `.env`.
+
+Always schedule it over **HTTPS** — the token travels in the query string, so plain HTTP would
+expose it on the wire. To rotate the secret, change `CRON_SECRET` (vault/`.env.local`) and update
+the URL in the hosting cron; no code change needed.
+
+Schedule it **once a day** (the engine decides what is due); e.g. a cdmon HTTP cron hitting
+`https://<host>/cron/obligation-alerts?token=...`, or a shell cron:
+
+```cron
+0 6 * * * cd /path/to/app && php bin/console app:obligations:send-alerts
+```
+
+> The schedule itself lives in the hosting panel, not in this repo.
+
 ## Domain model (current core)
 
 The stable core, independent of pending requirement decisions:
