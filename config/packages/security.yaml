@@ -39,6 +39,7 @@ security:
         # not by a logged-in session, so the firewall must let it through unauthenticated. Pinned to
         # the exact path (not a broad ^/cron prefix) so a future /cron/* route is not opened by accident.
         - { path: ^/cron/obligation-alerts$, roles: PUBLIC_ACCESS }
+        - { path: ^/cron/auto-nonconformities$, roles: PUBLIC_ACCESS }
         # The activity trail is sensitive (it shows everyone's actions): admins only.
         - { path: ^/audit, roles: ROLE_ADMIN }
         # User/role administration: admins only.

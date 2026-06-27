@@ -73,6 +73,21 @@ class Settings
     #[Assert\Range(min: 1, max: 10)]
     private int $intensityBaselineYears = 1;
 
+    /**
+     * Whether the system opens a non-conformity automatically (PC.10.0) for each indicator
+     * measurement marked as breaching its reference value (F.09.0). Off by default: nothing happens
+     * until the centre opts in from this screen.
+     */
+    #[ORM\Column]
+    private bool $autoNcFromBreachedIndicators = false;
+
+    /**
+     * Whether the system opens a non-conformity automatically for each objective marked as not
+     * achieved (PG-06.04). Off by default.
+     */
+    #[ORM\Column]
+    private bool $autoNcFromUnmetObjectives = false;
+
     #[ORM\Column]
     private \DateTimeImmutable $updatedAt;
 
@@ -203,6 +218,50 @@ class Settings
     public function setIntensityBaselineYears(int $intensityBaselineYears): static
     {
         $this->intensityBaselineYears = $intensityBaselineYears;
+
+        return $this;
+    }
+
+    /**
+     * Whether a breached indicator measurement opens a non-conformity automatically.
+     *
+     * @return bool true if the rule is enabled
+     */
+    public function isAutoNcFromBreachedIndicators(): bool
+    {
+        return $this->autoNcFromBreachedIndicators;
+    }
+
+    /**
+     * Enables or disables the auto non-conformity rule for breached indicator measurements.
+     *
+     * @param bool $autoNcFromBreachedIndicators true to enable the rule
+     */
+    public function setAutoNcFromBreachedIndicators(bool $autoNcFromBreachedIndicators): static
+    {
+        $this->autoNcFromBreachedIndicators = $autoNcFromBreachedIndicators;
+
+        return $this;
+    }
+
+    /**
+     * Whether an objective marked as not achieved opens a non-conformity automatically.
+     *
+     * @return bool true if the rule is enabled
+     */
+    public function isAutoNcFromUnmetObjectives(): bool
+    {
+        return $this->autoNcFromUnmetObjectives;
+    }
+
+    /**
+     * Enables or disables the auto non-conformity rule for objectives marked as not achieved.
+     *
+     * @param bool $autoNcFromUnmetObjectives true to enable the rule
+     */
+    public function setAutoNcFromUnmetObjectives(bool $autoNcFromUnmetObjectives): static
+    {
+        $this->autoNcFromUnmetObjectives = $autoNcFromUnmetObjectives;
 
         return $this;
     }

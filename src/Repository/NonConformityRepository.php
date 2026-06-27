@@ -95,4 +95,28 @@ class NonConformityRepository extends ServiceEntityRepository
 
         return $counts;
     }
+
+    /**
+     * Of the given auto-source keys, the ones that already have a non-conformity, in a single query
+     * (so the auto-generation engine checks idempotency without a lookup per candidate — no N+1).
+     *
+     * @param string[] $keys the candidate source keys (e.g. "indicator_measurement:123")
+     *
+     * @return string[] the subset of keys that already exist
+     */
+    public function findExistingAutoSourceKeys(array $keys): array
+    {
+        if ([] === $keys) {
+            return [];
+        }
+
+        $rows = $this->createQueryBuilder('nc')
+            ->select('nc.autoSourceKey')
+            ->where('nc.autoSourceKey IN (:keys)')
+            ->setParameter('keys', $keys)
+            ->getQuery()
+            ->getSingleColumnResult();
+
+        return array_map(strval(...), $rows);
+    }
 }

@@ -6,6 +6,7 @@ namespace App\Form;
 
 use App\Entity\Settings;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\Extension\Core\Type\PercentType;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -49,6 +50,16 @@ class SettingsType extends AbstractType
             ->add('intensityBaselineYears', IntegerType::class, [
                 'label' => 'Auto-intensidad · años de referencia (N)',
                 'help' => 'Con cuántos años anteriores se compara (1 = solo el año anterior).',
+            ])
+            ->add('autoNcFromBreachedIndicators', CheckboxType::class, [
+                'label' => 'No conformidad automática · Indicadores fuera de umbral',
+                'required' => false,
+                'help' => 'Abre una no conformidad por cada medición marcada como fuera de su valor de referencia.',
+            ])
+            ->add('autoNcFromUnmetObjectives', CheckboxType::class, [
+                'label' => 'No conformidad automática · Objetivos no cumplidos',
+                'required' => false,
+                'help' => 'Abre una no conformidad por cada objetivo marcado como no cumplido.',
             ]);
     }
 
