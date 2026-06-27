@@ -28,6 +28,7 @@ use Symfony\Component\Validator\Context\ExecutionContextInterface;
 #[ORM\Entity(repositoryClass: NonConformityRepository::class)]
 #[ORM\Table(name: 'non_conformity')]
 #[ORM\UniqueConstraint(name: 'uniq_nc_origin_year_sequence', columns: ['origin', 'reference_year', 'sequence'])]
+#[ORM\UniqueConstraint(name: 'uniq_nc_auto_source_key', columns: ['auto_source_key'])]
 #[ORM\HasLifecycleCallbacks]
 #[UniqueEntity(fields: ['reference'], message: 'Ya existe una no conformidad con esa referencia.')]
 class NonConformity
@@ -64,6 +65,15 @@ class NonConformity
     #[ORM\ManyToOne(targetEntity: SystemAudit::class)]
     #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
     private ?SystemAudit $audit = null;
+
+    /**
+     * Idempotency key of the source that auto-opened this non-conformity, e.g.
+     * "indicator_measurement:123" or "objective:45". Null for non-conformities entered by hand. It
+     * is unique (see the named constraint on the class) so the auto-generation engine never opens
+     * the same one twice (PC.10.0), and it lets a finding be traced back to what triggered it.
+     */
+    #[ORM\Column(length: 191, nullable: true)]
+    private ?string $autoSourceKey = null;
 
     /**
      * Year the reference belongs to (the sequence resets each year). Set together with
@@ -206,6 +216,29 @@ class NonConformity
     public function setAudit(?SystemAudit $audit): static
     {
         $this->audit = $audit;
+
+        return $this;
+    }
+
+    /**
+     * The idempotency key of the source that auto-opened this non-conformity, or null if it was
+     * entered by hand.
+     *
+     * @return string|null the source key, or null
+     */
+    public function getAutoSourceKey(): ?string
+    {
+        return $this->autoSourceKey;
+    }
+
+    /**
+     * Marks the source that auto-opened this non-conformity.
+     *
+     * @param string|null $autoSourceKey the source key (e.g. "indicator_measurement:123"), or null
+     */
+    public function setAutoSourceKey(?string $autoSourceKey): static
+    {
+        $this->autoSourceKey = $autoSourceKey;
 
         return $this;
     }

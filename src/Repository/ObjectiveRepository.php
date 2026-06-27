@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Repository;
 
 use App\Entity\Objective;
+use App\Enum\ObjectiveStatus;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -41,5 +42,16 @@ class ObjectiveRepository extends ServiceEntityRepository
             ->getSingleScalarResult();
 
         return (int) $max + 1;
+    }
+
+    /**
+     * The objectives marked as not achieved (PG-06.04), ordered by sequence. Used by the
+     * auto-non-conformity engine.
+     *
+     * @return Objective[] the unmet objectives
+     */
+    public function findNotAchieved(): array
+    {
+        return $this->findBy(['status' => ObjectiveStatus::NOT_ACHIEVED], ['sequence' => 'ASC']);
     }
 }
