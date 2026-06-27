@@ -238,7 +238,7 @@ final class DocumentDetailControllerTest extends WebTestCase
         $lines = array_filter(explode("\n", trim($content)), static fn (string $line): bool => '' !== $line);
 
         return array_values(array_map(
-            static fn (string $line): array => array_values(array_map(static fn (?string $field): string => (string) $field, str_getcsv($line, ';'))),
+            static fn (string $line): array => array_map(static fn (?string $field): string => (string) $field, str_getcsv($line, ';')),
             $lines,
         ));
     }
