@@ -18,6 +18,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  */
 #[ORM\Entity(repositoryClass: ObjectiveRepository::class)]
 #[ORM\Table(name: 'objective')]
+#[ORM\UniqueConstraint(name: 'uniq_objective_year_source', columns: ['school_year', 'source_code'])]
 #[ORM\HasLifecycleCallbacks]
 #[UniqueEntity(fields: ['reference'], message: 'Ya existe un objetivo con esa referencia.')]
 class Objective
@@ -45,6 +46,16 @@ class Objective
     #[Assert\NotBlank]
     #[Assert\Regex(pattern: '/^\d{4}-\d{4}$/', message: 'Usa el formato de curso escolar, p. ej. 2025-2026.')]
     private string $schoolYear;
+
+    /**
+     * The centre's own per-course code (e.g. "OBJ.01"), kept as it appears on the F.07.01 sheet.
+     * Unlike {@see $reference} (a globally unique surrogate), this code restarts each course, so it
+     * is only unique within a school year. It is populated by the historical ETL and lets the import
+     * upsert by (school year, source code) without colliding the same "OBJ.01" across courses; it is
+     * left null for objectives created from the UI, which only carry the surrogate reference.
+     */
+    #[ORM\Column(name: 'source_code', length: 20, nullable: true)]
+    private ?string $sourceCode = null;
 
     /**
      * The objective and its target ("Descripción objetivo"), e.g. "Reducir el consumo de agua 5%".
@@ -170,6 +181,18 @@ class Objective
     public function setSchoolYear(string $schoolYear): static
     {
         $this->schoolYear = $schoolYear;
+
+        return $this;
+    }
+
+    public function getSourceCode(): ?string
+    {
+        return $this->sourceCode;
+    }
+
+    public function setSourceCode(?string $sourceCode): static
+    {
+        $this->sourceCode = $sourceCode;
 
         return $this;
     }
