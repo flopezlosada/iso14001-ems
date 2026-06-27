@@ -62,8 +62,18 @@ def cell(row, key):
     return row[idx].strip() if idx < len(row) else ''
 
 
+# Fields whose text is folded (joined) when a reference spans several rows; the rest keep the
+# first non-empty value seen.
+MULTILINE = ('specific_requirement', 'compliance_evidence')
+
+
 def normalize(path):
-    out = []
+    # A single requirement (RL-NN) may span several rows: the source repeats the reference with
+    # extra evidence/requirement lines (e.g. RL-11 = one provision with two evidence bullets). We
+    # fold those rows into one entry, joining the multi-line fields, so the reference stays unique
+    # (the entity enforces it) and no evidence line is lost.
+    by_ref = {}
+    order = []
     for row in read_sheet(path, 1)[2:]:  # rows 1-2 are title + header
         ref_raw = cell(row, 'ref')
         m = re.match(r'^RL-?\s*0*(\d+)', ref_raw, re.IGNORECASE)
@@ -75,7 +85,7 @@ def normalize(path):
         # The review date lands in the evaluation or the fecha column depending on the row.
         last_review = serial_to_date(cell(row, 'evaluation')) or serial_to_date(cell(row, 'last_review'))
 
-        out.append({
+        candidate = {
             'reference': reference,
             'sequence': sequence,
             'legal_provision': cell(row, 'provision'),
@@ -86,8 +96,25 @@ def normalize(path):
             'evaluation_frequency': map_frequency(cell(row, 'frequency')),
             'last_reviewed_on': last_review,
             'next_review_on': serial_to_date(cell(row, 'next_review')),
-        })
-    return out
+        }
+
+        existing = by_ref.get(reference)
+        if existing is None:
+            by_ref[reference] = candidate
+            order.append(reference)
+            continue
+        # Same reference again: fold this row into the first one.
+        for field, value in candidate.items():
+            if not value or value == existing[field]:
+                continue
+            if field in MULTILINE and existing[field]:
+                # Compare against the already-folded lines, not the whole string, so a value that is
+                # a substring/prefix of an existing line is not silently dropped.
+                if value not in existing[field].split('\n'):
+                    existing[field] = f'{existing[field]}\n{value}'
+            elif not existing[field]:
+                existing[field] = value
+    return [by_ref[ref] for ref in order]
 
 
 def main():
