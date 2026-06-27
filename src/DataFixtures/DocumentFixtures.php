@@ -95,6 +95,7 @@ final class DocumentFixtures extends AbstractGoldenFixture implements DependentF
             ['code' => 'RG-09.03.01', 'title' => 'Revisión por la Dirección', 'type' => DocumentType::RECORD, 'chapter' => IsoChapter::PERFORMANCE_EVALUATION, 'role' => 'direction', 'area' => null, 'status' => ObligationStatus::IN_REVIEW, 'note' => 'En revisión 2026; falta firma de dirección.', 'instructions' => 'Elabora el informe de revisión por la dirección sobre los requisitos y puntos de la norma. Actualiza revisión, fecha y firma.'],
             ['code' => 'F.09.0', 'title' => 'Indicadores', 'type' => DocumentType::FORM, 'chapter' => IsoChapter::PERFORMANCE_EVALUATION, 'role' => 'ems_manager', 'area' => Area::INDICATOR, 'status' => ObligationStatus::DONE, 'note' => 'Revisado hasta marzo 2026.', 'instructions' => 'Define indicadores (consumos, etc.) con un valor límite de referencia y estudia mensualmente si todo se encuentra dentro de dicho parámetro.'],
             ['code' => 'AUD-09.02', 'title' => 'Auditoría Externa (certificación)', 'type' => DocumentType::EXTERNAL_EVIDENCE, 'chapter' => IsoChapter::PERFORMANCE_EVALUATION, 'role' => 'ems_manager', 'area' => null, 'status' => ObligationStatus::PENDING, 'note' => 'Anual; la realiza un organismo certificador externo en fecha conocida.', 'instructions' => 'Prepara la documentación para la auditoría externa anual de certificación. La fecha de la visita ancla los avisos de preparación: llega con todo al día.'],
+            ['code' => 'F.15.0', 'title' => 'Informe de Auditoría Interna', 'type' => DocumentType::FORM, 'chapter' => IsoChapter::PERFORMANCE_EVALUATION, 'role' => 'quality', 'area' => null, 'status' => ObligationStatus::IN_REVIEW, 'note' => 'Informe 2025 pendiente de completar.', 'instructions' => 'Tras la auditoría interna anual, redacta el informe con los hallazgos, las no conformidades detectadas y las conclusiones. Es la entrada del Plan de Acciones Correctivas.'],
             // 03.MEJORA — Mejora (cap. 10)
             ['code' => 'RG-08.07.01', 'title' => 'Plan de Acciones Correctivas', 'type' => DocumentType::RECORD, 'chapter' => IsoChapter::IMPROVEMENT, 'role' => 'ems_manager', 'area' => Area::NONCONFORMITY, 'status' => ObligationStatus::DONE, 'note' => 'A partir del informe del auditor (feb. 2024).', 'instructions' => 'Tras la auditoría externa, define y planifica las acciones correctivas derivadas del informe.'],
             ['code' => 'F.11.0', 'title' => 'Listado de Control de No Conformidades', 'type' => DocumentType::FORM, 'chapter' => IsoChapter::IMPROVEMENT, 'role' => 'ems_manager', 'area' => Area::NONCONFORMITY, 'status' => ObligationStatus::DONE, 'note' => 'Revisada abril 2026.', 'instructions' => 'Registra todas las no conformidades detectadas (auditorías internas y externas) y su seguimiento. Revisión mensual.'],
@@ -103,9 +104,13 @@ final class DocumentFixtures extends AbstractGoldenFixture implements DependentF
     }
 
     /**
-     * Framework documents that are NOT periodic obligations: the manual, key procedures and the
-     * document register itself. They give the registry its backbone of procedures/policies but
-     * carry no ISO chapter nor review cadence.
+     * Framework documents that are NOT periodic obligations: the manual, the full set of system
+     * procedures (PC/PG) and the document register itself. They give the registry its backbone of
+     * procedures/policies but carry no ISO chapter nor review cadence.
+     *
+     * The procedure set mirrors the centre's real /PROCEDIMIENTOS folder, NOT the (outdated) F.01
+     * spreadsheet, so the register can fully replace it: PC.01–PC.05, PC.09, PC.10, PC-06.03 and
+     * the PG-* operational procedures.
      *
      * @return array<int, array{code: string, title: string, type: DocumentType, chapter: null, role: string, area: ?Area, status: ObligationStatus, note: ?string, instructions: ?string}>
      */
@@ -114,8 +119,19 @@ final class DocumentFixtures extends AbstractGoldenFixture implements DependentF
         return [
             ['code' => 'MA-04.01.01', 'title' => 'Manual de Gestión Ambiental', 'type' => DocumentType::MANUAL, 'chapter' => null, 'role' => 'ems_manager', 'area' => null, 'status' => ObligationStatus::DONE, 'note' => null, 'instructions' => null],
             ['code' => 'PC.01.0', 'title' => 'Gestión de la Información Documentada', 'type' => DocumentType::PROCEDURE, 'chapter' => null, 'role' => 'ems_manager', 'area' => null, 'status' => ObligationStatus::DONE, 'note' => null, 'instructions' => null],
+            ['code' => 'PC.02.0', 'title' => 'Mejora', 'type' => DocumentType::PROCEDURE, 'chapter' => null, 'role' => 'quality', 'area' => null, 'status' => ObligationStatus::DONE, 'note' => null, 'instructions' => null],
+            ['code' => 'PC.03.0', 'title' => 'Gestión de Riesgos y Oportunidades', 'type' => DocumentType::PROCEDURE, 'chapter' => null, 'role' => 'ems_manager', 'area' => null, 'status' => ObligationStatus::DONE, 'note' => null, 'instructions' => null],
+            ['code' => 'PC.04.0', 'title' => 'Gestión de Recursos y Comunicación', 'type' => DocumentType::PROCEDURE, 'chapter' => null, 'role' => 'ems_manager', 'area' => null, 'status' => ObligationStatus::DONE, 'note' => null, 'instructions' => null],
+            ['code' => 'PC.05.0', 'title' => 'Compras y Gestión de Proveedores', 'type' => DocumentType::PROCEDURE, 'chapter' => null, 'role' => 'ems_manager', 'area' => null, 'status' => ObligationStatus::DONE, 'note' => null, 'instructions' => null],
+            ['code' => 'PC.09.0', 'title' => 'Auditoría Interna', 'type' => DocumentType::PROCEDURE, 'chapter' => null, 'role' => 'quality', 'area' => null, 'status' => ObligationStatus::DONE, 'note' => null, 'instructions' => null],
             ['code' => 'PC.10.0', 'title' => 'Tratamiento de No Conformidades y Acciones Correctivas', 'type' => DocumentType::PROCEDURE, 'chapter' => null, 'role' => 'quality', 'area' => null, 'status' => ObligationStatus::DONE, 'note' => null, 'instructions' => null],
+            ['code' => 'PC-06.03', 'title' => 'Requisitos Legales', 'type' => DocumentType::PROCEDURE, 'chapter' => null, 'role' => 'ems_manager', 'area' => null, 'status' => ObligationStatus::DONE, 'note' => null, 'instructions' => null],
             ['code' => 'PG-06.01', 'title' => 'Identificación y Evaluación de Aspectos Ambientales', 'type' => DocumentType::PROCEDURE, 'chapter' => null, 'role' => 'ems_manager', 'area' => null, 'status' => ObligationStatus::DONE, 'note' => null, 'instructions' => null],
+            ['code' => 'PG-06.04', 'title' => 'Objetivos de Medio Ambiente', 'type' => DocumentType::PROCEDURE, 'chapter' => null, 'role' => 'ems_manager', 'area' => null, 'status' => ObligationStatus::DONE, 'note' => null, 'instructions' => null],
+            ['code' => 'PG-07.01', 'title' => 'Mantenimiento de Equipos', 'type' => DocumentType::PROCEDURE, 'chapter' => null, 'role' => 'ems_manager', 'area' => null, 'status' => ObligationStatus::DONE, 'note' => null, 'instructions' => null],
+            ['code' => 'PG-08.01', 'title' => 'Control Operacional', 'type' => DocumentType::PROCEDURE, 'chapter' => null, 'role' => 'ems_manager', 'area' => null, 'status' => ObligationStatus::DONE, 'note' => null, 'instructions' => null],
+            ['code' => 'PG-08.02', 'title' => 'Preparación y Respuesta ante Emergencias', 'type' => DocumentType::PROCEDURE, 'chapter' => null, 'role' => 'ems_manager', 'area' => null, 'status' => ObligationStatus::DONE, 'note' => null, 'instructions' => null],
+            ['code' => 'PG-09.03.00', 'title' => 'Revisión por la Dirección', 'type' => DocumentType::PROCEDURE, 'chapter' => null, 'role' => 'direction', 'area' => null, 'status' => ObligationStatus::DONE, 'note' => null, 'instructions' => null],
             ['code' => 'F.01.0', 'title' => 'Lista de Documentación Vigente', 'type' => DocumentType::FORM, 'chapter' => null, 'role' => 'ems_manager', 'area' => null, 'status' => ObligationStatus::DONE, 'note' => 'Es el propio registro documental que se enseña al auditor; se mantiene al día desde el catálogo.', 'instructions' => null],
         ];
     }
