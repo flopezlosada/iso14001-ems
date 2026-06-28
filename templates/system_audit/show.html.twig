@@ -43,7 +43,7 @@
                 <div>
                     <a class="btn secondary" href="{{ path('non_conformity_new', { audit: audit.id }) }}">+ Registrar no conformidad</a>
                     {% if findings is not empty %}
-                        <form method="post" action="{{ path('system_audit_action_plan', { id: audit.id }) }}" onsubmit="return confirm('¿Generar el borrador del plan de acciones para las no conformidades que aún no tienen ninguna?');" style="display:inline">
+                        <form method="post" action="{{ path('system_audit_action_plan', { id: audit.id }) }}" data-confirm="¿Generar el borrador del plan de acciones para las no conformidades que aún no tienen ninguna?" style="display:inline">
                             <input type="hidden" name="_token" value="{{ csrf_token('action_plan_system_audit' ~ audit.id) }}">
                             <button type="submit" class="btn">Generar plan de acciones</button>
                         </form>

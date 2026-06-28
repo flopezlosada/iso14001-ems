@@ -13,7 +13,7 @@
     <div class="page-head">
         <h1>{{ isNew ? 'Nueva revisión por la dirección' : 'Editar revisión por la dirección' }}</h1>
         {% if not isNew and autoKeys|length > 0 %}
-            <form method="post" action="{{ path('management_review_regenerate', { id: review.id }) }}" onsubmit="return confirm('¿Actualizar las secciones automáticas con los datos actuales de los módulos? Se sobrescribirá su contenido generado.');">
+            <form method="post" action="{{ path('management_review_regenerate', { id: review.id }) }}" data-confirm="¿Actualizar las secciones automáticas con los datos actuales de los módulos? Se sobrescribirá su contenido generado.">
                 <input type="hidden" name="_token" value="{{ csrf_token('regenerate' ~ review.id) }}">
                 <button type="submit" class="btn secondary">Regenerar datos automáticos</button>
             </form>

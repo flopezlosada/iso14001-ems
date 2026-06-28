@@ -89,7 +89,7 @@
 
     {% if not review.approved %}
         <div class="card">
-            <form method="post" action="{{ path('management_review_approve', { id: review.id }) }}" onsubmit="return confirm('¿Aprobar la revisión? Quedará firmada por la dirección y no podrá editarse.');">
+            <form method="post" action="{{ path('management_review_approve', { id: review.id }) }}" data-confirm="¿Aprobar la revisión? Quedará firmada por la dirección y no podrá editarse.">
                 <input type="hidden" name="_token" value="{{ csrf_token('approve' ~ review.id) }}">
                 <button class="btn" type="submit">Aprobar (firmar) la revisión</button>
             </form>
@@ -97,7 +97,7 @@
     {% endif %}
 
     <div class="card">
-        <form method="post" action="{{ path('management_review_delete', { id: review.id }) }}" onsubmit="return confirm('¿Eliminar esta revisión por la dirección?');">
+        <form method="post" action="{{ path('management_review_delete', { id: review.id }) }}" data-confirm="¿Eliminar esta revisión por la dirección?">
             <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ review.id) }}">
             <button class="btn danger" type="submit">Eliminar</button>
         </form>
