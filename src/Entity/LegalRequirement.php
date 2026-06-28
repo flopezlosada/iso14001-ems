@@ -257,18 +257,20 @@ class LegalRequirement
     }
 
     /**
-     * Whether the next review is already past due as of the given date.
+     * Whether the next review is due as of the given date. The review date itself counts as due
+     * (today is the last day, already urgent), consistent with {@see \App\Entity\ScheduledAlert::isDue()}.
      *
      * @param \DateTimeImmutable $on the reference date (typically today)
      */
     public function isReviewOverdueOn(\DateTimeImmutable $on): bool
     {
-        return null !== $this->nextReviewOn && $this->nextReviewOn < $on;
+        return null !== $this->nextReviewOn && $this->nextReviewOn <= $on;
     }
 
     /**
      * Whether the next review is not yet due but falls within the upcoming window (so it should be
-     * flagged as approaching). Overdue reviews are reported by {@see isReviewOverdueOn()}, not here.
+     * flagged as approaching). Reviews due today or earlier are reported by {@see isReviewOverdueOn()},
+     * not here.
      *
      * @param \DateTimeImmutable $on       the reference date (typically today)
      * @param int                $soonDays size of the "approaching" window, in days
@@ -276,7 +278,7 @@ class LegalRequirement
     public function isReviewDueSoonOn(\DateTimeImmutable $on, int $soonDays = 30): bool
     {
         return null !== $this->nextReviewOn
-            && $this->nextReviewOn >= $on
+            && $this->nextReviewOn > $on
             && $this->nextReviewOn <= $on->modify(sprintf('+%d days', $soonDays));
     }
 

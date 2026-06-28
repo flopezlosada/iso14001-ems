@@ -42,7 +42,7 @@ class LegalRequirementRepository extends ServiceEntityRepository
         return $this->createQueryBuilder('lr')
             ->andWhere('lr.nextReviewOn IS NOT NULL')
             ->andWhere('lr.nextReviewOn <= :limit')
-            ->setParameter('limit', $on->modify(sprintf('+%d days', $soonDays)))
+            ->setParameter('limit', $on->modify(sprintf('+%d days', $soonDays))->format('Y-m-d'))
             ->orderBy('lr.nextReviewOn', 'ASC')
             ->getQuery()
             ->getResult();

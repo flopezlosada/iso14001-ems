@@ -76,6 +76,13 @@ final class LegalRequirementTest extends TestCase
         self::assertTrue($overdue->isReviewOverdueOn($on));
         self::assertFalse($overdue->isReviewDueSoonOn($on));
 
+        // Next review exactly today (monthly from 2026-05-15) → due today counts as overdue, not soon.
+        $dueToday = (new LegalRequirement())
+            ->setEvaluationFrequency(EvaluationFrequency::MONTHLY)
+            ->setLastReviewedOn(new \DateTimeImmutable('2026-05-15'));
+        self::assertTrue($dueToday->isReviewOverdueOn($on));
+        self::assertFalse($dueToday->isReviewDueSoonOn($on));
+
         // Next review 2026-07-01 (monthly from 2026-06-01) → within the 30-day window, not overdue.
         $soon = (new LegalRequirement())
             ->setEvaluationFrequency(EvaluationFrequency::MONTHLY)
