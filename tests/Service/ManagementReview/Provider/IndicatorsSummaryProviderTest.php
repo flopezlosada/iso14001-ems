@@ -12,6 +12,9 @@ use PHPUnit\Framework\TestCase;
 
 final class IndicatorsSummaryProviderTest extends TestCase
 {
+    /**
+     * @param list<array{int, int, string, bool}> $measurements rows of [year, month, value, breached]
+     */
     private function indicator(string $name, ?string $reference, array $measurements): Indicator
     {
         $indicator = (new Indicator())->setName($name)->setReferenceValue($reference);
