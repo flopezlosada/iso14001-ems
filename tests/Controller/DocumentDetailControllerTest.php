@@ -405,8 +405,8 @@ final class DocumentDetailControllerTest extends WebTestCase
         $client->loginUser($user);
 
         // A malicious body must be stored sanitised: the script is stripped, the safe text kept.
-        $client->request('POST', '/documentos/'.$document->getId().'/revision', [
-            '_token' => static::getContainer()->get('security.csrf.token_manager')->getToken('document_revision'.$document->getId())->getValue(),
+        $client->request('GET', '/documentos/'.$document->getId().'/revision/nueva');
+        $client->submitForm('Guardar', [
             'changeSummary' => 'Intento XSS',
             'body' => '<p>Texto legítimo</p><script>alert(1)</script>',
         ]);
@@ -529,11 +529,12 @@ final class DocumentDetailControllerTest extends WebTestCase
         $em->flush();
         $client->loginUser($approver);
 
-        $token = static::getContainer()->get('security.csrf.token_manager')->getToken('document_approve'.$document->getId())->getValue();
-        $client->request('POST', '/documentos/'.$document->getId().'/revision/'.$version->getId().'/aprobar', ['_token' => $token]);
+        $client->request('GET', '/documentos/'.$document->getId());
 
-        $client->followRedirect();
-        self::assertSelectorTextContains('.flash', 'revisada');
+        self::assertResponseIsSuccessful();
+        // Sin revisar no se ofrece aprobar: la fila muestra "pendiente de revisar", no "Aprobar".
+        self::assertSelectorTextContains('tbody', 'pendiente de revisar');
+        self::assertSelectorTextNotContains('tbody', 'Aprobar');
     }
 
     /**
@@ -615,11 +616,13 @@ final class DocumentDetailControllerTest extends WebTestCase
         // Approve first: the signature can only be attached to an already-approved revision.
         $client->request('GET', '/documentos/'.$document->getId());
         $client->submitForm('Aprobar');
-        $crawler = $client->followRedirect();
+        $client->followRedirect();
 
         $signedPath = tempnam(sys_get_temp_dir(), 'signed').'.pdf';
         file_put_contents($signedPath, "%PDF-1.4\nfirmado por la directora\n%%EOF");
-        $form = $crawler->selectButton('Adjuntar firma')->form();
+        // The signature is now attached from its own page, not inline in the history table.
+        $crawler = $client->request('GET', '/documentos/'.$document->getId().'/revision/'.$version->getId().'/firmar');
+        $form = $crawler->selectButton('Subir firma')->form();
         $field = $form['signedPdf'];
         self::assertInstanceOf(FileFormField::class, $field);
         $field->upload($signedPath);
