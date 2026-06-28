@@ -24,6 +24,6 @@
                 {{ f.section('Revisión pendiente', [form.reviewNote, form.needsReview]) }}
             {% endif %}
             {{ f.actions(path('training_year', { year: year })) }}
-        {{ form_end(form, { render_rest: false }) }}
+        {{ form_end(form) }}
     </div>
 {% endblock %}

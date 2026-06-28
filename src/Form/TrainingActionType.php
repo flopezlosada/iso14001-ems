@@ -55,17 +55,25 @@ class TrainingActionType extends AbstractType
             ->add('efficacyEvaluation', TextareaType::class, [
                 'label' => 'Evaluación de la eficacia',
                 'required' => false,
-            ])
-            ->add('reviewNote', TextareaType::class, [
-                'label' => 'Nota de revisión',
-                'help' => 'Motivo por el que quedó marcada para revisar (generado por la importación; puedes ajustarlo).',
-                'required' => false,
-            ])
-            ->add('needsReview', CheckboxType::class, [
-                'label' => 'Pendiente de revisar',
-                'help' => 'Desmárcalo cuando hayas verificado y corregido los datos de esta acción.',
-                'required' => false,
             ]);
+
+        // The review fields only make sense for actions the import flagged: adding them just for
+        // those keeps them out of the normal "new action" form (no orphan fields, no need to
+        // disable form_rest — which would also drop the CSRF token).
+        $action = $builder->getData();
+        if ($action instanceof TrainingAction && $action->isNeedsReview()) {
+            $builder
+                ->add('reviewNote', TextareaType::class, [
+                    'label' => 'Nota de revisión',
+                    'help' => 'Motivo por el que quedó marcada para revisar (generado por la importación; puedes ajustarlo).',
+                    'required' => false,
+                ])
+                ->add('needsReview', CheckboxType::class, [
+                    'label' => 'Pendiente de revisar',
+                    'help' => 'Desmárcalo cuando hayas verificado y corregido los datos de esta acción.',
+                    'required' => false,
+                ]);
+        }
     }
 
     public function configureOptions(OptionsResolver $resolver): void
