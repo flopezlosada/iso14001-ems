@@ -411,10 +411,12 @@ final class DocumentDetailControllerTest extends WebTestCase
             'body' => '<p>Texto legítimo</p><script>alert(1)</script>',
         ]);
 
-        $client->request('GET', '/documentos/'.$document->getId());
+        $crawler = $client->request('GET', '/documentos/'.$document->getId());
         self::assertSelectorTextContains('.document-body', 'Texto legítimo');
-        // The <script> must be stripped from the stored/served HTML, not just hidden from view.
-        self::assertStringNotContainsString('<script', (string) $client->getResponse()->getContent());
+        // The <script> must be stripped from the stored/served body, not just hidden from view.
+        // Scope the check to the rendered body: the page layout itself carries a legitimate
+        // <script> (the theme switcher), so asserting over the whole page would never hold.
+        self::assertStringNotContainsString('<script', $crawler->filter('.document-body')->html());
     }
 
     public function testNonResponsibleCannotIssueRevision(): void
