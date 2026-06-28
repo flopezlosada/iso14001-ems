@@ -43,9 +43,12 @@
     {% for section in review.sections %}
         <div class="card">
             <h2>{{ section.sectionKey.label }}</h2>
+            {% if section.decision %}
+                <p><strong>{{ section.decision }}</strong></p>
+            {% endif %}
             {% if section.content %}
                 <p style="white-space: pre-line">{{ section.content }}</p>
-            {% else %}
+            {% elseif not section.decision %}
                 <p class="muted">Sin contenido.</p>
             {% endif %}
         </div>
