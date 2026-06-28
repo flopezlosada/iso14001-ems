@@ -61,7 +61,10 @@ enum Area: string
      * it is actually filled in. Single source of truth shared by the obligations cockpit and the
      * dashboard worklist.
      *
-     * @return string the Symfony route name of the area's index page
+     * Convention: the route name must end in '_index' — {@see NavExtension} derives the module's
+     * route-name prefix (for the menu's active-item highlight) by stripping that suffix.
+     *
+     * @return string the Symfony route name of the area's index page (ends in '_index')
      */
     public function indexRoute(): string
     {
@@ -83,6 +86,26 @@ enum Area: string
             self::DAFO => 'dafo_index',
             self::SYSTEM_AUDIT => 'system_audit_index',
             self::COMMUNICATION => 'communication_index',
+        };
+    }
+
+    /**
+     * The PDCA phase this area belongs to, the dimension by which the navigation menu groups the
+     * modules. Kept consistent with {@see IsoChapter::phase()} (context/leadership/planning → Plan;
+     * support/operation → Do; performance evaluation → Check; improvement → Act), so an area and the
+     * obligations it hosts always fall under the same folder.
+     *
+     * @return PdcaPhase the phase that owns this area in the menu
+     */
+    public function phase(): PdcaPhase
+    {
+        return match ($this) {
+            self::INTERESTED_PARTY, self::DAFO, self::ASPECT, self::RISK_OPPORTUNITY,
+            self::OBJECTIVE, self::LEGAL_REQUIREMENT => PdcaPhase::PLAN,
+            self::CONSUMPTION, self::WASTE, self::OPERATIONAL_CONTROL, self::TRAINING,
+            self::COMMUNICATION, self::EMERGENCY, self::SUPPLIER => PdcaPhase::DO,
+            self::INDICATOR, self::SYSTEM_AUDIT, self::MANAGEMENT_REVIEW => PdcaPhase::CHECK,
+            self::NONCONFORMITY => PdcaPhase::ACT,
         };
     }
 }
