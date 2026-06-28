@@ -20,7 +20,10 @@
             {{ f.section('El curso', [form.description, form.type, form.targetAudience, form.objectives]) }}
             {{ f.section('Planificación', [form.plannedDate, form.methodology]) }}
             {{ f.section('Ejecución y eficacia', [form.actualDate, form.efficacyEvaluation]) }}
+            {% if action.needsReview %}
+                {{ f.section('Revisión pendiente', [form.reviewNote, form.needsReview]) }}
+            {% endif %}
             {{ f.actions(path('training_year', { year: year })) }}
-        {{ form_end(form) }}
+        {{ form_end(form, { render_rest: false }) }}
     </div>
 {% endblock %}

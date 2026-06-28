@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace App\Service\Import;
 
 /**
- * Accumulates the outcome of importing one dataset: how many rows were created, updated or
- * rejected. Rejected rows are never dropped silently — they are kept here with their reason and
- * raw data so the command can write them to a quarantine file for manual review.
+ * Accumulates the outcome of importing one dataset: how many rows were created, updated, flagged for
+ * review or rejected. Rejected rows are never dropped silently — they are kept here with their reason
+ * and raw data so the command can write them to a quarantine file for manual review. Flagged rows ARE
+ * imported, but carry data a human must verify; they are surfaced so the import never looks "clean"
+ * when it left work behind.
  */
 final class ImportReport
 {
@@ -18,6 +20,11 @@ final class ImportReport
      * @var list<array{line: int, reason: string, data: array<string, string>}>
      */
     private array $rejected = [];
+
+    /**
+     * @var list<array{line: int, reason: string}>
+     */
+    private array $flagged = [];
 
     /**
      * Records that a new entity was created from a row.
@@ -47,6 +54,18 @@ final class ImportReport
         $this->rejected[] = ['line' => $line, 'reason' => $reason, 'data' => $data];
     }
 
+    /**
+     * Records a row that was imported but needs manual review (e.g. a value that could not be
+     * normalized was left null on the entity).
+     *
+     * @param int    $line   1-based line number in the source CSV (header is line 1)
+     * @param string $reason human-readable explanation of what needs reviewing
+     */
+    public function flag(int $line, string $reason): void
+    {
+        $this->flagged[] = ['line' => $line, 'reason' => $reason];
+    }
+
     public function getCreated(): int
     {
         return $this->created;
@@ -63,6 +82,14 @@ final class ImportReport
     public function getRejected(): array
     {
         return $this->rejected;
+    }
+
+    /**
+     * @return list<array{line: int, reason: string}>
+     */
+    public function getFlagged(): array
+    {
+        return $this->flagged;
     }
 
     /**

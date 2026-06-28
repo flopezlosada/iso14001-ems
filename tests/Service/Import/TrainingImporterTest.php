@@ -14,8 +14,9 @@ use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
  * Integration tests for the training-plan importer, exercised against the real validator and a real
  * test database (rolled back per test by DAMA). Covers the happy path, the date normalization
  * convention applied to the F.03.0 dirty-text dates ("octubre 2023" -> first of month, "23 al
- * 27/10/23" -> start day, non-normalizable text -> quarantine), idempotent re-import (upsert by the
- * (year, description, audience) natural key), the optional actual date and the dry-run guard.
+ * 27/10/23" -> start day), the review-flag path for non-normalizable type/dates (imported with the
+ * field left null and flagged, not quarantined), idempotent re-import (upsert by the (year,
+ * description, audience) natural key), the optional actual date and the dry-run guard.
  */
 final class TrainingImporterTest extends KernelTestCase
 {
@@ -91,40 +92,113 @@ final class TrainingImporterTest extends KernelTestCase
         self::assertSame('2023-10-23', $action->getPlannedDate()->format('Y-m-d'));
     }
 
-    public function testNonNormalizablePlannedDateGoesToQuarantine(): void
+    public function testNonNormalizablePlannedDateIsImportedAndFlagged(): void
     {
         $report = $this->importer->import(
             [$this->row(['planned_date' => 'A la semana de su incorporación'])],
             false,
         );
+        $this->entityManager->clear();
 
-        self::assertSame(0, $report->getProcessed());
-        self::assertCount(1, $report->getRejected());
-        self::assertStringContainsString('Fecha prevista no normalizable', $report->getRejected()[0]['reason']);
-        self::assertNull($this->actions->findOneByNaturalKey(2023, 'Curso ISO 14001', 'Profesorado'));
+        self::assertSame(1, $report->getCreated());
+        self::assertSame([], $report->getRejected());
+        self::assertCount(1, $report->getFlagged());
+        self::assertStringContainsString('Fecha prevista no normalizable', $report->getFlagged()[0]['reason']);
+
+        $action = $this->actions->findOneByNaturalKey(2023, 'Curso ISO 14001', 'Profesorado');
+        self::assertNotNull($action);
+        self::assertNull($action->getPlannedDate(), 'La fecha no normalizable se deja null.');
+        self::assertTrue($action->isNeedsReview());
+        self::assertStringContainsString('Fecha prevista no normalizable', (string) $action->getReviewNote());
     }
 
-    public function testNonNormalizableActualDateGoesToQuarantine(): void
+    public function testNonNormalizableActualDateIsImportedAndFlagged(): void
     {
-        // A non-empty actual date that cannot be normalized must not be silently nulled.
+        // A non-empty actual date that cannot be normalized is left null and flagged, not dropped.
         $report = $this->importer->import(
             [$this->row(['actual_date' => 'previsto según calendario'])],
             false,
         );
+        $this->entityManager->clear();
 
-        self::assertSame(0, $report->getProcessed());
-        self::assertCount(1, $report->getRejected());
-        self::assertStringContainsString('Fecha real no normalizable', $report->getRejected()[0]['reason']);
+        self::assertSame(1, $report->getCreated());
+        self::assertCount(1, $report->getFlagged());
+
+        $action = $this->actions->findOneByNaturalKey(2023, 'Curso ISO 14001', 'Profesorado');
+        self::assertNotNull($action);
+        self::assertNull($action->getActualDate());
+        self::assertTrue($action->isNeedsReview());
+        self::assertStringContainsString('Fecha real no normalizable', (string) $action->getReviewNote());
     }
 
-    public function testAmbiguousTypeGoesToQuarantine(): void
+    public function testAmbiguousTypeIsImportedAndFlagged(): void
     {
-        // "int/ext" cannot map to a single delivery mode; quarantined for a manual decision.
+        // "int/ext" cannot map to a single delivery mode; imported with type null and flagged.
         $report = $this->importer->import([$this->row(['type' => 'int/ext'])], false);
+        $this->entityManager->clear();
 
-        self::assertSame(0, $report->getProcessed());
-        self::assertCount(1, $report->getRejected());
-        self::assertStringContainsString('Tipo EXT/INT no reconocido', $report->getRejected()[0]['reason']);
+        self::assertSame(1, $report->getCreated());
+        self::assertCount(1, $report->getFlagged());
+
+        $action = $this->actions->findOneByNaturalKey(2023, 'Curso ISO 14001', 'Profesorado');
+        self::assertNotNull($action);
+        self::assertNull($action->getType());
+        self::assertTrue($action->isNeedsReview());
+        self::assertStringContainsString('Tipo EXT/INT no reconocido', (string) $action->getReviewNote());
+    }
+
+    public function testCleanRowIsNotFlagged(): void
+    {
+        $report = $this->importer->import([$this->row()], false);
+        $this->entityManager->clear();
+
+        self::assertSame([], $report->getFlagged());
+        $action = $this->actions->findOneByNaturalKey(2023, 'Curso ISO 14001', 'Profesorado');
+        self::assertNotNull($action);
+        self::assertFalse($action->isNeedsReview());
+        self::assertNull($action->getReviewNote());
+    }
+
+    public function testMultipleNonNormalizableFieldsAccumulateInOneNote(): void
+    {
+        $report = $this->importer->import([$this->row([
+            'type' => 'int/ext',
+            'planned_date' => 'sin det',
+        ])], false);
+        $this->entityManager->clear();
+
+        self::assertCount(1, $report->getFlagged());
+        $action = $this->actions->findOneByNaturalKey(2023, 'Curso ISO 14001', 'Profesorado');
+        self::assertNotNull($action);
+        $note = (string) $action->getReviewNote();
+        self::assertStringContainsString('Tipo EXT/INT', $note);
+        self::assertStringContainsString('Fecha prevista', $note);
+    }
+
+    public function testReimportReappliesFlagOverManualFix(): void
+    {
+        // Documented contract: the importer is the cutover loader, not a continuous sync, so a full
+        // re-run re-sets the review flag from the (still dirty) source — manual UI fixes are meant to
+        // happen after the cutover, not to survive another ETL pass. This test pins that behaviour so
+        // nobody "fixes" the importer to preserve manual edits without realizing the trade-off.
+        $this->importer->import([$this->row(['type' => 'int/ext'])], false);
+        $this->entityManager->clear();
+
+        // Simulate the centre fixing the row in the UI and clearing the flag.
+        $action = $this->actions->findOneByNaturalKey(2023, 'Curso ISO 14001', 'Profesorado');
+        self::assertNotNull($action);
+        $action->setType(TrainingType::INTERNAL)->setNeedsReview(false)->setReviewNote(null);
+        $this->entityManager->flush();
+        $this->entityManager->clear();
+
+        // Re-importing the same dirty CSV row re-flags it (source wins).
+        $this->importer->import([$this->row(['type' => 'int/ext'])], false);
+        $this->entityManager->clear();
+
+        $reimported = $this->actions->findOneByNaturalKey(2023, 'Curso ISO 14001', 'Profesorado');
+        self::assertNotNull($reimported);
+        self::assertNull($reimported->getType());
+        self::assertTrue($reimported->isNeedsReview());
     }
 
     public function testReimportIsIdempotentAndUpdatesInPlace(): void

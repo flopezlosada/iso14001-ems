@@ -38,10 +38,15 @@
                 <tbody>
                     {% for action in actions %}
                         <tr>
-                            <td>{{ action.description }}</td>
-                            <td>{{ action.type.label }}</td>
+                            <td>
+                                {{ action.description }}
+                                {% if action.needsReview %}
+                                    <span class="badge badge--review" title="{{ action.reviewNote }}">⚠ Revisar</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ action.type ? action.type.label : '—' }}</td>
                             <td>{{ action.targetAudience }}</td>
-                            <td class="mono">{{ action.plannedDate|date('d/m/Y') }}</td>
+                            <td class="mono">{{ action.plannedDate is null ? '—' : action.plannedDate|date('d/m/Y') }}</td>
                             <td class="mono">{{ action.actualDate is null ? '—' : action.actualDate|date('d/m/Y') }}</td>
                             <td class="muted">{{ action.efficacyEvaluation ?? '—' }}</td>
                             <td><a href="{{ path('training_edit', { year: year, id: action.id }) }}">Editar</a></td>

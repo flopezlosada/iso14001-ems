@@ -19,7 +19,13 @@ use Symfony\Component\Validator\Constraints as Assert;
  * they will say so. The real F.03.0 sheet often holds free text there ("octubre 2023", "23 al
  * 27/10/23", "a la semana de su incorporación"); rather than weaken the model to a string, that text
  * is normalized in the real-data ETL by {@see \App\Service\Import\TrainingDateNormalizer} (month ->
- * first day, range -> start day) and any non-normalizable row is sent to quarantine for manual entry.
+ * first day, range -> start day).
+ *
+ * When the ETL cannot normalize the planned date or the delivery type, the row is no longer dropped
+ * to quarantine: it is imported with the un-normalizable field left null, {@see $needsReview} set and
+ * the original raw text recorded in {@see $reviewNote}, so the centre fixes it in the UI and clears
+ * the flag — far less friction than handing them a CSV to edit. This is why {@see $plannedDate} and
+ * {@see $type} are nullable: null means "pending review", not a valid empty value.
  */
 #[ORM\Entity(repositoryClass: TrainingActionRepository::class)]
 #[ORM\Table(name: 'training_action')]
@@ -44,10 +50,11 @@ class TrainingAction
     private string $description;
 
     /**
-     * Whether the action is delivered in-house or externally ("EXT/INT").
+     * Whether the action is delivered in-house or externally ("EXT/INT"). Null while pending review
+     * (e.g. the source said "int/ext"); see {@see $needsReview}.
      */
-    #[ORM\Column(enumType: TrainingType::class)]
-    private TrainingType $type;
+    #[ORM\Column(enumType: TrainingType::class, nullable: true)]
+    private ?TrainingType $type = null;
 
     /**
      * Roles or staff the action is aimed at ("Profesionales/puestos a los que va dirigido").
@@ -65,12 +72,11 @@ class TrainingAction
     private string $objectives;
 
     /**
-     * Planned execution date ("Fecha prevista de ejecución"). Mandatory (NOT NULL). Provisional
-     * calendar date; see the class-level note.
+     * Planned execution date ("Fecha prevista de ejecución"). Provisional calendar date; see the
+     * class-level note. Null while pending review (the source date could not be normalized).
      */
-    #[ORM\Column(name: 'planned_date', type: Types::DATE_IMMUTABLE)]
-    #[Assert\NotNull]
-    private \DateTimeImmutable $plannedDate;
+    #[ORM\Column(name: 'planned_date', type: Types::DATE_IMMUTABLE, nullable: true)]
+    private ?\DateTimeImmutable $plannedDate = null;
 
     /**
      * Training methodology ("Metodología de formación").
@@ -92,6 +98,22 @@ class TrainingAction
      */
     #[ORM\Column(name: 'efficacy_evaluation', type: Types::TEXT, nullable: true)]
     private ?string $efficacyEvaluation = null;
+
+    /**
+     * Whether the action carries data the centre still has to verify by hand. Set by the real-data
+     * ETL when a source value could not be normalized (see {@see $reviewNote}); cleared from the UI
+     * once a human has fixed the row.
+     */
+    #[ORM\Column(name: 'needs_review', options: ['default' => false])]
+    private bool $needsReview = false;
+
+    /**
+     * Human-readable explanation of why {@see $needsReview} is set, including the original raw text
+     * that could not be normalized (e.g. 'Fecha prevista original: "sin det".'). Null when nothing
+     * needs review.
+     */
+    #[ORM\Column(name: 'review_note', type: Types::TEXT, nullable: true)]
+    private ?string $reviewNote = null;
 
     #[ORM\Column]
     private \DateTimeImmutable $createdAt;
@@ -141,12 +163,12 @@ class TrainingAction
         return $this;
     }
 
-    public function getType(): TrainingType
+    public function getType(): ?TrainingType
     {
         return $this->type;
     }
 
-    public function setType(TrainingType $type): static
+    public function setType(?TrainingType $type): static
     {
         $this->type = $type;
 
@@ -177,12 +199,12 @@ class TrainingAction
         return $this;
     }
 
-    public function getPlannedDate(): \DateTimeImmutable
+    public function getPlannedDate(): ?\DateTimeImmutable
     {
         return $this->plannedDate;
     }
 
-    public function setPlannedDate(\DateTimeImmutable $plannedDate): static
+    public function setPlannedDate(?\DateTimeImmutable $plannedDate): static
     {
         $this->plannedDate = $plannedDate;
 
@@ -221,6 +243,30 @@ class TrainingAction
     public function setEfficacyEvaluation(?string $efficacyEvaluation): static
     {
         $this->efficacyEvaluation = $efficacyEvaluation;
+
+        return $this;
+    }
+
+    public function isNeedsReview(): bool
+    {
+        return $this->needsReview;
+    }
+
+    public function setNeedsReview(bool $needsReview): static
+    {
+        $this->needsReview = $needsReview;
+
+        return $this;
+    }
+
+    public function getReviewNote(): ?string
+    {
+        return $this->reviewNote;
+    }
+
+    public function setReviewNote(?string $reviewNote): static
+    {
+        $this->reviewNote = $reviewNote;
 
         return $this;
     }

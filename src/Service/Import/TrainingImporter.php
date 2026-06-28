@@ -16,10 +16,16 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
  * Natural key is (plan year, description, target audience): the F.03.0 sheet carries no code or id,
  * and the same description recurs within a year for different audiences, so the audience is part of
  * the identity — re-importing updates the matching action instead of duplicating it (or worse,
- * collapsing distinct actions into one). The execution dates arrive as free text and are normalized by
- * {@see TrainingDateNormalizer}; a non-normalizable date sends the whole row to quarantine (never
- * persisted, never invented), since the planned date is mandatory and a free-text actual date must
- * not be silently dropped.
+ * collapsing distinct actions into one). The execution dates and delivery type arrive as free text
+ * and are normalized by {@see TrainingDateNormalizer} / {@see TrainingType}; when a value cannot be
+ * normalized the row is NOT quarantined — it is imported with that field left null, the action flagged
+ * for review and the original raw text recorded in its review note, so the centre fixes it in the UI
+ * (see {@see TrainingAction}). Only a degenerate natural key (blank year/description/audience) is
+ * still rejected, since such a row cannot be identified at all.
+ *
+ * Re-running the importer re-applies the CSV verbatim (it is the cutover loader, not a continuous
+ * sync), so it re-sets the review flag from the source — manual fixes made in the UI are meant to
+ * happen after the cutover, not to survive another full ETL pass.
  */
 final class TrainingImporter extends AbstractDatasetImporter implements DatasetImporter
 {
@@ -61,32 +67,8 @@ final class TrainingImporter extends AbstractDatasetImporter implements DatasetI
                 continue;
             }
 
-            $type = $this->mapType($row['type'] ?? '');
-            if (null === $type) {
-                $report->reject($line, sprintf('Tipo EXT/INT no reconocido: "%s".', $row['type'] ?? ''), $row);
-                continue;
-            }
-
-            // The planned date is mandatory: blank or non-normalizable text goes to quarantine, we
-            // never invent a date for it.
-            $plannedDate = $this->dateNormalizer->normalize($row['planned_date'] ?? '');
-            if (null === $plannedDate) {
-                $report->reject($line, sprintf('Fecha prevista no normalizable: "%s".', $row['planned_date'] ?? ''), $row);
-                continue;
-            }
-
-            // The actual date is optional: an empty cell legitimately means "not delivered yet"
-            // (null), but a non-empty cell that cannot be normalized must not be silently lost.
-            $rawActual = trim($row['actual_date'] ?? '');
-            $actualDate = $this->dateNormalizer->normalize($rawActual);
-            if ('' !== $rawActual && null === $actualDate) {
-                $report->reject($line, sprintf('Fecha real no normalizable: "%s".', $rawActual), $row);
-                continue;
-            }
-
             // Description and target audience are both part of the natural key, so an empty value
-            // would degenerate the lookup; reject early with a clear reason for the quarantine file
-            // (the entity's @Assert\NotBlank is the safety net, but this gives a precise message).
+            // would degenerate the lookup: these are the only fields that still reject the row.
             $description = trim($row['description'] ?? '');
             if ('' === $description) {
                 $report->reject($line, 'La descripción del curso no puede estar vacía.', $row);
@@ -96,6 +78,34 @@ final class TrainingImporter extends AbstractDatasetImporter implements DatasetI
             if ('' === $targetAudience) {
                 $report->reject($line, 'El destinatario (target_audience) no puede estar vacío.', $row);
                 continue;
+            }
+
+            // Reasons the centre must review this row by hand: each un-normalizable value leaves its
+            // field null and records why, instead of dropping the whole row to quarantine.
+            $reviewNotes = [];
+
+            $rawType = trim($row['type'] ?? '');
+            $type = $this->mapType($rawType);
+            if (null === $type) {
+                $reviewNotes[] = '' === $rawType
+                    ? 'Tipo EXT/INT sin especificar.'
+                    : sprintf('Tipo EXT/INT no reconocido: "%s".', $rawType);
+            }
+
+            $rawPlanned = trim($row['planned_date'] ?? '');
+            $plannedDate = $this->dateNormalizer->normalize($rawPlanned);
+            if (null === $plannedDate) {
+                $reviewNotes[] = '' === $rawPlanned
+                    ? 'Fecha prevista sin especificar.'
+                    : sprintf('Fecha prevista no normalizable: "%s".', $rawPlanned);
+            }
+
+            // The actual date is optional: an empty cell legitimately means "not delivered yet"
+            // (null, no review needed); a non-empty cell that cannot be normalized is flagged.
+            $rawActual = trim($row['actual_date'] ?? '');
+            $actualDate = $this->dateNormalizer->normalize($rawActual);
+            if ('' !== $rawActual && null === $actualDate) {
+                $reviewNotes[] = sprintf('Fecha real no normalizable: "%s".', $rawActual);
             }
 
             $naturalKey = $year.'|'.$description.'|'.$targetAudience;
@@ -111,12 +121,18 @@ final class TrainingImporter extends AbstractDatasetImporter implements DatasetI
                 ->setPlannedDate($plannedDate)
                 ->setMethodology(trim($row['methodology'] ?? ''))
                 ->setActualDate($actualDate)
-                ->setEfficacyEvaluation($this->nullable($row['efficacy_evaluation'] ?? ''));
+                ->setEfficacyEvaluation($this->nullable($row['efficacy_evaluation'] ?? ''))
+                ->setNeedsReview([] !== $reviewNotes)
+                ->setReviewNote([] === $reviewNotes ? null : implode(' ', $reviewNotes));
 
             $violations = $this->validator->validate($action);
             if (\count($violations) > 0) {
                 $report->reject($line, $this->formatViolations($violations), $row);
                 continue;
+            }
+
+            if ([] !== $reviewNotes) {
+                $report->flag($line, implode(' ', $reviewNotes));
             }
 
             if ($isNew) {
@@ -138,9 +154,9 @@ final class TrainingImporter extends AbstractDatasetImporter implements DatasetI
     }
 
     /**
-     * Maps the raw "EXT/INT" cell to a {@see TrainingType}, or null when it is ambiguous or
-     * unrecognized (e.g. "int/ext"), so such rows are quarantined for a manual decision instead of
-     * defaulting to one delivery mode.
+     * Maps the raw "EXT/INT" cell to a {@see TrainingType}, or null when it is blank, ambiguous or
+     * unrecognized (e.g. "int/ext"), so the action is flagged for review instead of defaulting to one
+     * delivery mode.
      */
     private function mapType(string $raw): ?TrainingType
     {

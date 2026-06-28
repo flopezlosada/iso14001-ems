@@ -100,7 +100,7 @@ class TrainingController extends AbstractController
                 $isNew ? 'training.created' : 'training.updated',
                 'TrainingAction',
                 (string) $action->getId(),
-                sprintf('Formación %s · %s', $action->getType()->label(), $action->getDescription()),
+                sprintf('Formación %s · %s', $action->getType()?->label() ?? 'sin clasificar', $action->getDescription()),
             );
             $this->addFlash('success', 'Acción formativa guardada.');
 

@@ -102,6 +102,13 @@ final class ImportRealDataCommand extends Command
             $report = $importer->import($this->csvReader->read($path), $dryRun);
             $this->renderReport($io, $report);
 
+            if ([] !== $report->getFlagged()) {
+                $io->note(sprintf(
+                    '%d fila(s) importada(s) pero marcada(s) para revisión en la aplicación (datos no normalizables que un humano debe verificar).',
+                    \count($report->getFlagged()),
+                ));
+            }
+
             if ([] !== $report->getRejected()) {
                 $quarantine = $this->writeQuarantine($dir, $importer->key(), $report);
                 $io->warning(sprintf('%d fila(s) rechazada(s) escritas en %s para revisión manual.', \count($report->getRejected()), $quarantine));
@@ -153,6 +160,7 @@ final class ImportRealDataCommand extends Command
         $io->definitionList(
             ['Creados' => (string) $report->getCreated()],
             ['Actualizados' => (string) $report->getUpdated()],
+            ['Marcados para revisión' => (string) \count($report->getFlagged())],
             ['Rechazados' => (string) \count($report->getRejected())],
         );
     }
