@@ -12,12 +12,12 @@ use League\OAuth2\Client\Provider\GoogleUser;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\Session\FlashBagAwareSessionInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\Exception\CustomUserMessageAuthenticationException;
 use Symfony\Component\Security\Http\Authenticator\Passport\Badge\UserBadge;
+use Symfony\Component\Security\Http\SecurityRequestAttributes;
 use Symfony\Component\Security\Http\Authenticator\Passport\Passport;
 use Symfony\Component\Security\Http\Authenticator\Passport\SelfValidatingPassport;
 
@@ -60,7 +60,10 @@ class GoogleAuthenticator extends OAuth2Authenticator
         return new SelfValidatingPassport(new UserBadge($email, function (string $identifier): User {
             $user = $this->users->findActiveByEmail($identifier);
             if (null === $user) {
-                throw new CustomUserMessageAuthenticationException('Tu cuenta no está dada de alta en el sistema. Pide acceso al responsable.');
+                // Generic on purpose: not revealing "your address is not registered" avoids user
+                // enumeration (the allow-list membership is not disclosed). Same wording as any other
+                // sign-in failure.
+                throw new CustomUserMessageAuthenticationException('No se ha podido iniciar sesión. Si crees que deberías tener acceso, contacta con administración.');
             }
 
             return $user;
@@ -74,16 +77,16 @@ class GoogleAuthenticator extends OAuth2Authenticator
 
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception): ?Response
     {
-        // CustomUserMessageAuthenticationException carries a Spanish, user-safe message; for any
-        // other failure show a generic message instead of an internal translation key.
-        $message = $exception instanceof CustomUserMessageAuthenticationException
-            ? $exception->getMessageKey()
-            : 'No se ha podido iniciar sesión. Inténtalo de nuevo.';
+        // Surface the error ON the login page via the standard auth-error store (AuthenticationUtils
+        // reads and clears it there). A flash would instead surface on the first authenticated page,
+        // which is the bug this replaces. The stored message is always user-safe and Spanish:
+        // CustomUserMessageAuthenticationException carries one (already generic, no enumeration); any
+        // other failure is wrapped in a generic one rather than leaking an internal key.
+        $safe = $exception instanceof CustomUserMessageAuthenticationException
+            ? $exception
+            : new CustomUserMessageAuthenticationException('No se ha podido iniciar sesión. Inténtalo de nuevo.');
 
-        $session = $request->getSession();
-        if ($session instanceof FlashBagAwareSessionInterface) {
-            $session->getFlashBag()->add('error', $message);
-        }
+        $request->getSession()->set(SecurityRequestAttributes::AUTHENTICATION_ERROR, $safe);
 
         return new RedirectResponse($this->urlGenerator->generate('login'));
     }
