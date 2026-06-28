@@ -43,7 +43,7 @@ class ManagementReviewSectionType extends AbstractType
             if ([] !== $verdicts) {
                 $form->add('decision', ChoiceType::class, [
                     'label' => 'Valoración',
-                    'choices' => array_combine($verdicts, $verdicts) ?: [],
+                    'choices' => array_combine($verdicts, $verdicts),
                     'placeholder' => 'Sin valorar',
                     'required' => false,
                 ]);
