@@ -45,6 +45,11 @@ class UserType extends AbstractType
                 'required' => false,
                 // Use addAssignedRole/removeAssignedRole so unticking a role on edit actually removes it.
                 'by_reference' => false,
+                // Carry each role's description onto its checkbox so the template can show "name +
+                // what it can do" instead of a bare list of names.
+                'choice_attr' => static fn (Role $role): array => [
+                    'data-description' => $role->getDescription() ?? '',
+                ],
             ]);
     }
 

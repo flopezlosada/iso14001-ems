@@ -52,6 +52,44 @@ final class AdminRoleControllerTest extends WebTestCase
         self::assertResponseStatusCodeSame(403);
     }
 
+    public function testIndexListsRolesWithAOneLinePermissionSummary(): void
+    {
+        $client = static::createClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $role = new Role();
+        $role->setCode('mant')->setName('Mantenimiento')
+            ->setLevel(Area::CONSUMPTION, PermissionLevel::WRITE)
+            ->setLevel(Area::WASTE, PermissionLevel::WRITE)
+            ->setLevel(Area::SUPPLIER, PermissionLevel::READ);
+        $em->persist($role);
+        $em->flush();
+
+        $client->loginUser($this->persistAdmin());
+        $client->request('GET', '/admin/roles');
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('.role-list', 'Mantenimiento');
+        self::assertSelectorTextContains('.role-list', 'Escritura en 2 · Lectura en 1 · Sin acceso al resto');
+    }
+
+    public function testIndexSummarisesARoleWithNoPermissions(): void
+    {
+        // A freshly created role (or one being configured) grants nothing: the summary must read
+        // "Sin acceso a ninguna área", not an empty line.
+        $client = static::createClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $role = new Role();
+        $role->setCode('vacio')->setName('Rol sin permisos');
+        $em->persist($role);
+        $em->flush();
+
+        $client->loginUser($this->persistAdmin());
+        $client->request('GET', '/admin/roles');
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('.role-list', 'Sin acceso a ninguna área');
+    }
+
     public function testAdminCanCreateRoleWithPermissions(): void
     {
         $client = static::createClient();

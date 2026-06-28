@@ -59,4 +59,50 @@ final class RoleTest extends TestCase
             }
         }
     }
+
+    public function testLevelCountsTallyAreasPerLevel(): void
+    {
+        $role = (new Role())
+            ->setLevel(Area::CONSUMPTION, PermissionLevel::WRITE)
+            ->setLevel(Area::WASTE, PermissionLevel::WRITE)
+            ->setLevel(Area::SUPPLIER, PermissionLevel::READ);
+
+        $counts = $role->levelCounts();
+
+        self::assertSame(2, $counts['write']);
+        self::assertSame(1, $counts['read']);
+        self::assertSame(\count(Area::cases()) - 3, $counts['none']);
+    }
+
+    public function testSeededAuditorIsReadOnlyOnEveryAreaAndNotAdmin(): void
+    {
+        $auditor = RoleFixtures::catalog()['auditor'] ?? null;
+        self::assertNotNull($auditor, 'The external-auditor role must be seeded');
+        self::assertFalse($auditor->isAdmin());
+
+        foreach (Area::cases() as $area) {
+            self::assertSame(PermissionLevel::READ, $auditor->getLevel($area), sprintf('Auditor must read %s', $area->value));
+        }
+        self::assertSame(\count(Area::cases()), $auditor->levelCounts()['read']);
+        self::assertSame(0, $auditor->levelCounts()['write']);
+    }
+
+    public function testSeededMaintenanceRolesGrantOperationalControlAndDrills(): void
+    {
+        $catalog = RoleFixtures::catalog();
+
+        foreach (['cfpg', 'cleaning'] as $code) {
+            $role = $catalog[$code] ?? null;
+            self::assertNotNull($role, sprintf('Role "%s" must be seeded', $code));
+            self::assertSame(PermissionLevel::WRITE, $role->getLevel(Area::OPERATIONAL_CONTROL), sprintf('%s writes operational control', $code));
+            self::assertSame(PermissionLevel::WRITE, $role->getLevel(Area::EMERGENCY), sprintf('%s writes emergency drills', $code));
+        }
+    }
+
+    public function testEverySeededRoleHasADescription(): void
+    {
+        foreach (RoleFixtures::catalog() as $code => $role) {
+            self::assertNotEmpty($role->getDescription(), sprintf('Role "%s" should describe what it can do', $code));
+        }
+    }
 }

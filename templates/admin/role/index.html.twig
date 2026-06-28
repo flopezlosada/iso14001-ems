@@ -21,30 +21,33 @@
                 <a class="btn" href="{{ path('admin_role_new') }}">Nuevo rol</a>
             </div>
         {% else %}
-            <table>
-                <thead>
-                    <tr>
-                        <th>Nombre</th><th>Código</th>
-                        {% for area in areas %}<th>{{ area.label }}</th>{% endfor %}
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for role in roles %}
-                        <tr>
-                            <td>{{ role.name }}</td>
-                            <td class="mono muted">{{ role.code }}</td>
-                            {% if role.isAdmin %}
-                                {# Un rol admin ignora la matriz: mostrar su acceso real, no columnas de "Sin acceso". #}
-                                <td colspan="{{ areas|length }}"><span class="badge badge--success">Acceso total (administrador)</span></td>
-                            {% else %}
-                                {% for area in areas %}<td class="muted">{{ role.getLevel(area).label }}</td>{% endfor %}
-                            {% endif %}
-                            <td><a href="{{ path('admin_role_edit', { id: role.id }) }}">Editar</a></td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+            {# Lista (no matriz): la matriz roles×17 áreas se salía de pantalla. Cada rol resume su
+               acceso en una línea, calculada desde su mapa de permisos (Role::levelCounts). #}
+            <ul class="role-list">
+                {% for role in roles %}
+                    <li class="role-list__item">
+                        <div class="role-list__main">
+                            <div class="role-list__head">
+                                <a class="role-list__name" href="{{ path('admin_role_edit', { id: role.id }) }}">{{ role.name }}</a>
+                                <span class="mono muted role-list__code">{{ role.code }}</span>
+                            </div>
+                            <p class="role-list__summary">
+                                {%- if role.isAdmin -%}
+                                    Acceso total (administrador)
+                                {%- else -%}
+                                    {%- set c = role.levelCounts -%}
+                                    {%- set parts = [] -%}
+                                    {%- if c.write > 0 %}{% set parts = parts|merge(['Escritura en ' ~ c.write]) %}{% endif -%}
+                                    {%- if c.read > 0 %}{% set parts = parts|merge(['Lectura en ' ~ c.read]) %}{% endif -%}
+                                    {%- if (c.write > 0 or c.read > 0) and c.none > 0 %}{% set parts = parts|merge(['Sin acceso al resto']) %}{% endif -%}
+                                    {{- parts is empty ? 'Sin acceso a ninguna área' : parts|join(' · ') -}}
+                                {%- endif -%}
+                            </p>
+                        </div>
+                        <a class="role-list__edit" href="{{ path('admin_role_edit', { id: role.id }) }}">Editar</a>
+                    </li>
+                {% endfor %}
+            </ul>
         {% endif %}
     </div>
 {% endblock %}
