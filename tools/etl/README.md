@@ -96,3 +96,40 @@ Propiedades:
 - **Cuarentena**: las filas que no validan se escriben en `fixtures/real/<dataset>.rejected.csv`
   con el motivo, y el comando termina con código de error. Nada se descarta en silencio.
 - No requiere PhpSpreadsheet: el comando solo lee CSV.
+
+## Documentos redactados (política, manual, procedimientos)
+
+Los 16 documentos de **texto** (no son datos tabulares, así que van por su propio carril, no por
+`app:import-real-data`, que solo lee CSV). Mismo principio de 2 etapas:
+
+```
+.docx reales  ──(1) convertir──▶  HTML en fixtures/real/documents/  ──(2) importar──▶  base de datos
+   (centro)       convert_documents.py    <CODIGO>.html (gitignored)      app:import-documents
+```
+
+### Etapa 1 — Convertir (offline, necesita `pandoc` en local)
+
+```bash
+DOC="../ruta/a/documentacion_base/IES La Cabrera"
+python3 tools/etl/convert_documents.py "$DOC"   # → fixtures/real/documents/<CODIGO>.html
+```
+
+Localiza cada `.docx` por su código (la política, por título), coge la revisión más reciente cuando
+hay varias, y limpia el membrete (los logos los pone la plantilla del PDF, no el cuerpo). La salida
+va a `fixtures/real/` (gitignored, PII). **Reproducible**: dado el `.docx`, regenera el mismo HTML —
+nada depende de una conversión manual. La fuente de verdad son los `.docx`; el HTML es derivado.
+
+### Etapa 2 — Importar (comando idempotente)
+
+```bash
+php bin/console app:import-documents
+```
+
+Lee `fixtures/real/documents/*.html`, **sanea** el HTML (allowlist `app.document_body`: conserva
+tablas, descarta `<img>`/scripts) y lo carga como cuerpo de la revisión inicial de cada documento,
+mapeando por código. Re-ejecutable sin duplicar.
+
+### Cutover a producción
+
+Igual que los CSV: el contenido real no viaja por git (PII). Se genera en local (etapa 1) y
+`fixtures/real/` se transfiere al servidor; allí se ejecutan los comandos de importación (etapa 2).

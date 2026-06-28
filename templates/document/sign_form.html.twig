@@ -1,0 +1,43 @@
+{% extends 'app_shell.html.twig' %}
+
+{% block title %}Adjuntar firma · {{ document.code }}{% endblock %}
+
+{% block breadcrumb %}
+    <a href="{{ path('app_homepage') }}">Inicio</a><span class="sep">/</span>
+    <a href="{{ path('document_show', { id: document.id }) }}">{{ document.code }}</a><span class="sep">/</span>
+    Adjuntar firma
+{% endblock %}
+
+{% block body %}
+    <div class="page-head">
+        <div>
+            <h1>Adjuntar firma de dirección</h1>
+            <p class="lead">{{ document.title }} · {{ document.code }} · revisión {{ version.revisionNumber }}</p>
+        </div>
+    </div>
+
+    <div class="card">
+        <p>La aprobación ya está sellada por el sistema (con su sello de integridad). La firma digital
+        de dirección (nivel 1a) se hace fuera de la aplicación y se adjunta aquí:</p>
+        <ol>
+            <li><a href="{{ path('document_revision_pdf', { id: document.id, versionId: version.id }) }}" target="_blank" rel="noopener">Descarga el PDF oficial</a>.</li>
+            <li>Fírmalo con tu certificado mediante <strong>AutoFirma</strong> en tu equipo.</li>
+            <li>Sube aquí el PDF ya firmado.</li>
+        </ol>
+        {% if approval.digitallySigned %}
+            <p class="muted">Ya hay un PDF firmado adjunto. Si subes otro, lo reemplazará.</p>
+        {% endif %}
+
+        <form method="post" enctype="multipart/form-data" action="{{ path('document_revision_sign', { id: document.id, versionId: version.id }) }}" class="document-editor">
+            <input type="hidden" name="_token" value="{{ csrf_token('document_sign' ~ document.id) }}">
+            <div class="field">
+                <label for="signedPdf">PDF firmado</label>
+                <input type="file" id="signedPdf" name="signedPdf" accept="application/pdf" required>
+            </div>
+            <div class="form-actions">
+                <button class="btn" type="submit">Subir firma</button>
+                <a class="btn secondary" href="{{ path('document_show', { id: document.id }) }}">Cancelar</a>
+            </div>
+        </form>
+    </div>
+{% endblock %}

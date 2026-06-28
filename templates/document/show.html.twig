@@ -50,36 +50,34 @@
         {% endif %}
     </div>
 
-    {% if is_granted('DOCUMENT_LIFECYCLE', document) %}
-        <div class="card">
-            <h2>Control del documento</h2>
-            <p class="muted">Los documentos no se borran: se anulan (con motivo) o se archivan, dejando rastro para la auditoría.</p>
-            {% if document.isActive %}
-                <form method="post" action="{{ path('document_lifecycle', { id: document.id }) }}" class="lifecycle-form">
-                    <input type="hidden" name="_token" value="{{ csrf_token('document_lifecycle' ~ document.id) }}">
-                    <input type="hidden" name="action" value="cancel">
-                    <input type="text" name="reason" aria-label="Motivo de la anulación" placeholder="Motivo de la anulación…">
-                    <button class="btn danger" type="submit">Anular</button>
-                </form>
-                <form method="post" action="{{ path('document_lifecycle', { id: document.id }) }}" class="lifecycle-form">
-                    <input type="hidden" name="_token" value="{{ csrf_token('document_lifecycle' ~ document.id) }}">
-                    <input type="hidden" name="action" value="archive">
-                    <input type="text" name="reason" aria-label="Motivo del archivado (opcional)" placeholder="Motivo del archivado (opcional)…">
-                    <button class="btn secondary" type="submit">Archivar</button>
-                </form>
-            {% else %}
-                <form method="post" action="{{ path('document_lifecycle', { id: document.id }) }}">
-                    <input type="hidden" name="_token" value="{{ csrf_token('document_lifecycle' ~ document.id) }}">
-                    <input type="hidden" name="action" value="restore">
-                    <button class="btn secondary" type="submit">Reactivar documento</button>
-                </form>
+    {# El documento en sí: el contenido de la revisión en vigor. Es lo que se imprime en el PDF. #}
+    <div class="page-head">
+        <div><h2>Documento</h2></div>
+        {% if document.isActive and is_granted('DOCUMENT_ISSUE', document) %}
+            {% if displayVersion and displayVersion.status.isEditable %}
+                <a class="btn secondary" href="{{ path('document_revision_edit', { id: document.id, versionId: displayVersion.id }) }}">Editar documento</a>
+            {% elseif not displayVersion %}
+                <a class="btn secondary" href="{{ path('document_revision_compose', { id: document.id }) }}">Redactar documento</a>
             {% endif %}
-        </div>
-    {% endif %}
+        {% endif %}
+    </div>
+    <div class="card">
+        {% if displayVersion and displayVersion.body %}
+            {% if not (current and displayVersion.id == current.id) %}
+                <p class="muted">Mostrando el contenido de la revisión {{ displayVersion.revisionNumber }} ({{ displayVersion.status.label|lower }}), aún sin aprobar.</p>
+            {% endif %}
+            <div class="document-body">{{ displayVersion.body|raw }}</div>
+        {% elseif current %}
+            <p class="muted">La revisión en vigor aún no tiene contenido redactado. Emite una nueva revisión para añadirlo.</p>
+        {% else %}
+            <p class="muted">Aún no hay contenido redactado del documento.{% if document.isActive and is_granted('DOCUMENT_ISSUE', document) %} Redáctalo para crearlo.{% endif %}</p>
+        {% endif %}
+    </div>
 
     {# Cierres de revisión de periodo (del audit-log): cuándo se marcó "hecho" cada periodo desde
-       "Qué toca". Distinto del historial de versiones (revisiones formales del documento). #}
-    {% if document.hasFixedCadence or reviews is not empty %}
+       "Qué toca". No aplica a documentos redactados: para ellos la revisión periódica ES emitir una
+       nueva revisión (historial de versiones). #}
+    {% if (document.hasFixedCadence or reviews is not empty) and not document.type.isDrafted %}
         <div class="page-head"><h2>Revisiones de periodo</h2></div>
         <div class="card">
             {% if reviews is empty %}
@@ -98,15 +96,12 @@
         </div>
     {% endif %}
 
-    <div class="page-head"><h2>Historial de versiones</h2></div>
-
-    {% if document.isActive and is_granted('DOCUMENT_ISSUE', document) %}
-        <form method="post" action="{{ path('document_revision_new', { id: document.id }) }}" class="lifecycle-form">
-            <input type="hidden" name="_token" value="{{ csrf_token('document_revision' ~ document.id) }}">
-            <input type="text" name="changeSummary" aria-label="Resumen de los cambios" placeholder="Resumen de los cambios de la nueva revisión…">
-            <button class="btn" type="submit">Nueva revisión</button>
-        </form>
-    {% endif %}
+    <div class="page-head">
+        <div><h2>Historial de versiones</h2></div>
+        {% if document.isActive and is_granted('DOCUMENT_ISSUE', document) and not hasOpenRevision and versions is not empty %}
+            <a class="btn secondary" href="{{ path('document_revision_compose', { id: document.id }) }}">Emitir nueva revisión</a>
+        {% endif %}
+    </div>
 
     {% set can_approve = is_granted('DOCUMENT_APPROVE', document) %}
     <div class="card">
@@ -118,7 +113,7 @@
         {% else %}
             <table>
                 <thead>
-                    <tr><th>Rev.</th><th>Fecha</th><th>Estado</th><th>Autor</th><th>Cambios</th><th>Aprobación</th><th>Documento</th></tr>
+                    <tr><th>Rev.</th><th>Fecha</th><th>Estado</th><th>Autor</th><th>Cambios</th><th>Acción</th><th>Documento</th></tr>
                 </thead>
                 <tbody>
                     {% for v in versions %}
@@ -135,16 +130,35 @@
                                     {{ ap.approver.fullName }} <span class="muted">· {{ ap.approvedAt|date('d/m/Y') }}</span>
                                     {% if ap.digitallySigned %} <span class="badge badge--success" title="Firma digital adjunta">Firmada</span>{% endif %}
                                     <span class="mono muted" title="Hash de integridad: {{ ap.integrityHash|e('html_attr') }}">· {{ ap.integrityHash|slice(0, 10) }}…</span>
-                                {%- elseif can_approve and document.isActive and v.status.value in ['draft', 'in_review'] -%}
+                                {%- elseif document.isActive and v.status.value == 'draft' and is_granted('DOCUMENT_ISSUE', document) -%}
+                                    <form method="post" action="{{ path('document_revision_submit', { id: document.id, versionId: v.id }) }}" class="inline-form">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('document_submit' ~ document.id) }}">
+                                        <button class="btn secondary" type="submit">Enviar a revisión</button>
+                                    </form>
+                                {%- elseif document.isActive and v.status.value == 'in_review' and not v.reviewed and is_granted('DOCUMENT_REVIEW', document) -%}
+                                    <form method="post" action="{{ path('document_revision_review', { id: document.id, versionId: v.id }) }}" class="inline-form">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('document_review' ~ document.id) }}">
+                                        <button class="btn secondary" type="submit">Revisar</button>
+                                    </form>
+                                {%- elseif document.isActive and v.status.value == 'in_review' and v.reviewed and can_approve -%}
                                     <form method="post" action="{{ path('document_revision_approve', { id: document.id, versionId: v.id }) }}" class="inline-form" data-confirm="¿Aprobar esta versión del documento? Quedará como versión vigente.">
+
                                         <input type="hidden" name="_token" value="{{ csrf_token('document_approve' ~ document.id) }}">
                                         <button class="btn secondary" type="submit">Aprobar</button>
                                     </form>
+                                {%- elseif v.reviewed -%}
+                                    <span class="muted">Revisado{% if v.reviewedBy %} por {{ v.reviewedBy }}{% endif %} · pendiente de aprobar</span>
+                                {%- elseif v.status.value == 'in_review' -%}
+                                    <span class="muted">En revisión · pendiente de revisar</span>
                                 {%- else -%}
                                     <span class="muted">Pendiente</span>
                                 {%- endif -%}
                             </td>
                             <td>
+                                {%- if v.status.isEditable and document.isActive and is_granted('DOCUMENT_ISSUE', document) %}
+                                    <a href="{{ path('document_revision_edit', { id: document.id, versionId: v.id }) }}">Editar</a>
+                                    <span class="muted"> · </span>
+                                {%- endif %}
                                 <a href="{{ path('document_revision_pdf', { id: document.id, versionId: v.id }) }}" target="_blank" rel="noopener">
                                     {{ ap ? 'PDF oficial' : 'Vista previa' }}
                                 </a>
@@ -152,11 +166,8 @@
                                     {% if ap.digitallySigned %}
                                         <span class="muted"> · </span><a href="{{ path('document_revision_signed_download', { id: document.id, versionId: v.id }) }}">PDF firmado</a>
                                     {% elseif can_approve %}
-                                        <form method="post" enctype="multipart/form-data" action="{{ path('document_revision_sign', { id: document.id, versionId: v.id }) }}" class="inline-form">
-                                            <input type="hidden" name="_token" value="{{ csrf_token('document_sign' ~ document.id) }}">
-                                            <input type="file" name="signedPdf" accept="application/pdf" aria-label="PDF firmado">
-                                            <button class="btn secondary" type="submit">Adjuntar firma</button>
-                                        </form>
+                                        <span class="muted"> · </span>
+                                        <a href="{{ path('document_revision_sign_form', { id: document.id, versionId: v.id }) }}">Adjuntar firma…</a>
                                     {% endif %}
                                 {% endif -%}
                             </td>
@@ -166,4 +177,24 @@
             </table>
         {% endif %}
     </div>
+
+    {# Acciones administrativas del documento, al final: poco frecuentes y de cuidado (anular/archivar). #}
+    {% if is_granted('DOCUMENT_LIFECYCLE', document) %}
+        <div class="page-head"><h2>Control del documento</h2></div>
+        <div class="card">
+            <p class="muted">Los documentos no se borran: se anulan (con motivo) o se archivan, dejando rastro para la auditoría.</p>
+            {% if document.isActive %}
+                <div class="form-actions">
+                    <a class="btn danger" href="{{ path('document_lifecycle_confirm', { id: document.id, action: 'cancel' }) }}">Anular…</a>
+                    <a class="btn secondary" href="{{ path('document_lifecycle_confirm', { id: document.id, action: 'archive' }) }}">Archivar…</a>
+                </div>
+            {% else %}
+                <form method="post" action="{{ path('document_lifecycle', { id: document.id }) }}">
+                    <input type="hidden" name="_token" value="{{ csrf_token('document_lifecycle' ~ document.id) }}">
+                    <input type="hidden" name="action" value="restore">
+                    <button class="btn secondary" type="submit">Reactivar documento</button>
+                </form>
+            {% endif %}
+        </div>
+    {% endif %}
 {% endblock %}

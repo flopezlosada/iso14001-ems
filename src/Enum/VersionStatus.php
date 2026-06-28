@@ -28,6 +28,17 @@ enum VersionStatus: string
     }
 
     /**
+     * Whether this version's body can still be edited: while it is a draft or under review, but not
+     * once approved (immutable, in force) or obsolete (superseded).
+     *
+     * @return bool true for draft or in-review versions
+     */
+    public function isEditable(): bool
+    {
+        return self::DRAFT === $this || self::IN_REVIEW === $this;
+    }
+
+    /**
      * Human-facing label (Spanish, the application's UI language).
      *
      * @return string the display name

@@ -129,6 +129,31 @@ final class DocumentControllerTest extends WebTestCase
         self::assertSelectorTextNotContains('body', 'Obligación TEST-OTHER');
     }
 
+    public function testDoneObligationIsListedAsDoneNotOnTrack(): void
+    {
+        $client = static::createClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $mine = (new Role())->setCode('mant')->setName('Mantenimiento');
+        $em->persist($mine);
+        // Both have a future due date (so by urgency they are "al día"); one is still pending, the
+        // other is already done. The done one must surface under "Hecho", not inflate "Al día".
+        $this->persistObligation($em, 'TEST-ONTRACK', IsoChapter::PLANNING, AlertFrequency::MONTHLY, '2099-01-01', $mine);
+        $this->persistObligation($em, 'TEST-DONE', IsoChapter::PLANNING, AlertFrequency::MONTHLY, '2099-01-01', $mine)
+            ->setStatus(ObligationStatus::DONE);
+        $em->flush();
+        $this->loginUserWithRole($client, $mine);
+
+        $client->request('GET', '/obligaciones');
+
+        self::assertResponseIsSuccessful();
+        // The completed one is in the "Hecho" section, not in "Al día".
+        self::assertSelectorTextContains('#done', 'Obligación TEST-DONE');
+        self::assertSelectorTextNotContains('#on_track', 'Obligación TEST-DONE');
+        // The pending one is still in "Al día".
+        self::assertSelectorTextContains('#on_track', 'Obligación TEST-ONTRACK');
+        self::assertSelectorTextNotContains('#done', 'Obligación TEST-ONTRACK');
+    }
+
     public function testStructureGroupsByPhase(): void
     {
         $client = static::createClient();

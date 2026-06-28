@@ -33,6 +33,19 @@ enum DocumentType: string
     }
 
     /**
+     * Whether this type is a drafted document (free text written in-app: policy, manual, procedure)
+     * rather than a form/record (whose content lives in its module) or external evidence. For these,
+     * the periodic review is the revision workflow itself, so the separate "Revisiones de periodo"
+     * section does not apply.
+     *
+     * @return bool true for policy, manual and procedure
+     */
+    public function isDrafted(): bool
+    {
+        return \in_array($this, [self::POLICY, self::MANUAL, self::PROCEDURE], true);
+    }
+
+    /**
      * Human-facing label (Spanish, the application's UI language), following the procedure's
      * five-type taxonomy plus external evidence.
      *

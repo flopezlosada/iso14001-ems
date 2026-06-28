@@ -545,6 +545,7 @@ thead th.is-sortable:focus-visible { outline: 2px solid var(--focus); outline-of
 .badge--warning { background: var(--warning-weak); color: var(--warning-text); border-color: var(--warning); }
 .badge--danger  { background: var(--danger-weak);  color: var(--danger-text);  border-color: var(--danger); }
 .badge--void    { color: var(--text-faint); text-decoration: line-through; }
+.badge--done    { background: var(--surface-sunken); color: var(--text-muted); border-color: var(--border-strong); }
 
 /* ---- Formularios -------------------------------------------------------- */
 /* Tarjeta contenedora de un formulario de alta/edición: ancho de línea cómodo y único
@@ -555,6 +556,30 @@ thead th.is-sortable:focus-visible { outline: 2px solid var(--focus); outline-of
 /* Barra de acciones (Guardar / Cancelar): separación consistente y aire respecto al
    último campo, en vez de botones pegados sin contenedor. */
 .form-actions { display: flex; align-items: center; gap: 10px; margin-top: 22px; }
+
+/* ---- Editor de documentos (Trix) ---------------------------------------- */
+.document-editor .field { margin-bottom: 20px; }
+.document-editor .field > label { display: block; font-weight: 600; margin-bottom: 4px; }
+.field-help { color: var(--text-muted); font-size: 13px; margin: 0 0 8px; }
+.document-editor trix-editor {
+    min-height: 340px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--text);
+    font: 400 15px var(--font-body);
+    line-height: 1.55;
+    padding: 14px 16px;
+}
+.document-editor trix-toolbar .trix-button-group { border-color: var(--border-strong); }
+/* Cuerpo renderizado del documento en la ficha y en otras vistas. */
+.document-body { line-height: 1.6; }
+.document-body :where(ul, ol) { padding-left: 1.4em; }
+.document-body h1 { font-size: 20px; }
+.document-body h2 { font-size: 17px; }
+/* Subida discreta (Adjuntar firma): un enlace que abre el selector; el input nativo queda oculto. */
+.file-action { color: var(--accent); cursor: pointer; position: relative; white-space: nowrap; }
+.file-action input[type="file"] { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; }
 /* Sección de formulario: agrupa campos bajo un título en los formularios largos. Reset del
    fieldset nativo + una línea divisoria sutil sobre cada grupo salvo el primero. */
 .form-section { border: 0; margin: 0; padding: 0; min-width: 0; }

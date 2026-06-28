@@ -41,7 +41,7 @@
         {% set items = groups[key] %}
         {% if items is not empty %}
             {% set anything = true %}
-            <section class="obligation-group">
+            <section class="obligation-group" id="{{ key }}">
                 <div class="obligation-group-head">
                     <span class="badge {{ meta.badge }}">{{ meta.label }}</span>
                     <span class="muted">{{ items|length }} · {{ meta.desc }}</span>
@@ -53,8 +53,21 @@
         {% endif %}
     {% endfor %}
 
+    {% if done is not empty %}
+        <section class="obligation-group" id="done">
+            <div class="obligation-group-head">
+                <span class="badge badge--done">Hecho</span>
+                <span class="muted">{{ done|length }} · Cumplimentadas este periodo. Sin más acción hasta la próxima revisión.</span>
+            </div>
+            <div class="card">
+                {# Sin canComplete a propósito: ya están hechas para este periodo. #}
+                {{ m.obligation_table(done, moduleRoutes) }}
+            </div>
+        </section>
+    {% endif %}
+
     {% if notApplicable is not empty %}
-        <section class="obligation-group">
+        <section class="obligation-group" id="not_applicable">
             <div class="obligation-group-head">
                 <span class="badge">No aplica</span>
                 <span class="muted">{{ notApplicable|length }} · Marcadas como no aplicables actualmente.</span>
@@ -66,7 +79,7 @@
         </section>
     {% endif %}
 
-    {% if not anything and notApplicable is empty %}
+    {% if not anything and done is empty and notApplicable is empty %}
         <div class="empty-state">
             {% if scope == 'mias' and totalCount > 0 %}
                 <h2>No tienes obligaciones asignadas</h2>
