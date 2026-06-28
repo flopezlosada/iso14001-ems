@@ -24,7 +24,7 @@ class InterestedPartyType extends AbstractType
         $builder
             ->add('name', TextType::class, [
                 'label' => 'Parte interesada',
-                'help' => 'Quién es la parte interesada (p. ej. "Usuarios/Alumnos", "Proveedores").',
+                'help' => 'Quién es la parte interesada (p. ej. "Alumnado", "Proveedores").',
             ])
             ->add('needsAndExpectations', TextareaType::class, [
                 'label' => 'Necesidades y expectativas',

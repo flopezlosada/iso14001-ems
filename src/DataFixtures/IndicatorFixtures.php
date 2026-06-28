@@ -57,12 +57,12 @@ final class IndicatorFixtures extends AbstractDemoFixture
     {
         return [
             [
-                'name' => 'Consumo eléctrico por alumno',
-                'description' => 'kWh facturados en el mes / nº de alumnos matriculados.',
-                'reference' => '≤ 30 kWh/alumno',
+                'name' => 'Consumo eléctrico por estudiante',
+                'description' => 'kWh facturados en el mes / nº de estudiantes matriculados.',
+                'reference' => '≤ 30 kWh/estudiante',
                 'process' => SgmaProcess::PERFORMANCE_EVALUATION,
                 'periodicity' => MeasurementPeriodicity::MONTHLY,
-                // breached when above the 30 kWh/alumno threshold.
+                // breached when above the 30 kWh/estudiante threshold.
                 'measurements' => $this->monthly([
                     2025 => [1 => 33.2, 2 => 31.5, 3 => 28.4, 4 => 24.1, 5 => 22.8, 6 => 25.0, 7 => 18.2, 8 => 12.7, 9 => 24.5, 10 => 26.3, 11 => 30.8, 12 => 34.1],
                     2026 => [1 => 30.9, 2 => 29.2, 3 => 26.1, 4 => 22.4, 5 => 21.2, 6 => 23.3],
