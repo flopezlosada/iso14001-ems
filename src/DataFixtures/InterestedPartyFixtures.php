@@ -24,11 +24,11 @@ final class InterestedPartyFixtures extends AbstractDemoFixture
     {
         // [review year, party name, needs and expectations, incidents|null]
         $parties = [
-            [2025, 'Usuarios/Alumnos',
+            [2025, 'Alumnado',
                 'Atención personalizada y cercana, confidencialidad, buena presentación de las '
                 .'instalaciones, uso de materiales reciclables y climatización adecuada de las aulas.',
                 'NO'],
-            [2025, 'Trabajadores/as',
+            [2025, 'Plantilla',
                 'Condiciones adecuadas de trabajo, medios y materiales para realizarlo, formación y '
                 .'promoción, conciliación, y un entorno respetuoso con el medio ambiente.',
                 null],

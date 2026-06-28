@@ -37,7 +37,7 @@ class InterestedParty
     private int $reviewYear;
 
     /**
-     * The interested party itself ("Partes interesadas"), e.g. "Usuarios/Alumnos", "Proveedores".
+     * The interested party itself ("Partes interesadas"), e.g. "Alumnado", "Proveedores".
      */
     #[ORM\Column(length: 255)]
     #[Assert\NotBlank]
