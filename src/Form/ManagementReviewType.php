@@ -46,6 +46,7 @@ class ManagementReviewType extends AbstractType
             ])
             ->add('sections', CollectionType::class, [
                 'entry_type' => ManagementReviewSectionType::class,
+                'entry_options' => ['auto_keys' => $options['auto_keys']],
                 'label' => false,
                 'allow_add' => false,
                 'allow_delete' => false,
@@ -58,7 +59,9 @@ class ManagementReviewType extends AbstractType
         $resolver->setDefaults([
             'data_class' => ManagementReview::class,
             'lock_exercise' => false,
+            'auto_keys' => [],
         ]);
         $resolver->setAllowedTypes('lock_exercise', 'bool');
+        $resolver->setAllowedTypes('auto_keys', 'array');
     }
 }
