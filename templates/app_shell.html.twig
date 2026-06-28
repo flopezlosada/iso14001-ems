@@ -61,6 +61,45 @@
                     {% block breadcrumb %}<a href="{{ path('app_homepage') }}">Inicio</a>{% endblock %}
                 </nav>
                 <div class="topbar-right">
+                    {# Salto rápido: buscador de módulos en cliente (public/js/quickjump.js). La lista
+                       la genera el servidor reutilizando nav_pillars() + el bloque de Administración,
+                       así que solo aparecen los módulos que el usuario puede leer (mismo criterio que
+                       la barra lateral, sin duplicar el filtrado). Cada resultado es un <a href> real:
+                       Ctrl/⌘+clic abre pestaña nueva sin perder el formulario en curso. Sin JS el panel
+                       no se despliega; la barra lateral sigue siendo el camino completo. #}
+                    {% if app.user %}
+                        <div class="quickjump" data-quickjump>
+                            <input type="search" class="quickjump__input" placeholder="Ir a un módulo…"
+                                   role="combobox" aria-haspopup="listbox" aria-expanded="false"
+                                   aria-controls="quickjump-list" aria-autocomplete="list"
+                                   aria-label="Ir a un módulo" autocomplete="off">
+                            {# Los resultados son <a role="option"> hijos directos del role="listbox" (sin
+                               <li> intermedio): así el árbol de accesibilidad listbox→option es válido. El
+                               rol no afecta a la navegación del navegador, los enlaces siguen siendo reales
+                               (Ctrl/⌘+clic abre pestaña nueva). #}
+                            <div class="quickjump__panel" hidden>
+                                <div class="quickjump__list" id="quickjump-list" role="listbox" aria-label="Módulos">
+                                    <a role="option" class="quickjump__item" href="{{ path('app_homepage') }}"><span class="quickjump__name">Inicio</span><span class="quickjump__hint">General</span></a>
+                                    <a role="option" class="quickjump__item" href="{{ path('obligation_index') }}"><span class="quickjump__name">Qué toca</span><span class="quickjump__hint">General</span></a>
+                                    <a role="option" class="quickjump__item" href="{{ path('obligation_structure') }}"><span class="quickjump__name">Estructura del SGA</span><span class="quickjump__hint">General</span></a>
+                                    <a role="option" class="quickjump__item" href="{{ path('document_index') }}"><span class="quickjump__name">Documentos</span><span class="quickjump__hint">General</span></a>
+                                    {% for pillar in nav_pillars() %}
+                                        {% for item in pillar.items %}
+                                            <a role="option" class="quickjump__item" href="{{ path(item.route) }}"><span class="quickjump__name">{{ item.label }}</span><span class="quickjump__hint">{{ pillar.label }}</span></a>
+                                        {% endfor %}
+                                    {% endfor %}
+                                    {% if is_granted('ROLE_ADMIN') %}
+                                        <a role="option" class="quickjump__item" href="{{ path('audit_index') }}"><span class="quickjump__name">Registro de actividad</span><span class="quickjump__hint">Administración</span></a>
+                                        <a role="option" class="quickjump__item" href="{{ path('admin_user_index') }}"><span class="quickjump__name">Usuarios</span><span class="quickjump__hint">Administración</span></a>
+                                        <a role="option" class="quickjump__item" href="{{ path('admin_role_index') }}"><span class="quickjump__name">Roles y permisos</span><span class="quickjump__hint">Administración</span></a>
+                                        <a role="option" class="quickjump__item" href="{{ path('admin_settings_edit') }}"><span class="quickjump__name">Ajustes</span><span class="quickjump__hint">Administración</span></a>
+                                        <a role="option" class="quickjump__item" href="{{ path('admin_operational_control_item_index') }}"><span class="quickjump__name">Checklist control operacional</span><span class="quickjump__hint">Administración</span></a>
+                                    {% endif %}
+                                </div>
+                                <p class="quickjump__empty" hidden>Sin resultados</p>
+                            </div>
+                        </div>
+                    {% endif %}
                     <div class="theme-toggle" role="group" aria-label="Tema de color">
                         <button type="button" data-theme-value="light" aria-pressed="true">Claro</button>
                         <button type="button" data-theme-value="dark" aria-pressed="false">Oscuro</button>
