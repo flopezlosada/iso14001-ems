@@ -99,6 +99,25 @@ final class RoleTest extends TestCase
         }
     }
 
+    public function testSeededGovernanceBodiesHaveTheirDefaultGrants(): void
+    {
+        $catalog = RoleFixtures::catalog();
+
+        $committee = $catalog['environmental_committee'] ?? null;
+        self::assertNotNull($committee, 'The environmental committee role must be seeded');
+        self::assertFalse($committee->isAdmin());
+        self::assertSame(PermissionLevel::WRITE, $committee->getLevel(Area::MANAGEMENT_REVIEW), 'committee writes the management review');
+        self::assertSame(PermissionLevel::WRITE, $committee->getLevel(Area::OBJECTIVE), 'committee writes objectives');
+        self::assertTrue($committee->allows(Area::SYSTEM_AUDIT, PermissionLevel::READ), 'committee reads every area for oversight');
+
+        $commission = $catalog['efficiency_commission'] ?? null;
+        self::assertNotNull($commission, 'The efficiency commission role must be seeded');
+        self::assertFalse($commission->isAdmin());
+        foreach ([Area::CONSUMPTION, Area::WASTE, Area::INDICATOR, Area::OBJECTIVE] as $area) {
+            self::assertSame(PermissionLevel::WRITE, $commission->getLevel($area), sprintf('commission writes %s', $area->value));
+        }
+    }
+
     public function testEverySeededRoleHasADescription(): void
     {
         foreach (RoleFixtures::catalog() as $code => $role) {

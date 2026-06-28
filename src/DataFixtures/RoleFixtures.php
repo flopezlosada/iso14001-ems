@@ -44,6 +44,20 @@ final class RoleFixtures extends AbstractGoldenFixture
             'admin' => ['Administrador', 'Acceso total y administración de usuarios, roles y configuración del sistema.', $all],
             'direction' => ['Dirección', 'Dirección del centro: acceso completo a todas las áreas del SGA.', $all],
             'ems_manager' => ['Responsable del SGA', 'Responsable del Sistema de Gestión Ambiental: gestiona todas las áreas.', $all],
+            // Governance bodies of the SGA. Default permissions are a sensible starting point and are
+            // meant to be tuned from the UI by the centre (roles are editable).
+            'environmental_committee' => ['Comité Medioambiental', 'Órgano de gobierno del SGA: supervisa todas las áreas y participa en la revisión por la dirección y en la definición de objetivos.', array_merge($allRead, [
+                Area::MANAGEMENT_REVIEW->value => $w,
+                Area::OBJECTIVE->value => $w,
+            ])],
+            'efficiency_commission' => ['Comisión de Eficiencia Ambiental', 'Seguimiento de la eficiencia ambiental: registra consumos, residuos, indicadores y objetivos; consulta aspectos y requisitos legales.', [
+                Area::CONSUMPTION->value => $w,
+                Area::WASTE->value => $w,
+                Area::INDICATOR->value => $w,
+                Area::OBJECTIVE->value => $w,
+                Area::ASPECT->value => $r,
+                Area::LEGAL_REQUIREMENT->value => $r,
+            ]],
             'quality' => ['Responsable de Calidad', 'Gestiona las no conformidades; consulta aspectos, requisitos legales y proveedores.', [
                 Area::NONCONFORMITY->value => $w,
                 Area::ASPECT->value => $r,

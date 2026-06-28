@@ -48,6 +48,14 @@ final class InterestedPartyFixtures extends AbstractDemoFixture
                 'Confianza en el centro para gestionar sus residuos y que estos se encuentren '
                 .'segregados correctamente para facilitar las retiradas.',
                 null],
+            [2025, 'Comité Medioambiental',
+                'Implicación de la comunidad educativa en el SGA, cumplimiento de los requisitos '
+                .'legales y mejora continua del desempeño ambiental del centro.',
+                null],
+            [2025, 'Comisión de Eficiencia Ambiental',
+                'Reducción del consumo de energía, agua y materiales, mejora de la segregación de '
+                .'residuos y cumplimiento de los objetivos de eficiencia ambiental.',
+                null],
         ];
 
         foreach ($parties as [$year, $name, $needs, $incidents]) {
