@@ -6,10 +6,12 @@ namespace App\Controller;
 
 use App\Entity\NonConformity;
 use App\Enum\Area;
+use App\Enum\AuditType;
 use App\Enum\NonConformityOrigin;
 use App\Enum\NonConformityStatus;
 use App\Form\NonConformityType;
 use App\Repository\NonConformityRepository;
+use App\Repository\SystemAuditRepository;
 use App\Security\Voter\AreaVoter;
 use App\Service\AuditLogger;
 use App\Service\NonConformityReferenceGenerator;
@@ -69,13 +71,13 @@ class NonConformityController extends AbstractController
      * decision), and any submitted value wins over the seed.
      */
     #[Route('/new', name: 'non_conformity_new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $em): Response
+    public function new(Request $request, EntityManagerInterface $em, SystemAuditRepository $audits): Response
     {
         $this->denyAccessUnlessGranted(AreaVoter::WRITE, Area::NONCONFORMITY);
 
         $nonConformity = new NonConformity();
         if ($request->isMethod('GET')) {
-            $this->prefillFromQuery($nonConformity, $request);
+            $this->prefillFromQuery($nonConformity, $request, $audits);
         }
 
         return $this->handleForm($nonConformity, $request, $em);
@@ -97,7 +99,7 @@ class NonConformityController extends AbstractController
      * Seeds a new non-conformity from optional query parameters when another module deep-links
      * here. Unknown/blank values are ignored.
      */
-    private function prefillFromQuery(NonConformity $nonConformity, Request $request): void
+    private function prefillFromQuery(NonConformity $nonConformity, Request $request, SystemAuditRepository $audits): void
     {
         $description = trim((string) $request->query->get('description'));
         if ('' !== $description) {
@@ -107,6 +109,20 @@ class NonConformityController extends AbstractController
         $origin = NonConformityOrigin::tryFrom((string) $request->query->get('origin'));
         if (null !== $origin) {
             $nonConformity->setOrigin($origin);
+        }
+
+        // Deep-linked from an audit: link the finding to it and, unless an explicit origin was
+        // given, default its origin to the matching audit origin so it stays traced to that audit.
+        $auditId = $request->query->getInt('audit');
+        if ($auditId > 0 && null !== ($audit = $audits->find($auditId))) {
+            $nonConformity->setAudit($audit);
+            if (null === $origin) {
+                $nonConformity->setOrigin(
+                    AuditType::INTERNAL === $audit->getType()
+                        ? NonConformityOrigin::INTERNAL_AUDIT
+                        : NonConformityOrigin::EXTERNAL_AUDIT,
+                );
+            }
         }
     }
 

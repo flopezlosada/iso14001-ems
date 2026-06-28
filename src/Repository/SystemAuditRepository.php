@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Repository;
 
 use App\Entity\SystemAudit;
+use App\Enum\AuditType;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -43,5 +44,16 @@ class SystemAuditRepository extends ServiceEntityRepository
             ['year' => $year],
             ['type' => 'ASC', 'conductedOn' => 'ASC', 'id' => 'ASC'],
         );
+    }
+
+    /**
+     * Whether an internal audit (ISO 14001 §9.2) has already been registered for the given year.
+     * Drives the yearly reminder to run the internal audit.
+     *
+     * @param int $year the audit year
+     */
+    public function hasInternalForYear(int $year): bool
+    {
+        return null !== $this->findOneBy(['year' => $year, 'type' => AuditType::INTERNAL]);
     }
 }

@@ -17,6 +17,14 @@
         {% endif %}
     </div>
 
+    {% if needsInternalAudit and can_write %}
+        <div class="card">
+            <h2>Auditoría interna de {{ currentYear }} pendiente</h2>
+            <p>Aún no se ha registrado la auditoría interna de {{ currentYear }} (ISO 14001 §9.2). Cuando hayas revisado que la documentación del sistema está al día, crea el registro para dejarla planificada.</p>
+            <a class="btn" href="{{ path('system_audit_new', { type: 'internal' }) }}">Crear auditoría interna {{ currentYear }}</a>
+        </div>
+    {% endif %}
+
     <div class="card">
         {% if audits is empty %}
             <div class="empty-state">

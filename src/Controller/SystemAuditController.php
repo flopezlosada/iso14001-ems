@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Entity\CorrectiveAction;
 use App\Entity\SystemAudit;
 use App\Enum\Area;
+use App\Enum\AuditType;
 use App\Form\SystemAuditType;
 use App\Repository\NonConformityRepository;
 use App\Repository\SystemAuditRepository;
@@ -43,8 +45,12 @@ class SystemAuditController extends AbstractController
     {
         $this->denyAccessUnlessGranted(AreaVoter::READ, Area::SYSTEM_AUDIT);
 
+        $currentYear = (int) date('Y');
+
         return $this->render('system_audit/index.html.twig', [
             'audits' => $audits->findAllOrdered(),
+            'currentYear' => $currentYear,
+            'needsInternalAudit' => !$audits->hasInternalForYear($currentYear),
         ]);
     }
 
@@ -63,6 +69,59 @@ class SystemAuditController extends AbstractController
     }
 
     /**
+     * Generates the draft resolution plan for the audit: a corrective action (to be completed) for
+     * each of its non-conformities that has none yet. This is the "design the actions" step once the
+     * findings of the (external) report have been registered — the system seeds the plan's structure;
+     * the responsible and dates are filled in afterwards. CSRF-protected POST, idempotent (a finding
+     * that already has actions is skipped).
+     */
+    #[Route('/{id}/action-plan', name: 'system_audit_action_plan', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function generateActionPlan(
+        SystemAudit $audit,
+        Request $request,
+        EntityManagerInterface $em,
+        NonConformityRepository $nonConformities,
+    ): Response {
+        // Reading the audit and creating its findings' corrective actions: gate both areas, the
+        // latter because the plan lives in the non-conformity area.
+        $this->denyAccessUnlessGranted(AreaVoter::READ, Area::SYSTEM_AUDIT);
+        $this->denyAccessUnlessGranted(AreaVoter::WRITE, Area::NONCONFORMITY);
+
+        if (!$this->isCsrfTokenValid('action_plan_system_audit'.(string) $audit->getId(), (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Invalid CSRF token.');
+        }
+
+        $created = 0;
+        foreach ($nonConformities->findByAudit($audit) as $nonConformity) {
+            if (!$nonConformity->getCorrectiveActions()->isEmpty()) {
+                continue;
+            }
+
+            $em->persist(
+                (new CorrectiveAction())
+                    ->setNonConformity($nonConformity)
+                    // The guard above guarantees this finding has no actions yet, so it is the first.
+                    ->setSequence(1)
+                    ->setDescription(sprintf(
+                        'Acción correctiva para subsanar la no conformidad %s (pendiente de definir).',
+                        $nonConformity->getReference(),
+                    )),
+            );
+            ++$created;
+        }
+        $em->flush();
+
+        if ($created > 0) {
+            $this->auditLogger->log('systemaudit.actionplan_generated', 'SystemAudit', (string) $audit->getId(), $this->label($audit));
+            $this->addFlash('success', sprintf('Borrador del plan de acciones generado: %d acción(es) creada(s). Completa responsable y fechas.', $created));
+        } else {
+            $this->addFlash('info', 'No hay no conformidades sin plan de acciones en esta auditoría.');
+        }
+
+        return $this->redirectToRoute('system_audit_show', ['id' => $audit->getId()]);
+    }
+
+    /**
      * Registers a new audit.
      */
     #[Route('/new', name: 'system_audit_new', methods: ['GET', 'POST'])]
@@ -71,6 +130,10 @@ class SystemAuditController extends AbstractController
         $this->denyAccessUnlessGranted(AreaVoter::WRITE, Area::SYSTEM_AUDIT);
 
         $audit = (new SystemAudit())->setYear((int) date('Y'));
+        $type = AuditType::tryFrom((string) $request->query->get('type'));
+        if (null !== $type) {
+            $audit->setType($type);
+        }
 
         return $this->handleForm($audit, $request, $em);
     }
