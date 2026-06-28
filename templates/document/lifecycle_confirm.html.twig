@@ -1,0 +1,44 @@
+{% extends 'app_shell.html.twig' %}
+
+{% set is_cancel = action == 'cancel' %}
+
+{% block title %}{{ is_cancel ? 'Anular' : 'Archivar' }} · {{ document.code }}{% endblock %}
+
+{% block breadcrumb %}
+    <a href="{{ path('app_homepage') }}">Inicio</a><span class="sep">/</span>
+    <a href="{{ path('document_show', { id: document.id }) }}">{{ document.code }}</a><span class="sep">/</span>
+    {{ is_cancel ? 'Anular' : 'Archivar' }}
+{% endblock %}
+
+{% block body %}
+    <div class="page-head">
+        <div>
+            <h1>{{ is_cancel ? 'Anular documento' : 'Archivar documento' }}</h1>
+            <p class="lead">{{ document.title }} · {{ document.code }}</p>
+        </div>
+    </div>
+
+    <div class="card">
+        {% if is_cancel %}
+            <p>Anular invalida el documento: deja de estar en vigor. <strong>No se borra</strong> — queda en el sistema con su historial para la auditoría, y puede reactivarse después. Indica el motivo (obligatorio).</p>
+        {% else %}
+            <p>Archivar retira el documento del uso diario conservándolo como histórico. <strong>No se borra</strong> y puede reactivarse después. El motivo es opcional.</p>
+        {% endif %}
+
+        <form method="post" action="{{ path('document_lifecycle', { id: document.id }) }}" class="document-editor">
+            <input type="hidden" name="_token" value="{{ csrf_token('document_lifecycle' ~ document.id) }}">
+            <input type="hidden" name="action" value="{{ action }}">
+
+            <div class="field">
+                <label for="reason">Motivo{{ is_cancel ? '' : ' (opcional)' }}</label>
+                <input type="text" id="reason" name="reason" {{ is_cancel ? 'required' : '' }}
+                       placeholder="{{ is_cancel ? 'Ej.: Sustituido por una nueva versión.' : 'Ej.: Documento retirado del alcance actual.' }}">
+            </div>
+
+            <div class="form-actions">
+                <button class="btn {{ is_cancel ? 'danger' : '' }}" type="submit">{{ is_cancel ? 'Anular documento' : 'Archivar documento' }}</button>
+                <a class="btn secondary" href="{{ path('document_show', { id: document.id }) }}">Cancelar</a>
+            </div>
+        </form>
+    </div>
+{% endblock %}

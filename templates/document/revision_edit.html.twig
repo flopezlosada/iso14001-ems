@@ -1,0 +1,53 @@
+{% extends 'app_shell.html.twig' %}
+
+{% set is_new = version is null %}
+
+{% block title %}{{ is_new ? 'Nueva revisión' : 'Editar borrador' }} · {{ document.code }}{% endblock %}
+
+{% block breadcrumb %}
+    <a href="{{ path('app_homepage') }}">Inicio</a><span class="sep">/</span>
+    <a href="{{ path('document_show', { id: document.id }) }}">{{ document.code }}</a><span class="sep">/</span>
+    {{ is_new ? 'Nueva revisión' : 'Editar borrador' }}
+{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="/vendor/trix/trix.css">
+{% endblock %}
+
+{% block body %}
+    <div class="page-head">
+        <div>
+            <h1>{{ is_new ? 'Nueva revisión' : 'Editar borrador · revisión ' ~ version.revisionNumber }}</h1>
+            <p class="lead">{{ document.title }} · {{ document.code }}</p>
+        </div>
+    </div>
+
+    <form method="post" action="{{ formAction }}" class="document-editor">
+        <input type="hidden" name="_token" value="{{ csrf_token('document_revision' ~ document.id) }}">
+
+        <div class="field">
+            <label for="changeSummary">Resumen de los cambios</label>
+            <p class="field-help">Qué cambia en esta revisión respecto a la anterior. Aparece en el histórico del documento.</p>
+            <input type="text" id="changeSummary" name="changeSummary" value="{{ changeSummary }}" required
+                   placeholder="Ej.: Actualización del alcance y de los compromisos.">
+        </div>
+
+        <div class="field">
+            <label for="document-body">Contenido del documento</label>
+            <p class="field-help">El texto del documento. Se imprimirá en el PDF bajo la portada de control.</p>
+            <input id="document-body" type="hidden" name="body" value="{{ body }}">
+            <trix-editor input="document-body" class="trix-content"></trix-editor>
+        </div>
+
+        <div class="form-actions">
+            <button class="btn" type="submit">Guardar</button>
+            <a class="btn secondary" href="{{ path('document_show', { id: document.id }) }}">Cancelar</a>
+        </div>
+    </form>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="/vendor/trix/trix.umd.min.js"></script>
+{% endblock %}

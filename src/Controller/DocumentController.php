@@ -54,7 +54,13 @@ final class DocumentController extends AbstractController
 
     /**
      * "Qué toca": the obligations grouped by urgency (overdue / due soon / on track / event-driven),
-     * plus the ones marked not-applicable set aside. This is the day-to-day landing view.
+     * with the settled ones set aside in their own sections — done ("Hecho") and not-applicable.
+     *
+     * Urgency ({@see ObligationUrgency}) and manual status ({@see ObligationStatus}) are complementary
+     * dimensions: a completed obligation rolls its next due date forward, so by date it would look
+     * "al día", but it is not pending action — it is done. Mixing the two would inflate the "Al día"
+     * group with already-completed items (and disagree with the home worklist, which excludes them),
+     * so done obligations are pulled out before the urgency grouping. This is the day-to-day landing view.
      */
     #[Route('/obligaciones', name: 'obligation_index', methods: ['GET'])]
     public function index(
@@ -78,9 +84,12 @@ final class DocumentController extends AbstractController
             ObligationUrgency::EVENT_DRIVEN->value => [],
         ];
         $notApplicable = [];
+        // Settled obligations marked "Hecho": kept apart from the urgency buckets so a completed item
+        // is not counted as "Al día" (see method docblock).
+        $done = [];
         // Counts for the scope pills. They tally EVERY obligation in each scope (urgency buckets,
-        // event-driven and not-applicable alike), which is exactly what the page renders — so the
-        // badge number always matches the rows shown.
+        // event-driven, done and not-applicable alike), which is exactly what the page renders — so
+        // the badge number always matches the rows shown.
         $mineCount = 0;
         $totalCount = 0;
 
@@ -95,8 +104,14 @@ final class DocumentController extends AbstractController
                 continue;
             }
 
-            if (ObligationStatus::NOT_APPLICABLE === $obligation->getStatus()) {
+            $status = $obligation->getStatus();
+            if (ObligationStatus::NOT_APPLICABLE === $status) {
                 $notApplicable[] = $obligation;
+
+                continue;
+            }
+            if (ObligationStatus::DONE === $status) {
+                $done[] = $obligation;
 
                 continue;
             }
@@ -109,6 +124,7 @@ final class DocumentController extends AbstractController
             'mineCount' => $mineCount,
             'totalCount' => $totalCount,
             'groups' => $groups,
+            'done' => $done,
             'notApplicable' => $notApplicable,
             'moduleRoutes' => self::moduleRoutes(),
             // Aspects (consumption or waste) already trending worse than the threshold: surfaced

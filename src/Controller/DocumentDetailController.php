@@ -21,6 +21,8 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\HeaderUtils;
+use Symfony\Component\DependencyInjection\Attribute\Target;
+use Symfony\Component\HtmlSanitizer\HtmlSanitizerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -45,7 +47,48 @@ final class DocumentDetailController extends AbstractController
         private readonly AuditLogger $auditLogger,
         private readonly DocumentPdfGenerator $pdfGenerator,
         private readonly FileUploader $fileUploader,
+        #[Target('app.document_body')]
+        private readonly HtmlSanitizerInterface $htmlSanitizer,
     ) {
+    }
+
+    /**
+     * Sanitises the rich-text body coming from the editor into safe HTML, treating an empty editor
+     * as null. Never trust the editor's HTML: it is rendered later with |raw, so it must be cleaned
+     * of scripts and dangerous attributes here, at the trust boundary.
+     *
+     * @param mixed $raw the raw "body" request value
+     *
+     * @return string|null the sanitised HTML, or null when there is no real content
+     */
+    private function cleanBody(mixed $raw): ?string
+    {
+        $html = \is_string($raw) ? trim($raw) : '';
+        if ('' === $html) {
+            return null;
+        }
+        $clean = trim($this->htmlSanitizer->sanitize($html));
+
+        // Trix emits an empty wrapper for a blank editor; treat "no visible text" as no body.
+        return '' === trim(strip_tags($clean)) ? null : $clean;
+    }
+
+    /**
+     * Guards a write action against an inactive (cancelled/archived) document: returns a redirect to
+     * abort, or null to proceed. The GET pages already block this; the POST endpoints must too.
+     *
+     * @param Document $document the document being acted on
+     *
+     * @return Response|null a redirect if the document is not active, null otherwise
+     */
+    private function abortIfInactive(Document $document): ?Response
+    {
+        if ($document->isActive()) {
+            return null;
+        }
+        $this->addFlash('error', 'Solo se pueden gestionar revisiones de un documento activo.');
+
+        return $this->redirectToRoute('document_show', ['id' => $document->getId()]);
     }
 
     /**
@@ -165,10 +208,35 @@ final class DocumentDetailController extends AbstractController
         $versions = $document->getVersions()->toArray();
         usort($versions, static fn (DocumentVersion $a, DocumentVersion $b): int => $b->getRevisionNumber() <=> $a->getRevisionNumber());
 
+        // Whether an unapproved revision is already open (draft/in-review): while one exists, a new
+        // revision is not offered — that open one is finished first (one live revision at a time).
+        $hasOpenRevision = false;
+        foreach ($versions as $candidate) {
+            if ($candidate->getStatus()->isEditable()) {
+                $hasOpenRevision = true;
+                break;
+            }
+        }
+
+        // The body to show on the detail: the in-force revision's, or — while none is approved yet —
+        // the most recent revision that has a body, so a drafted document is visible before approval.
+        $current = $document->getCurrentVersion();
+        $displayVersion = (null !== $current && null !== $current->getBody()) ? $current : null;
+        if (null === $displayVersion) {
+            foreach ($versions as $candidate) {
+                if (null !== $candidate->getBody()) {
+                    $displayVersion = $candidate;
+                    break;
+                }
+            }
+        }
+
         return $this->render('document/show.html.twig', [
             'document' => $document,
             'versions' => $versions,
-            'current' => $document->getCurrentVersion(),
+            'current' => $current,
+            'displayVersion' => $displayVersion,
+            'hasOpenRevision' => $hasOpenRevision,
             'moduleRoute' => $document->getLinkedArea()?->indexRoute(),
             // The trail of "marked done for the period" events, so the responsible can see when each
             // review cycle was closed without a parallel data model (it lives in the audit log).
@@ -225,6 +293,30 @@ final class DocumentDetailController extends AbstractController
     }
 
     /**
+     * Confirmation page for a destructive lifecycle action (cancel / archive): shows what it means
+     * and collects the reason, instead of an inline input next to the button. The actual change is
+     * still done by {@see changeLifecycle} (POST). Restore needs no reason, so it stays inline.
+     *
+     * @param Document $document the document to act on
+     * @param string   $action   the lifecycle action: "cancel" or "archive"
+     *
+     * @return Response the confirmation page, or a redirect if the document is not active
+     */
+    #[Route('/documentos/{id}/ciclo/{action}', name: 'document_lifecycle_confirm', requirements: ['id' => '\d+', 'action' => 'cancel|archive'], methods: ['GET'])]
+    public function confirmLifecycle(Document $document, string $action): Response
+    {
+        $this->denyAccessUnlessGranted(DocumentVoter::LIFECYCLE, $document);
+        if (!$document->isActive()) {
+            return $this->redirectToRoute('document_show', ['id' => $document->getId()]);
+        }
+
+        return $this->render('document/lifecycle_confirm.html.twig', [
+            'document' => $document,
+            'action' => $action,
+        ]);
+    }
+
+    /**
      * Issues a new revision of the document as a DRAFT (revision = highest + 1). Done by the
      * responsible role (the elaborator); approval is a separate step.
      *
@@ -240,6 +332,10 @@ final class DocumentDetailController extends AbstractController
         $this->denyAccessUnlessGranted(DocumentVoter::ISSUE, $document);
         if (!$this->isCsrfTokenValid('document_revision'.(string) $document->getId(), (string) $request->request->get('_token'))) {
             throw $this->createAccessDeniedException('Token CSRF inválido.');
+        }
+
+        if (null !== ($abort = $this->abortIfInactive($document))) {
+            return $abort;
         }
 
         $summary = trim((string) $request->request->get('changeSummary'));
@@ -260,7 +356,8 @@ final class DocumentDetailController extends AbstractController
             ->setIssueDate(new \DateTimeImmutable('today'))
             ->setStatus(VersionStatus::DRAFT)
             ->setAuthor($author instanceof User ? $author->getFullName() : null)
-            ->setChangeSummary($summary);
+            ->setChangeSummary($summary)
+            ->setBody($this->cleanBody($request->request->get('body')));
         $document->addVersion($version);
 
         try {
@@ -274,6 +371,202 @@ final class DocumentDetailController extends AbstractController
         }
         $this->auditLogger->log('document.revision_drafted', 'Document', (string) $document->getId(), 'Borrador de revisión '.$nextNumber);
         $this->addFlash('success', 'Nueva revisión '.$nextNumber.' creada como borrador.');
+
+        return $this->redirectToRoute('document_show', ['id' => $document->getId()]);
+    }
+
+    /**
+     * Editor page to compose a NEW revision: shows the rich-text editor pre-filled with the body of
+     * the revision currently in force, so a new revision starts from the live text and is edited,
+     * not written from scratch. If an open draft already exists, redirects to editing it (PC.01.0
+     * allows only one draft at a time per the revision-number unique constraint).
+     *
+     * @param Document $document the document to draft a revision for
+     *
+     * @return Response the editor page, or a redirect
+     */
+    #[Route('/documentos/{id}/revision/nueva', name: 'document_revision_compose', requirements: ['id' => '\d+'], methods: ['GET'])]
+    public function composeRevision(Document $document): Response
+    {
+        $this->denyAccessUnlessGranted(DocumentVoter::ISSUE, $document);
+        if (!$document->isActive()) {
+            $this->addFlash('error', 'Solo se pueden emitir revisiones de un documento activo.');
+
+            return $this->redirectToRoute('document_show', ['id' => $document->getId()]);
+        }
+
+        $inForceBody = null;
+        foreach ($document->getVersions() as $existing) {
+            if ($existing->getStatus()->isEditable()) {
+                // An unapproved revision is already open: edit it instead of starting another.
+                return $this->redirectToRoute('document_revision_edit', ['id' => $document->getId(), 'versionId' => $existing->getId()]);
+            }
+            if ($existing->isInForce()) {
+                $inForceBody = $existing->getBody();
+            }
+        }
+
+        return $this->render('document/revision_edit.html.twig', [
+            'document' => $document,
+            'version' => null,
+            'formAction' => $this->generateUrl('document_revision_new', ['id' => $document->getId()]),
+            'body' => $inForceBody,
+            'changeSummary' => null,
+        ]);
+    }
+
+    /**
+     * Editor page to edit an existing DRAFT revision's body and change summary. Only drafts are
+     * editable; an approved or obsolete revision is immutable.
+     *
+     * @param Document               $document  the document
+     * @param int                    $versionId the draft revision to edit
+     * @param EntityManagerInterface $em        to resolve the revision
+     *
+     * @return Response the editor page, or a redirect
+     */
+    #[Route('/documentos/{id}/revision/{versionId}/editar', name: 'document_revision_edit', requirements: ['id' => '\d+', 'versionId' => '\d+'], methods: ['GET'])]
+    public function editRevision(Document $document, int $versionId, EntityManagerInterface $em): Response
+    {
+        $this->denyAccessUnlessGranted(DocumentVoter::ISSUE, $document);
+        $version = $this->resolveVersion($document, $versionId, $em);
+        if (!$version->getStatus()->isEditable()) {
+            $this->addFlash('error', 'Solo se puede editar una revisión que no esté aprobada.');
+
+            return $this->redirectToRoute('document_show', ['id' => $document->getId()]);
+        }
+
+        return $this->render('document/revision_edit.html.twig', [
+            'document' => $document,
+            'version' => $version,
+            'formAction' => $this->generateUrl('document_revision_update', ['id' => $document->getId(), 'versionId' => $version->getId()]),
+            'body' => $version->getBody(),
+            'changeSummary' => $version->getChangeSummary(),
+        ]);
+    }
+
+    /**
+     * Saves edits to a DRAFT revision (body + change summary). Only drafts are mutable.
+     *
+     * @param Request                $request   the POST request (changeSummary, body, CSRF token)
+     * @param Document               $document  the document
+     * @param int                    $versionId the draft revision to update
+     * @param EntityManagerInterface $em        to persist the changes
+     *
+     * @return Response a redirect back to the document detail
+     */
+    #[Route('/documentos/{id}/revision/{versionId}', name: 'document_revision_update', requirements: ['id' => '\d+', 'versionId' => '\d+'], methods: ['POST'])]
+    public function updateRevision(Request $request, Document $document, int $versionId, EntityManagerInterface $em): Response
+    {
+        $this->denyAccessUnlessGranted(DocumentVoter::ISSUE, $document);
+        if (!$this->isCsrfTokenValid('document_revision'.(string) $document->getId(), (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Token CSRF inválido.');
+        }
+
+        if (null !== ($abort = $this->abortIfInactive($document))) {
+            return $abort;
+        }
+
+        $version = $this->resolveVersion($document, $versionId, $em);
+        if (!$version->getStatus()->isEditable()) {
+            $this->addFlash('error', 'Solo se puede editar una revisión que no esté aprobada.');
+
+            return $this->redirectToRoute('document_show', ['id' => $document->getId()]);
+        }
+
+        $summary = trim((string) $request->request->get('changeSummary'));
+        if ('' === $summary) {
+            $this->addFlash('error', 'Describe brevemente los cambios de la revisión.');
+
+            return $this->redirectToRoute('document_revision_edit', ['id' => $document->getId(), 'versionId' => $version->getId()]);
+        }
+
+        $version->setChangeSummary($summary)
+            ->setBody($this->cleanBody($request->request->get('body')))
+            ->clearReview(); // editing invalidates any prior review: it must be reviewed again.
+        $em->flush();
+        $this->auditLogger->log('document.revision_edited', 'Document', (string) $document->getId(), 'Edición de la revisión '.$version->getRevisionNumber());
+        $this->addFlash('success', 'Revisión '.$version->getRevisionNumber().' guardada.');
+
+        return $this->redirectToRoute('document_show', ['id' => $document->getId()]);
+    }
+
+    /**
+     * Sends a DRAFT revision to review (PC.01.0 elaboración → revisión). Done by the elaborator (the
+     * responsible role). The revision must have a body: an empty document is not ready for review.
+     *
+     * @param Request                $request   the POST request (CSRF token)
+     * @param Document               $document  the document
+     * @param int                    $versionId the draft revision to send to review
+     * @param EntityManagerInterface $em        to persist the transition
+     *
+     * @return Response a redirect back to the document detail
+     */
+    #[Route('/documentos/{id}/revision/{versionId}/enviar-a-revision', name: 'document_revision_submit', requirements: ['id' => '\d+', 'versionId' => '\d+'], methods: ['POST'])]
+    public function submitForReview(Request $request, Document $document, int $versionId, EntityManagerInterface $em): Response
+    {
+        $this->denyAccessUnlessGranted(DocumentVoter::ISSUE, $document);
+        if (!$this->isCsrfTokenValid('document_submit'.(string) $document->getId(), (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Token CSRF inválido.');
+        }
+        if (null !== ($abort = $this->abortIfInactive($document))) {
+            return $abort;
+        }
+
+        $version = $this->resolveVersion($document, $versionId, $em);
+        if (VersionStatus::DRAFT !== $version->getStatus()) {
+            $this->addFlash('error', 'Solo se puede enviar a revisión un borrador.');
+
+            return $this->redirectToRoute('document_show', ['id' => $document->getId()]);
+        }
+        if (null === $version->getBody()) {
+            $this->addFlash('error', 'Redacta el contenido del documento antes de enviarlo a revisión.');
+
+            return $this->redirectToRoute('document_revision_edit', ['id' => $document->getId(), 'versionId' => $version->getId()]);
+        }
+
+        $version->setStatus(VersionStatus::IN_REVIEW);
+        $em->flush();
+        $this->auditLogger->log('document.revision_submitted', 'Document', (string) $document->getId(), 'Revisión '.$version->getRevisionNumber().' enviada a revisión');
+        $this->addFlash('success', 'Revisión '.$version->getRevisionNumber().' enviada a revisión.');
+
+        return $this->redirectToRoute('document_show', ['id' => $document->getId()]);
+    }
+
+    /**
+     * Records the review of a revision (PC.01.0 revisión step), done by the Responsable del Sistema
+     * (RSGMA). The revision must be in review; once reviewed it can be approved.
+     *
+     * @param Request                $request   the POST request (CSRF token)
+     * @param Document               $document  the document
+     * @param int                    $versionId the revision to mark as reviewed
+     * @param EntityManagerInterface $em        to persist the review
+     *
+     * @return Response a redirect back to the document detail
+     */
+    #[Route('/documentos/{id}/revision/{versionId}/revisar', name: 'document_revision_review', requirements: ['id' => '\d+', 'versionId' => '\d+'], methods: ['POST'])]
+    public function reviewRevision(Request $request, Document $document, int $versionId, EntityManagerInterface $em): Response
+    {
+        $this->denyAccessUnlessGranted(DocumentVoter::REVIEW, $document);
+        if (!$this->isCsrfTokenValid('document_review'.(string) $document->getId(), (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Token CSRF inválido.');
+        }
+        if (null !== ($abort = $this->abortIfInactive($document))) {
+            return $abort;
+        }
+
+        $version = $this->resolveVersion($document, $versionId, $em);
+        if (VersionStatus::IN_REVIEW !== $version->getStatus()) {
+            $this->addFlash('error', 'Solo se puede revisar una revisión que esté en revisión.');
+
+            return $this->redirectToRoute('document_show', ['id' => $document->getId()]);
+        }
+
+        $reviewer = $this->getUser();
+        $version->review($reviewer instanceof User ? $reviewer->getFullName() : 'Revisor', new \DateTimeImmutable());
+        $em->flush();
+        $this->auditLogger->log('document.revision_reviewed', 'Document', (string) $document->getId(), 'Revisión '.$version->getRevisionNumber().' revisada');
+        $this->addFlash('success', 'Revisión '.$version->getRevisionNumber().' marcada como revisada. Ya puede aprobarse.');
 
         return $this->redirectToRoute('document_show', ['id' => $document->getId()]);
     }
@@ -306,9 +599,11 @@ final class DocumentDetailController extends AbstractController
         if (!$approver instanceof User) {
             throw $this->createAccessDeniedException();
         }
-        // Approvable from DRAFT (and IN_REVIEW once a review step exists); never re-approve.
-        if (\in_array($version->getStatus(), [VersionStatus::APPROVED, VersionStatus::OBSOLETE], true)) {
-            $this->addFlash('error', 'Esa revisión no está pendiente de aprobación.');
+        // PC.01.0 flow: a revision can only be approved once it is in review AND has been reviewed.
+        // This forbids approving a raw draft (it must be sent to review and reviewed first) and
+        // re-approving an already in-force/obsolete revision.
+        if (VersionStatus::IN_REVIEW !== $version->getStatus() || !$version->isReviewed()) {
+            $this->addFlash('error', 'Solo se puede aprobar una revisión que esté en revisión y ya revisada.');
 
             return $this->redirectToRoute('document_show', ['id' => $document->getId()]);
         }
@@ -362,6 +657,35 @@ final class DocumentDetailController extends AbstractController
         return new Response($this->pdfGenerator->render($document, $version), Response::HTTP_OK, [
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'inline; filename="'.$this->pdfFilename($document, $version).'"',
+        ]);
+    }
+
+    /**
+     * Page to attach the approver's digital signature: explains the AutoFirma flow (download the
+     * official PDF → sign it on your machine → upload it) and offers the upload, instead of a bare
+     * file input in the history table. The upload itself is {@see uploadSignedPdf}.
+     *
+     * @param Document               $document  the document
+     * @param int                    $versionId the approved revision to sign
+     * @param EntityManagerInterface $em        to resolve the revision
+     *
+     * @return Response the sign page, or a redirect if the revision is not approved
+     */
+    #[Route('/documentos/{id}/revision/{versionId}/firmar', name: 'document_revision_sign_form', requirements: ['id' => '\d+', 'versionId' => '\d+'], methods: ['GET'])]
+    public function signForm(Document $document, int $versionId, EntityManagerInterface $em): Response
+    {
+        $this->denyAccessUnlessGranted(DocumentVoter::APPROVE, $document);
+        $version = $this->resolveVersion($document, $versionId, $em);
+        if (null === $version->getLatestApproval()) {
+            $this->addFlash('error', 'Solo se puede firmar una revisión ya aprobada.');
+
+            return $this->redirectToRoute('document_show', ['id' => $document->getId()]);
+        }
+
+        return $this->render('document/sign_form.html.twig', [
+            'document' => $document,
+            'version' => $version,
+            'approval' => $version->getLatestApproval(),
         ]);
     }
 

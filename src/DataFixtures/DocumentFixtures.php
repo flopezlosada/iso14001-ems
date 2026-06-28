@@ -167,7 +167,8 @@ final class DocumentFixtures extends AbstractGoldenFixture implements DependentF
             ->setIssueDate(new \DateTimeImmutable('2024-01-08'))
             ->setStatus($versionStatus)
             ->setAuthor($author->getFullName())
-            ->setChangeSummary('Edición inicial.');
+            ->setChangeSummary('Edición inicial.')
+            ->setBody($this->exampleBodyFor($row['type']));
         $document->addVersion($version);
 
         if (VersionStatus::APPROVED === $versionStatus) {
@@ -190,6 +191,34 @@ final class DocumentFixtures extends AbstractGoldenFixture implements DependentF
             ObligationStatus::DONE, ObligationStatus::NOT_APPLICABLE => VersionStatus::APPROVED,
             ObligationStatus::IN_REVIEW => VersionStatus::IN_REVIEW,
             ObligationStatus::PENDING => VersionStatus::DRAFT,
+        };
+    }
+
+    /**
+     * A generic, centre-agnostic example body (rich-text HTML) for drafted documents, so the demo
+     * shows the document content flowing through the editor → detail → PDF pipeline. Deliberately
+     * free of any real centre name/data (real content is loaded by the gitignored import).
+     *
+     * @param DocumentType $type the document type
+     *
+     * @return string|null the example HTML body, or null for types whose content lives in a module
+     */
+    private function exampleBodyFor(DocumentType $type): ?string
+    {
+        return match ($type) {
+            DocumentType::POLICY => '<h1>Política del Sistema de Gestión Ambiental</h1>'
+                .'<div>El centro ha implantado un Sistema de Gestión Ambiental conforme a la norma UNE-EN ISO 14001:2015 y asume los siguientes compromisos:</div>'
+                .'<ul>'
+                .'<li>Cumplir la legislación ambiental vigente y los demás requisitos que el centro suscriba.</li>'
+                .'<li>Prevenir la contaminación y proteger el entorno, con una mejora continua del desempeño ambiental.</li>'
+                .'<li>Establecer y revisar anualmente objetivos ambientales y hacer seguimiento de su cumplimiento.</li>'
+                .'<li>Fomentar la formación y la sensibilización ambiental de toda la comunidad educativa.</li>'
+                .'<li>Gestionar de forma sostenible los recursos y los residuos generados por la actividad.</li>'
+                .'</ul>'
+                .'<div>Esta política se comunica a todas las partes interesadas y está a disposición del público.</div>',
+            DocumentType::MANUAL, DocumentType::PROCEDURE => '<h1>'.htmlspecialchars($type->label()).'</h1>'
+                .'<div>Documento de ejemplo. Su contenido se redactará desde la aplicación o se importará de la documentación del centro.</div>',
+            default => null,
         };
     }
 

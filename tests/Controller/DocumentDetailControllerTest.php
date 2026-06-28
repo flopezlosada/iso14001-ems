@@ -268,8 +268,8 @@ final class DocumentDetailControllerTest extends WebTestCase
         $document = $this->persistDocument($em, 'PC.07.0');
         $this->loginAdmin($client, $em, 'admin-cancel@example.test');
 
-        $client->request('GET', '/documentos/'.$document->getId());
-        $client->submitForm('Anular', ['reason' => 'Creado por error']);
+        $client->request('GET', '/documentos/'.$document->getId().'/ciclo/cancel');
+        $client->submitForm('Anular documento', ['reason' => 'Creado por error']);
 
         self::assertResponseRedirects('/documentos/'.$document->getId());
         $client->followRedirect();
@@ -284,8 +284,8 @@ final class DocumentDetailControllerTest extends WebTestCase
         $document = $this->persistDocument($em, 'PC.08.0');
         $this->loginAdmin($client, $em, 'admin-noreason@example.test');
 
-        $client->request('GET', '/documentos/'.$document->getId());
-        $client->submitForm('Anular', ['reason' => '']);
+        $client->request('GET', '/documentos/'.$document->getId().'/ciclo/cancel');
+        $client->submitForm('Anular documento', ['reason' => '']);
 
         $client->followRedirect();
         // Rejected: it stays active (no banner) and the reason is demanded.
@@ -300,8 +300,8 @@ final class DocumentDetailControllerTest extends WebTestCase
         $document = $this->persistDocument($em, 'PC.10.0');
         $this->loginAdmin($client, $em, 'admin-archive@example.test');
 
-        $client->request('GET', '/documentos/'.$document->getId());
-        $client->submitForm('Archivar', ['reason' => 'Ya no aplica']);
+        $client->request('GET', '/documentos/'.$document->getId().'/ciclo/archive');
+        $client->submitForm('Archivar documento', ['reason' => 'Ya no aplica']);
 
         $client->followRedirect();
         self::assertSelectorTextContains('.lifecycle-banner', 'Archivado');
@@ -351,8 +351,8 @@ final class DocumentDetailControllerTest extends WebTestCase
         $em->flush();
         $client->loginUser($rsgma);
 
-        $client->request('GET', '/documentos/'.$document->getId());
-        $client->submitForm('Anular', ['reason' => 'Sustituido por nueva versión']);
+        $client->request('GET', '/documentos/'.$document->getId().'/ciclo/cancel');
+        $client->submitForm('Anular documento', ['reason' => 'Sustituido por nueva versión']);
 
         self::assertResponseRedirects('/documentos/'.$document->getId());
         $client->followRedirect();
@@ -380,12 +380,43 @@ final class DocumentDetailControllerTest extends WebTestCase
         $em->flush();
         $client->loginUser($user);
 
-        $client->request('GET', '/documentos/'.$document->getId());
-        $client->submitForm('Nueva revisión', ['changeSummary' => 'Actualización anual']);
+        $client->request('GET', '/documentos/'.$document->getId().'/revision/nueva');
+        $client->submitForm('Guardar', [
+            'changeSummary' => 'Actualización anual',
+            'body' => '<div>Contenido redactado de prueba.</div>',
+        ]);
 
         self::assertResponseRedirects('/documentos/'.$document->getId());
         $client->followRedirect();
         self::assertSelectorTextContains('tbody', 'Borrador');
+        // The body flows through to the detail view (drafted document is visible before approval).
+        self::assertSelectorTextContains('.document-body', 'Contenido redactado de prueba.');
+    }
+
+    public function testRevisionBodyIsSanitised(): void
+    {
+        $client = static::createClient();
+        $em = $this->em();
+        $role = (new Role())->setCode('ems_manager')->setName('Responsable del SGA');
+        $document = $this->persistProcedure($em, 'PG-06.03', $role);
+        $user = (new User())->setFullName('Carlos SGA')->setEmail('sga-xss@example.test')->setActive(true)->addAssignedRole($role);
+        $em->persist($user);
+        $em->flush();
+        $client->loginUser($user);
+
+        // A malicious body must be stored sanitised: the script is stripped, the safe text kept.
+        $client->request('GET', '/documentos/'.$document->getId().'/revision/nueva');
+        $client->submitForm('Guardar', [
+            'changeSummary' => 'Intento XSS',
+            'body' => '<p>Texto legítimo</p><script>alert(1)</script>',
+        ]);
+
+        $crawler = $client->request('GET', '/documentos/'.$document->getId());
+        self::assertSelectorTextContains('.document-body', 'Texto legítimo');
+        // The <script> must be stripped from the stored/served body, not just hidden from view.
+        // Scope the check to the rendered body: the page layout itself carries a legitimate
+        // <script> (the theme switcher), so asserting over the whole page would never hold.
+        self::assertStringNotContainsString('<script', $crawler->filter('.document-body')->html());
     }
 
     public function testNonResponsibleCannotIssueRevision(): void
@@ -420,7 +451,9 @@ final class DocumentDetailControllerTest extends WebTestCase
         // Revision 0 already approved and in force; revision 1 is the draft we approve now.
         $rev0 = (new DocumentVersion())->setRevisionNumber(0)->setStatus(VersionStatus::APPROVED)->setChangeSummary('Inicial.');
         $rev0->addApprovalEvent((new ApprovalEvent())->setApprover($approver)->setIntegrityHash('seed0'));
-        $rev1 = (new DocumentVersion())->setRevisionNumber(1)->setStatus(VersionStatus::DRAFT)->setChangeSummary('Actualización.');
+        // Pending approval = in review AND already reviewed (PC.01.0 elaboración → revisión → aprobación).
+        $rev1 = (new DocumentVersion())->setRevisionNumber(1)->setStatus(VersionStatus::IN_REVIEW)->setChangeSummary('Actualización.')
+            ->review('RSGMA', new \DateTimeImmutable());
         $document->addVersion($rev0);
         $document->addVersion($rev1);
         $em->persist($rev0);
@@ -459,10 +492,58 @@ final class DocumentDetailControllerTest extends WebTestCase
         self::assertResponseStatusCodeSame(403);
     }
 
+    public function testReviewerMarksRevisionAsReviewed(): void
+    {
+        $client = static::createClient();
+        $em = $this->em();
+        // The RSGMA (ems_manager) is the reviewer (PC.01.0); here also the procedure's responsible.
+        $role = (new Role())->setCode('ems_manager')->setName('RSGMA');
+        $document = $this->persistProcedure($em, 'PG-07.10', $role);
+        $version = (new DocumentVersion())->setRevisionNumber(0)->setStatus(VersionStatus::IN_REVIEW)->setChangeSummary('Inicial.')->setBody('<p>Contenido</p>');
+        $document->addVersion($version);
+        $em->persist($version);
+        $user = (new User())->setFullName('Carlos SGA')->setEmail('rsgma-review@example.test')->setActive(true)->addAssignedRole($role);
+        $em->persist($user);
+        $em->flush();
+        $client->loginUser($user);
+
+        $client->request('GET', '/documentos/'.$document->getId());
+        $client->submitForm('Revisar');
+
+        $client->followRedirect();
+        // Now reviewed and pending approval (the RSGMA is not the approver of a procedure, Dirección is).
+        self::assertSelectorTextContains('body', 'Revisado');
+    }
+
+    public function testCannotApproveUnreviewedRevision(): void
+    {
+        $client = static::createClient();
+        $em = $this->em();
+        $document = $this->persistProcedure($em, 'PG-07.11', (new Role())->setCode('ems_manager')->setName('RSGMA'));
+        $direction = (new Role())->setCode('direction')->setName('Dirección');
+        $em->persist($direction);
+        $approver = (new User())->setFullName('Marta Directora')->setEmail('dir-noreview@example.test')->setActive(true)->addAssignedRole($direction);
+        $em->persist($approver);
+        // In review but NOT yet reviewed: approval must be refused.
+        $version = (new DocumentVersion())->setRevisionNumber(0)->setStatus(VersionStatus::IN_REVIEW)->setChangeSummary('Inicial.')->setBody('<p>x</p>');
+        $document->addVersion($version);
+        $em->persist($version);
+        $em->flush();
+        $client->loginUser($approver);
+
+        $client->request('GET', '/documentos/'.$document->getId());
+
+        self::assertResponseIsSuccessful();
+        // Sin revisar no se ofrece aprobar: la fila muestra "pendiente de revisar", no "Aprobar".
+        self::assertSelectorTextContains('tbody', 'pendiente de revisar');
+        self::assertSelectorTextNotContains('tbody', 'Aprobar');
+    }
+
     /**
-     * Persists a procedure with a draft revision pending Dirección's approval.
+     * Persists a procedure with a revision in review and already reviewed — i.e. pending only
+     * Dirección's approval (PC.01.0 elaboración → revisión → aprobación).
      *
-     * @return array{0: Document, 1: DocumentVersion, 2: User} the document, its draft revision and the approver
+     * @return array{0: Document, 1: DocumentVersion, 2: User} the document, its revision and the approver
      */
     private function procedurePendingApproval(EntityManagerInterface $em, string $code, string $approverEmail): array
     {
@@ -471,7 +552,8 @@ final class DocumentDetailControllerTest extends WebTestCase
         $em->persist($direction);
         $approver = (new User())->setFullName('Marta Directora')->setEmail($approverEmail)->setActive(true)->addAssignedRole($direction);
         $em->persist($approver);
-        $version = (new DocumentVersion())->setRevisionNumber(0)->setStatus(VersionStatus::DRAFT)->setChangeSummary('Edición inicial.');
+        $version = (new DocumentVersion())->setRevisionNumber(0)->setStatus(VersionStatus::IN_REVIEW)->setChangeSummary('Edición inicial.')
+            ->review('RSGMA', new \DateTimeImmutable());
         $document->addVersion($version);
         $em->persist($version);
         $em->flush();
@@ -536,11 +618,13 @@ final class DocumentDetailControllerTest extends WebTestCase
         // Approve first: the signature can only be attached to an already-approved revision.
         $client->request('GET', '/documentos/'.$document->getId());
         $client->submitForm('Aprobar');
-        $crawler = $client->followRedirect();
+        $client->followRedirect();
 
         $signedPath = tempnam(sys_get_temp_dir(), 'signed').'.pdf';
         file_put_contents($signedPath, "%PDF-1.4\nfirmado por la directora\n%%EOF");
-        $form = $crawler->selectButton('Adjuntar firma')->form();
+        // The signature is now attached from its own page, not inline in the history table.
+        $crawler = $client->request('GET', '/documentos/'.$document->getId().'/revision/'.$version->getId().'/firmar');
+        $form = $crawler->selectButton('Subir firma')->form();
         $field = $form['signedPdf'];
         self::assertInstanceOf(FileFormField::class, $field);
         $field->upload($signedPath);

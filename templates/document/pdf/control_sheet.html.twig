@@ -35,6 +35,15 @@
         .muted { color: #777; }
         .mono { font-family: "DejaVu Sans Mono", monospace; }
         .center { text-align: center; }
+
+        /* The document body itself (rich text from the editor). Neutral headings, so they don't
+           inherit the green control-section style above. */
+        .doc-body { font-size: 10.5pt; line-height: 1.5; }
+        .doc-body h1 { font-size: 15pt; color: #1a1a1a; border: none; margin: 0.4cm 0 0.3cm; }
+        .doc-body h2 { font-size: 12.5pt; color: #1a1a1a; border: none; margin: 0.4cm 0 0.2cm; }
+        .doc-body ul, .doc-body ol { margin: 0.2cm 0 0.2cm 0.6cm; padding-left: 0.6cm; }
+        .doc-body li { margin-bottom: 2pt; }
+        .doc-body a { color: #2f6f4f; }
     </style>
 </head>
 <body>
@@ -58,6 +67,12 @@
 
     <div style="page-break-after: always;"></div>
 
+    {# ---------- Document body ---------- #}
+    {% if version.body %}
+        <div class="doc-body">{{ version.body|raw }}</div>
+        <div style="page-break-after: always;"></div>
+    {% endif %}
+
     {# ---------- Control page ---------- #}
     <h2>1. Identificación del documento</h2>
     <table class="control">
@@ -75,7 +90,7 @@
         <thead><tr><th>Fase</th><th>Responsable</th><th>Fecha</th></tr></thead>
         <tbody>
             <tr><td>Elaboración</td><td>{{ version.author ?? '—' }}</td><td>{{ version.issueDate|date('d/m/Y') }}</td></tr>
-            <tr><td>Revisión</td><td class="muted">—</td><td class="muted">—</td></tr>
+            <tr><td>Revisión</td><td>{{ version.reviewedBy ?? '—' }}</td><td>{{ version.reviewedAt ? version.reviewedAt|date('d/m/Y') : '—' }}</td></tr>
             <tr>
                 <td>Aprobación</td>
                 <td>{{ approval ? approval.approver.fullName : '—' }}</td>

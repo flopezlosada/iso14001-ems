@@ -55,6 +55,25 @@ class DocumentVersion
     private ?string $changeSummary = null;
 
     /**
+     * The document body itself (rich-text HTML) for documents drafted inside the app (policy,
+     * manual, procedures). Each revision carries its own body, so the history reflects what the
+     * text was at every version. Null for documents whose content lives outside the app.
+     */
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $body = null;
+
+    /**
+     * Who reviewed this revision (display name) and when, in the elaboración→revisión→aprobación
+     * flow of PC.01.0. The review is a distinct step before approval: a revision cannot be approved
+     * until it has been reviewed. Null until reviewed.
+     */
+    #[ORM\Column(length: 180, nullable: true)]
+    private ?string $reviewedBy = null;
+
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    private ?\DateTimeImmutable $reviewedAt = null;
+
+    /**
      * Path to the artefact for this revision: the generated PDF for system-generated
      * documents, or the uploaded file for external evidence. Null while still a data-only draft.
      */
@@ -176,6 +195,64 @@ class DocumentVersion
     public function setChangeSummary(?string $changeSummary): static
     {
         $this->changeSummary = $changeSummary;
+
+        return $this;
+    }
+
+    public function getBody(): ?string
+    {
+        return $this->body;
+    }
+
+    public function setBody(?string $body): static
+    {
+        $this->body = $body;
+
+        return $this;
+    }
+
+    public function getReviewedBy(): ?string
+    {
+        return $this->reviewedBy;
+    }
+
+    public function getReviewedAt(): ?\DateTimeImmutable
+    {
+        return $this->reviewedAt;
+    }
+
+    /**
+     * Whether this revision has been reviewed (a prerequisite for approval, PC.01.0).
+     *
+     * @return bool true once a review has been recorded
+     */
+    public function isReviewed(): bool
+    {
+        return null !== $this->reviewedAt;
+    }
+
+    /**
+     * Records the review of this revision (reviewer name and timestamp).
+     *
+     * @param string             $reviewedBy display name of the reviewer
+     * @param \DateTimeImmutable $reviewedAt when the review happened
+     */
+    public function review(string $reviewedBy, \DateTimeImmutable $reviewedAt): static
+    {
+        $this->reviewedBy = $reviewedBy;
+        $this->reviewedAt = $reviewedAt;
+
+        return $this;
+    }
+
+    /**
+     * Clears a recorded review. Editing a revision invalidates a prior review (the text changed), so
+     * it must be reviewed again before it can be approved.
+     */
+    public function clearReview(): static
+    {
+        $this->reviewedBy = null;
+        $this->reviewedAt = null;
 
         return $this;
     }
