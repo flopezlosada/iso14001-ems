@@ -100,7 +100,7 @@ class HomeController extends AbstractController
      * @param object|null        $user      the authenticated user, if any
      * @param \DateTimeImmutable $today     the reference date for urgency
      *
-     * @return array{counts: array{overdue: int, due_soon: int, on_track: int}, actionable: list<array{title: string, code: ?string, urgency: ObligationUrgency, dueDate: ?\DateTimeImmutable, daysUntil: ?int, route: ?string}>, total: int}
+     * @return array{counts: array{overdue: int, due_soon: int, on_track: int}, actionable: list<array{id: ?int, title: string, code: ?string, urgency: ObligationUrgency, dueDate: ?\DateTimeImmutable, daysUntil: ?int, route: ?string}>, total: int}
      */
     private function buildWorklist(DocumentRepository $documents, ?object $user, \DateTimeImmutable $today): array
     {
@@ -133,6 +133,7 @@ class HomeController extends AbstractController
             if (ObligationUrgency::OVERDUE === $urgency || ObligationUrgency::DUE_SOON === $urgency) {
                 $dueDate = $obligation->nextReviewDate();
                 $actionable[] = [
+                    'id' => $obligation->getId(),
                     'title' => $obligation->getTitle(),
                     'code' => $obligation->getCode(),
                     'urgency' => $urgency,
