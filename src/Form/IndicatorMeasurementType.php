@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Form;
 
 use App\Entity\IndicatorMeasurement;
+use App\Util\DecimalFormatter;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\CallbackTransformer;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\IntegerType;
@@ -52,6 +54,14 @@ class IndicatorMeasurementType extends AbstractType
                 'label' => 'Observaciones',
                 'required' => false,
             ]);
+
+        // The value is a DECIMAL, so editing an existing measurement would otherwise show the raw
+        // "150.000" in the input. Strip the trailing zeros on the way to the form; the value reaches
+        // the model unchanged (Doctrine re-pads it to the column scale on persist).
+        $builder->get('value')->addModelTransformer(new CallbackTransformer(
+            static fn (string|int|float|null $stored): string => DecimalFormatter::display($stored),
+            static fn (?string $input): ?string => $input,
+        ));
     }
 
     public function configureOptions(OptionsResolver $resolver): void

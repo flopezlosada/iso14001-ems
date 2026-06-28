@@ -12,7 +12,10 @@
 
 {% block body %}
     <div class="page-head">
-        <h1>{{ isNew ? 'Nueva valoración' : 'Editar valoración ' ~ assessment.exercise }} · {{ item.type.label }}</h1>
+        <div>
+            <h1>{{ isNew ? 'Nueva valoración' : 'Editar valoración ' ~ assessment.exercise }} · {{ item.type.label }}</h1>
+            <p class="lead">{{ item.description }}</p>
+        </div>
     </div>
 
     <div class="card form-card form-card--wide">
