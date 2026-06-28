@@ -16,6 +16,8 @@ use App\Repository\EnvironmentalAspectRepository;
 use App\Security\Voter\DocumentVoter;
 use App\Service\AspectIntensityEstimator;
 use App\Service\AuditLogger;
+use App\Service\ObligationCalendar;
+use App\Service\SettingsProvider;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -112,6 +114,67 @@ final class DocumentController extends AbstractController
             // Aspects (consumption or waste) already trending worse than the threshold: surfaced
             // proactively so a likely-significant aspect is seen now, not only at the yearly evaluation.
             'aspectsToWatch' => $intensityEstimator->watchList($aspects->findLinkedForIntensity(), $today),
+        ]);
+    }
+
+    /**
+     * "Calendario": the obligations laid onto a 12-month year-at-a-glance, starting at the configured
+     * month so it can span the centre's audit cycle. A third lens on the same obligations as "Qué
+     * toca" (by urgency) and "Estructura SGA" (by phase) — this one is by time. Same scope toggle
+     * (mías/todas) and permission basis as the cockpit.
+     *
+     * @param Request            $request   the GET request (scope query param)
+     * @param DocumentRepository $documents the obligation register
+     * @param ObligationCalendar $calendar  lays the obligations onto the 12-month grid
+     * @param SettingsProvider   $settings  provides the configured start month
+     *
+     * @return Response the rendered calendar
+     */
+    #[Route('/calendario', name: 'obligation_calendar', methods: ['GET'])]
+    public function calendar(
+        Request $request,
+        DocumentRepository $documents,
+        ObligationCalendar $calendar,
+        SettingsProvider $settings,
+    ): Response {
+        $today = new \DateTimeImmutable('today');
+        $scope = 'todas' === $request->query->get('scope') ? 'todas' : 'mias';
+        $user = $this->getUser();
+
+        $scoped = [];
+        $mineCount = 0;
+        $totalCount = 0;
+        // Obligations the user owns (or, in "todas", the whole centre) that are marked not-applicable:
+        // they are not painted on the grid, so we surface their count to explain the gap vs the pill.
+        $notApplicable = 0;
+        foreach ($documents->findObligations() as $obligation) {
+            ++$totalCount;
+            $responsible = $obligation->getResponsibleRole();
+            $isMine = $user instanceof User && null !== $responsible && $user->holdsRole($responsible);
+            if ($isMine) {
+                ++$mineCount;
+            }
+            if ('mias' === $scope && !$isMine) {
+                continue;
+            }
+            if (ObligationStatus::NOT_APPLICABLE === $obligation->getStatus()) {
+                ++$notApplicable;
+
+                continue;
+            }
+            $scoped[] = $obligation;
+        }
+
+        $startMonth = $settings->get()->getStartMonth();
+
+        return $this->render('document/calendar.html.twig', [
+            'today' => $today,
+            'scope' => $scope,
+            'mineCount' => $mineCount,
+            'totalCount' => $totalCount,
+            'notApplicable' => $notApplicable,
+            'startMonth' => $startMonth,
+            'calendar' => $calendar->build($scoped, $startMonth, $today),
         ]);
     }
 

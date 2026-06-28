@@ -1,0 +1,89 @@
+{% extends 'app_shell.html.twig' %}
+
+{% set month_names = ['', 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'] %}
+{# Etiqueta de cada pilar para la leyenda; el color lo da la clase cal-*--<pilar>. #}
+{% set pillar_labels = { 'plan': 'Planificar', 'do': 'Implementación', 'check': 'Verificar', 'act': 'Mejora' } %}
+
+{% block title %}Calendario{% endblock %}
+{% block breadcrumb %}<a href="{{ path('app_homepage') }}">Inicio</a><span class="sep">/</span>Calendario{% endblock %}
+
+{% macro mark(e) %}
+    {% set pillar_class = 'cal-mark--' ~ (e.pillar|default('none')) %}
+    {# Toda obligación enlaza: a su módulo de datos si lo tiene, o a su ficha del registro documental
+       si no (como hace el cockpit). Nunca una fila muerta. #}
+    {% set href = e.route ? path(e.route) : (e.id ? path('document_show', { id: e.id })) %}
+    <li class="cal-mark {{ pillar_class }}">
+        {% if href %}<a href="{{ href }}">{% else %}<span class="cal-mark-row">{% endif %}
+            {% if e.status is defined and e.status %}
+                <span class="cal-dot cal-dot--{{ e.status }}" title="{{ e.status == 'overdue' ? 'Vencido' : 'Próximo a vencer' }}"></span>
+            {% endif %}
+            <span class="cal-mark-title">{{ e.title }}</span>
+            {% if e.code %}<span class="cal-mark-code mono muted">{{ e.code }}</span>{% endif %}
+        {% if href %}</a>{% else %}</span>{% endif %}
+    </li>
+{% endmacro %}
+
+{% block body %}
+    <div class="page-head">
+        <div>
+            <h1>Calendario</h1>
+            <p class="lead">
+                {%- if scope == 'mias' -%}
+                    Tus obligaciones a lo largo del año.
+                {%- else -%}
+                    Las obligaciones del centro a lo largo del año.
+                {%- endif %} El año empieza en {{ month_names[startMonth]|lower }}.
+            </p>
+        </div>
+        <a class="btn secondary" href="{{ path('obligation_index') }}">Ver qué toca</a>
+    </div>
+
+    {# Ámbito: lo del usuario (por defecto) o todo el centro (Dirección / auditor). #}
+    <div class="scope-toggle" role="group" aria-label="Ámbito de las obligaciones">
+        <a href="{{ path('obligation_calendar', { scope: 'mias' }) }}" class="{{ scope == 'mias' ? 'is-active' }}"{{ scope == 'mias' ? ' aria-current="page"' }}>Mías ({{ mineCount }})</a>
+        <a href="{{ path('obligation_calendar', { scope: 'todas' }) }}" class="{{ scope == 'todas' ? 'is-active' }}"{{ scope == 'todas' ? ' aria-current="page"' }}>Todas ({{ totalCount }})</a>
+    </div>
+
+    {# Leyenda: el color agrupa por pilar; el icono/texto identifican (no solo color, por accesibilidad).
+       La urgencia es una dimensión distinta (estado temporal), por eso va en su propio grupo. #}
+    <div class="cal-legend-row">
+        <ul class="cal-legend" aria-label="Pilar (color)">
+            {% for key, label in pillar_labels %}
+                <li><span class="cal-dot cal-dot--{{ key }}"></span>{{ label }}</li>
+            {% endfor %}
+        </ul>
+        <ul class="cal-legend" aria-label="Estado de revisión">
+            <li class="cal-legend-sep">Estado</li>
+            <li><span class="cal-dot cal-dot--overdue"></span>Vencido</li>
+            <li><span class="cal-dot cal-dot--due_soon"></span>Próximo a vencer</li>
+        </ul>
+    </div>
+
+    <div class="cal-grid">
+        {% for cell in calendar.months %}
+            <section class="cal-month {{ cell.month == today|date('n') ? 'is-current' }}">
+                <h2 class="cal-month-name">{{ month_names[cell.month] }}</h2>
+                {% if cell.entries is empty %}
+                    <p class="cal-empty muted">Sin obligaciones.</p>
+                {% else %}
+                    <ul class="cal-list">
+                        {% for e in cell.entries %}{{ _self.mark(e) }}{% endfor %}
+                    </ul>
+                {% endif %}
+            </section>
+        {% endfor %}
+    </div>
+
+    {% if notApplicable > 0 %}
+        <p class="cal-note muted">{{ notApplicable }} obligación{{ notApplicable == 1 ? '' : 'es' }} marcada{{ notApplicable == 1 ? '' : 's' }} como «no aplica» no se muestra{{ notApplicable == 1 ? '' : 'n' }} en el calendario.</p>
+    {% endif %}
+
+    {% if calendar.eventDriven is not empty %}
+        <section class="cal-event">
+            <p class="eyebrow">Sin fecha fija · según evento</p>
+            <ul class="cal-list">
+                {% for e in calendar.eventDriven %}{{ _self.mark(e) }}{% endfor %}
+            </ul>
+        </section>
+    {% endif %}
+{% endblock %}
