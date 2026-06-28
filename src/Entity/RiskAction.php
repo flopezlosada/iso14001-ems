@@ -11,9 +11,11 @@ use Symfony\Component\Validator\Constraints as Assert;
 /**
  * One action of the plan to address a {@see RiskAssessment} (PC.03.0 §5.3 — "one or more actions").
  *
- * Responsible, deadline and efficacy are free text on purpose: the real F.08.0 fills them with
- * heterogeneous values ("RESPO SGMA", "DIC", "ANUAL", "Realizada", "Sí"), so a stricter type would
- * lose data. The deadline is NOT a date for the same reason.
+ * The responsible is a {@see Role} (functional ownership, e.g. "Responsable del SGA"), matching how
+ * the rest of the system models responsibility ({@see Document::$responsibleRole}); it is nullable
+ * and SET NULL on role deletion, so removing a role never breaks an action. Deadline and efficacy
+ * stay free text on purpose: the real F.08.0 fills them with heterogeneous values ("DIC", "ANUAL",
+ * "Realizada", "Sí"), so a stricter type would lose data. The deadline is NOT a date for the same reason.
  */
 #[ORM\Entity]
 #[ORM\Table(name: 'risk_action')]
@@ -33,11 +35,12 @@ class RiskAction
     private string $description;
 
     /**
-     * Person/role responsible for the action (free text, e.g. "RESPO SGMA").
+     * Role responsible for the action (e.g. "Responsable del SGA"). Nullable, and SET NULL when the
+     * role is deleted, so an action never blocks role administration.
      */
-    #[ORM\Column(length: 255, nullable: true)]
-    #[Assert\Length(max: 255)]
-    private ?string $responsible = null;
+    #[ORM\ManyToOne(targetEntity: Role::class)]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
+    private ?Role $responsible = null;
 
     /**
      * Deadline as free text (e.g. "DIC", "ANUAL"); not a date — see class note.
@@ -87,12 +90,12 @@ class RiskAction
         return $this;
     }
 
-    public function getResponsible(): ?string
+    public function getResponsible(): ?Role
     {
         return $this->responsible;
     }
 
-    public function setResponsible(?string $responsible): static
+    public function setResponsible(?Role $responsible): static
     {
         $this->responsible = $responsible;
 

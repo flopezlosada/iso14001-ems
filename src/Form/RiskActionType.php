@@ -5,6 +5,10 @@ declare(strict_types=1);
 namespace App\Form;
 
 use App\Entity\RiskAction;
+use App\Entity\Role;
+use App\Repository\RoleRepository;
+use Doctrine\ORM\QueryBuilder;
+use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
@@ -14,7 +18,8 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
  * Form for one {@see RiskAction} of the action plan, embedded as a collection item in
- * {@see RiskAssessmentType}. Responsible, deadline and efficacy are free text by design.
+ * {@see RiskAssessmentType}. The responsible is a {@see Role} (functional ownership); deadline and
+ * efficacy stay free text by design.
  *
  * @extends AbstractType<RiskAction>
  */
@@ -26,9 +31,14 @@ class RiskActionType extends AbstractType
             ->add('description', TextareaType::class, [
                 'label' => 'Acción',
             ])
-            ->add('responsible', TextType::class, [
+            ->add('responsible', EntityType::class, [
                 'label' => 'Responsable',
                 'required' => false,
+                'class' => Role::class,
+                'choice_label' => 'name',
+                'placeholder' => 'Sin asignar',
+                // Alphabetical, stable order for the selector.
+                'query_builder' => static fn (RoleRepository $roles): QueryBuilder => $roles->createQueryBuilder('r')->orderBy('r.name', 'ASC'),
             ])
             ->add('deadline', TextType::class, [
                 'label' => 'Plazo',

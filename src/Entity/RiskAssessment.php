@@ -93,6 +93,7 @@ class RiskAssessment
      * @var Collection<int, RiskAction>
      */
     #[ORM\OneToMany(targetEntity: RiskAction::class, mappedBy: 'assessment', cascade: ['persist', 'remove'], orphanRemoval: true)]
+    #[ORM\OrderBy(['id' => 'ASC'])]
     private Collection $actions;
 
     #[ORM\Column]

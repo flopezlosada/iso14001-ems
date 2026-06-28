@@ -15,6 +15,7 @@ use App\Enum\RiskCategory;
 use App\Enum\RiskLevel;
 use App\Enum\RiskOpportunityType;
 use App\Repository\RiskOpportunityRepository;
+use App\Util\SchoolYear;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
@@ -62,11 +63,10 @@ final class RiskAssessmentControllerTest extends WebTestCase
         $itemId = $this->item->getId();
 
         $client->request('GET', '/risks/'.$itemId.'/assessments/new');
+        // The "Curso" selector is preselected to the current school year, so it is not overridden here.
         $client->submitForm('Guardar', [
-            'risk_assessment[exercise]' => '2025-2026',
             'risk_assessment[probability]' => '3',
             'risk_assessment[impact]' => '2',
-            'risk_assessment[revisionNumber]' => '1',
         ]);
 
         self::assertResponseRedirects('/risks/'.$itemId);
@@ -80,6 +80,37 @@ final class RiskAssessmentControllerTest extends WebTestCase
         self::assertNotFalse($assessment);
         self::assertSame(6, $assessment->getScore());
         self::assertSame(RiskCategory::CRITICAL, $assessment->getCategory());
+    }
+
+    public function testNewFormDoesNotOfferYearsAlreadyValued(): void
+    {
+        $client = $this->loggedInClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $current = SchoolYear::current(new \DateTimeImmutable('today'));
+        $this->persistAssessment($em, $current);
+
+        $crawler = $client->request('GET', '/risks/'.$this->item->getId().'/assessments/new');
+
+        self::assertResponseIsSuccessful();
+        $offered = $crawler->filter('#risk_assessment_exercise option')->each(static fn ($option): ?string => $option->attr('value'));
+        // The already-valued current year is gone; the still-free next year is offered.
+        self::assertNotContains($current, $offered);
+        self::assertContains(SchoolYear::next($current), $offered);
+    }
+
+    public function testNewRedirectsWhenEveryAvailableYearIsAlreadyValued(): void
+    {
+        $client = $this->loggedInClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $current = SchoolYear::current(new \DateTimeImmutable('today'));
+        $this->persistAssessment($em, SchoolYear::previous($current));
+        $this->persistAssessment($em, $current);
+        $this->persistAssessment($em, SchoolYear::next($current));
+
+        $client->request('GET', '/risks/'.$this->item->getId().'/assessments/new');
+
+        // Nothing left to add: bounce back to the item instead of rendering a choiceless form.
+        self::assertResponseRedirects('/risks/'.$this->item->getId());
     }
 
     public function testDirectionApprovesValuation(): void
@@ -157,7 +188,7 @@ final class RiskAssessmentControllerTest extends WebTestCase
         self::assertCount(0, $crawler->filter('form[action$="/approve"]'));
     }
 
-    public function testBumpingRevisionClearsApproval(): void
+    public function testEditingApprovedValuationBumpsRevisionAndClearsApproval(): void
     {
         $client = static::createClient();
         $em = static::getContainer()->get(EntityManagerInterface::class);
@@ -170,12 +201,11 @@ final class RiskAssessmentControllerTest extends WebTestCase
         $client->loginUser($approver);
 
         $client->request('GET', '/risks/'.$this->item->getId().'/assessments/'.$assessmentId.'/edit');
-        // A new revision is a fresh draft: bumping the number must clear the previous approval.
+        // A REAL change (impact 2 -> 1) of an approved valuation is a new revision: the number bumps
+        // automatically (no manual field) and the previous approval is cleared. "Curso" is locked here.
         $client->submitForm('Guardar', [
-            'risk_assessment[exercise]' => '2025-2026',
             'risk_assessment[probability]' => '3',
-            'risk_assessment[impact]' => '2',
-            'risk_assessment[revisionNumber]' => '2',
+            'risk_assessment[impact]' => '1',
         ]);
 
         self::assertResponseRedirects('/risks/'.$this->item->getId());
@@ -185,6 +215,59 @@ final class RiskAssessmentControllerTest extends WebTestCase
         self::assertSame(2, $reloaded->getRevisionNumber());
         self::assertNull($reloaded->getApprovedBy());
         self::assertNull($reloaded->getApprovedAt());
+    }
+
+    public function testSavingApprovedValuationUnchangedKeepsRevisionAndApproval(): void
+    {
+        $client = static::createClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $this->seedItem($em);
+        $approver = $this->persistUser($em, 'direction', 'noop-save@example.test');
+        $assessment = $this->persistAssessment($em, '2025-2026'); // probability 3, impact 2
+        $assessment->setApprovedBy($approver)->setApprovedAt(new \DateTimeImmutable('2026-01-15'));
+        $em->flush();
+        $assessmentId = $assessment->getId();
+        $client->loginUser($approver);
+
+        $client->request('GET', '/risks/'.$this->item->getId().'/assessments/'.$assessmentId.'/edit');
+        // Re-saving with the SAME values is a no-op: it must not bump the revision nor drop approval.
+        $client->submitForm('Guardar', [
+            'risk_assessment[probability]' => '3',
+            'risk_assessment[impact]' => '2',
+        ]);
+
+        self::assertResponseRedirects('/risks/'.$this->item->getId());
+        $em->clear();
+        $reloaded = $em->find(RiskAssessment::class, $assessmentId);
+        self::assertNotNull($reloaded);
+        self::assertSame(1, $reloaded->getRevisionNumber());
+        self::assertNotNull($reloaded->getApprovedBy());
+        self::assertNotNull($reloaded->getApprovedAt());
+    }
+
+    public function testEditingDraftValuationDoesNotBumpRevision(): void
+    {
+        $client = static::createClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $this->seedItem($em);
+        $editor = $this->persistUser($em, 'direction', 'draft-edit@example.test');
+        $assessment = $this->persistAssessment($em, '2025-2026'); // unapproved draft, revision 1
+        $assessmentId = $assessment->getId();
+        $client->loginUser($editor);
+
+        $client->request('GET', '/risks/'.$this->item->getId().'/assessments/'.$assessmentId.'/edit');
+        $client->submitForm('Guardar', [
+            'risk_assessment[probability]' => '3',
+            'risk_assessment[impact]' => '2',
+        ]);
+
+        self::assertResponseRedirects('/risks/'.$this->item->getId());
+        $em->clear();
+        $reloaded = $em->find(RiskAssessment::class, $assessmentId);
+        self::assertNotNull($reloaded);
+        // Still a draft being refined: the revision stays put (only edits to an approved one bump it).
+        self::assertSame(1, $reloaded->getRevisionNumber());
+        self::assertNull($reloaded->getApprovedBy());
     }
 
     /** Persists the item under test (a risk) into {@see self::$item}. */

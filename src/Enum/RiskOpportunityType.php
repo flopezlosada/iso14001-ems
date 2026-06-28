@@ -30,6 +30,21 @@ enum RiskOpportunityType: string
     }
 
     /**
+     * Lowercased label preceded by its Spanish definite article, agreeing in gender: "el riesgo"
+     * (masculine) / "la oportunidad" (feminine). Lets sentences read correctly without hardcoding
+     * "el", which would produce "el oportunidad".
+     *
+     * @return string the article + lowercased label, e.g. "el riesgo" or "la oportunidad"
+     */
+    public function withDefiniteArticle(): string
+    {
+        return match ($this) {
+            self::RISK => 'el riesgo',
+            self::OPPORTUNITY => 'la oportunidad',
+        };
+    }
+
+    /**
      * Label of the first scoring factor for this type: "Probabilidad" for risks,
      * "Potencialidad" for opportunities (PC.03.0 §5.2).
      *
