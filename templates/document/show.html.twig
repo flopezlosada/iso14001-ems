@@ -77,6 +77,27 @@
         </div>
     {% endif %}
 
+    {# Cierres de revisión de periodo (del audit-log): cuándo se marcó "hecho" cada periodo desde
+       "Qué toca". Distinto del historial de versiones (revisiones formales del documento). #}
+    {% if document.hasFixedCadence or reviews is not empty %}
+        <div class="page-head"><h2>Revisiones de periodo</h2></div>
+        <div class="card">
+            {% if reviews is empty %}
+                <p class="muted">Aún no se ha cerrado ninguna revisión de periodo desde la aplicación. Se registran al marcar la obligación como hecha en «Qué toca».</p>
+            {% else %}
+                <ul class="activity">
+                    {% for r in reviews %}
+                        <li>
+                            <span class="activity-when mono">{{ r.occurredAt|date('d/m/Y H:i') }}</span>
+                            <span class="activity-what">{{ r.summary ?? 'Revisión del periodo cerrada' }}</span>
+                            <span class="activity-who muted">{{ r.actor ?? 'sistema' }}</span>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+    {% endif %}
+
     <div class="page-head"><h2>Historial de versiones</h2></div>
 
     {% if document.isActive and is_granted('DOCUMENT_ISSUE', document) %}

@@ -17,6 +17,8 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Entity(repositoryClass: AuditLogRepository::class)]
 #[ORM\Table(name: 'audit_log')]
 #[ORM\Index(name: 'idx_audit_occurred_at', columns: ['occurred_at'])]
+// Supports findForSubject(): the obligation detail page lists a subject's entries newest-first.
+#[ORM\Index(name: 'idx_audit_subject', columns: ['subject_type', 'subject_id', 'occurred_at'])]
 class AuditLog
 {
     #[ORM\Id]
