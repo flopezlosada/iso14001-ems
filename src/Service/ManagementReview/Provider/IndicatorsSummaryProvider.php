@@ -8,6 +8,7 @@ use App\Enum\ReviewSectionKey;
 use App\Repository\IndicatorRepository;
 use App\Service\ManagementReview\ExerciseYears;
 use App\Service\ManagementReview\SectionSummaryProvider;
+use App\Util\DecimalFormatter;
 
 /**
  * Summarises the indicator measurements of the course's closing year (F.09.0), highlighting the
@@ -31,23 +32,38 @@ final class IndicatorsSummaryProvider implements SectionSummaryProvider
         $year = ExerciseYears::endYear($exercise);
 
         $measuredCount = 0;
+        $perIndicator = [];
         $breaches = [];
         foreach ($this->indicators->findAllWithMeasurements() as $indicator) {
+            $measuredThisYear = 0;
+            $breachedThisYear = 0;
             foreach ($indicator->getMeasurements() as $measurement) {
                 if ($measurement->getYear() !== $year) {
                     continue;
                 }
 
                 ++$measuredCount;
+                ++$measuredThisYear;
                 if ($measurement->isBreached()) {
+                    ++$breachedThisYear;
                     $breaches[] = sprintf(
                         '- %s (mes %d): valor %s (referencia %s)',
                         $indicator->getName(),
                         $measurement->getMonth(),
-                        $measurement->getValue(),
+                        DecimalFormatter::display($measurement->getValue()),
                         $indicator->getReferenceValue() ?? '—',
                     );
                 }
+            }
+
+            if ($measuredThisYear > 0) {
+                $perIndicator[] = sprintf(
+                    '- %s (referencia %s): %d medición(es), %d fuera de referencia.',
+                    $indicator->getName(),
+                    $indicator->getReferenceValue() ?? '—',
+                    $measuredThisYear,
+                    $breachedThisYear,
+                );
             }
         }
 
@@ -56,16 +72,20 @@ final class IndicatorsSummaryProvider implements SectionSummaryProvider
         }
 
         $header = sprintf(
-            'Mediciones de indicadores en %d: %d, de las cuales %d superaron el valor de referencia.',
+            'Mediciones de indicadores en %d: %d sobre %d indicador(es), de las cuales %d superaron el valor de referencia.',
             $year,
             $measuredCount,
+            \count($perIndicator),
             \count($breaches),
         );
 
-        if ([] === $breaches) {
-            return $header;
+        $parts = [$header, '', 'Indicadores medidos:', ...$perIndicator];
+        if ([] !== $breaches) {
+            $parts[] = '';
+            $parts[] = 'Desviaciones:';
+            $parts = [...$parts, ...$breaches];
         }
 
-        return implode("\n", [$header, '', 'Desviaciones:', ...$breaches]);
+        return implode("\n", $parts);
     }
 }

@@ -64,6 +64,51 @@ final class ManagementReviewControllerTest extends WebTestCase
         self::assertCount(\count(ReviewSectionKey::cases()), $all[0]->getSections());
     }
 
+    public function testAutoSectionsAreReadOnlyAndManualOnesEditableInEditForm(): void
+    {
+        $client = $this->loggedInClient();
+        $client->request('GET', '/management-review/new');
+        $client->submitForm('Guardar', ['management_review[exercise]' => '2025-2026']);
+        static::getContainer()->get(EntityManagerInterface::class)->clear();
+        $id = $this->reviews()->findAllOrdered()[0]->getId();
+
+        $client->request('GET', '/management-review/'.$id.'/edit');
+
+        self::assertResponseIsSuccessful();
+        // The data-driven sections render a disabled textarea (review only)...
+        self::assertSelectorExists('textarea[disabled]');
+        // ...while the decision/manual sections stay editable.
+        self::assertSelectorExists('textarea:not([disabled])');
+        // The six output (decision) sections each render a closed verdict dropdown.
+        self::assertCount(6, $client->getCrawler()->filter('select[id$="_decision"]'));
+    }
+
+    public function testRegeneratingADraftRedirectsBackToEdit(): void
+    {
+        $client = $this->loggedInClient();
+        $client->request('GET', '/management-review/new');
+        $client->submitForm('Guardar', ['management_review[exercise]' => '2025-2026']);
+        static::getContainer()->get(EntityManagerInterface::class)->clear();
+        $id = $this->reviews()->findAllOrdered()[0]->getId();
+
+        $client->request('GET', '/management-review/'.$id.'/edit');
+        $client->submitForm('Regenerar datos automáticos');
+
+        self::assertResponseRedirects('/management-review/'.$id.'/edit');
+    }
+
+    public function testRegenerateRejectsAnInvalidCsrfToken(): void
+    {
+        $client = $this->loggedInClient();
+        $client->request('GET', '/management-review/new');
+        $client->submitForm('Guardar', ['management_review[exercise]' => '2025-2026']);
+        static::getContainer()->get(EntityManagerInterface::class)->clear();
+        $id = $this->reviews()->findAllOrdered()[0]->getId();
+
+        $client->request('POST', '/management-review/'.$id.'/regenerate', ['_token' => 'wrong']);
+        self::assertResponseStatusCodeSame(403);
+    }
+
     public function testApprovingRecordsSignOff(): void
     {
         $client = $this->loggedInClient();

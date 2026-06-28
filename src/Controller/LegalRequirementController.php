@@ -40,6 +40,7 @@ class LegalRequirementController extends AbstractController
 
         return $this->render('legal_requirement/index.html.twig', [
             'requirements' => $repository->findAllOrdered(),
+            'today' => new \DateTimeImmutable('today'),
         ]);
     }
 

@@ -57,6 +57,25 @@ enum ReviewSectionKey: string
     }
 
     /**
+     * The fixed verdict options for an output (decision) section: the closed set of choices Direction
+     * picks from, instead of free text. Input sections have no verdict (empty list).
+     *
+     * @return list<string> the allowed verdicts, in order; empty for non-decision sections
+     */
+    public function decisionOptions(): array
+    {
+        return match ($this) {
+            self::CONCLUSIONS => ['Conveniente, adecuado y eficaz', 'Adecuado con mejoras', 'Requiere cambios importantes'],
+            self::IMPROVEMENT_DECISIONS => ['Se aprueban mejoras', 'No se aprueban mejoras'],
+            self::SYSTEM_CHANGES => ['Se requieren cambios', 'No se requieren cambios'],
+            self::UNMET_OBJECTIVES => ['Hay objetivos no alcanzados', 'Todos los objetivos alcanzados'],
+            self::BUSINESS_INTEGRATION => ['Necesaria', 'No procede'],
+            self::STRATEGIC_DIRECTION => ['Con implicaciones', 'Sin implicaciones'],
+            default => [],
+        };
+    }
+
+    /**
      * Human-facing label (Spanish, the application's UI language), taken from the wording of the
      * real RG-09.03.01 register.
      *

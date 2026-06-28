@@ -49,7 +49,7 @@
                                 {%- if assessment.approvedBy -%}
                                     {{ assessment.approvedBy.fullName }} <span class="muted">· {{ assessment.approvedAt|date('d/m/Y') }}</span>
                                 {%- elseif is_granted('RISK_ASSESSMENT_APPROVE', assessment) -%}
-                                    <form method="post" action="{{ path('risk_assessment_approve', { id: item.id, assessmentId: assessment.id }) }}" class="inline-form">
+                                    <form method="post" action="{{ path('risk_assessment_approve', { id: item.id, assessmentId: assessment.id }) }}" class="inline-form" data-confirm="¿Aprobar esta valoración del {{ item.type.label|lower|e('html_attr') }}?">
                                         <input type="hidden" name="_token" value="{{ csrf_token('risk_assessment_approve' ~ assessment.id) }}">
                                         <button class="btn secondary" type="submit">Aprobar</button>
                                     </form>

@@ -52,7 +52,7 @@
                             <td>
                                 {% if can_write %}
                                     <a href="{{ path('training_evidence_edit', { id: evidence.id }) }}">Editar</a>
-                                    <form method="post" action="{{ path('training_evidence_delete', { id: evidence.id }) }}" onsubmit="return confirm('¿Eliminar la evidencia de «{{ evidence.personName|e('js') }}»?');" style="display:inline">
+                                    <form method="post" action="{{ path('training_evidence_delete', { id: evidence.id }) }}" data-confirm="¿Eliminar la evidencia de «{{ evidence.personName|e('html_attr') }}»?" style="display:inline">
                                         <input type="hidden" name="_token" value="{{ csrf_token('delete_training_evidence' ~ evidence.id) }}">
                                         <button type="submit" class="btn secondary">Eliminar</button>
                                     </form>

@@ -70,8 +70,15 @@ final class LegalRequirementImporter extends AbstractDatasetImporter implements 
                 ->setSpecificRequirement(trim($row['specific_requirement'] ?? ''))
                 ->setComplianceEvidence($this->nullable($row['compliance_evidence'] ?? ''))
                 ->setEvaluationFrequency(EvaluationFrequency::tryFrom($row['evaluation_frequency'] ?? ''))
-                ->setLastReviewedOn($this->parseDate($row['last_reviewed_on'] ?? ''))
-                ->setNextReviewOn($this->parseDate($row['next_review_on'] ?? ''));
+                ->setLastReviewedOn($this->parseDate($row['last_reviewed_on'] ?? ''));
+
+            // The next review is derived from the last review plus the cadence (see LegalRequirement).
+            // Only override it when the CSV carries an explicit date (a regulator-fixed inspection that
+            // does not follow the cadence); an empty column must NOT wipe the derived value.
+            $explicitNextReview = $this->parseDate($row['next_review_on'] ?? '');
+            if (null !== $explicitNextReview) {
+                $requirement->setNextReviewOn($explicitNextReview);
+            }
 
             $violations = $this->validator->validate($requirement);
             if (\count($violations) > 0) {

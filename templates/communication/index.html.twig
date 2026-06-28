@@ -47,7 +47,7 @@
                             <td>
                                 {% if can_write %}
                                     <a href="{{ path('communication_edit', { id: communication.id }) }}">Editar</a>
-                                    <form method="post" action="{{ path('communication_delete', { id: communication.id }) }}" onsubmit="return confirm('¿Eliminar la comunicación «{{ communication.subject|e('js') }}»?');" style="display:inline">
+                                    <form method="post" action="{{ path('communication_delete', { id: communication.id }) }}" data-confirm="¿Eliminar la comunicación «{{ communication.subject|e('html_attr') }}»?" style="display:inline">
                                         <input type="hidden" name="_token" value="{{ csrf_token('delete_communication' ~ communication.id) }}">
                                         <button type="submit" class="btn secondary">Eliminar</button>
                                     </form>

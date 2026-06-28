@@ -19,7 +19,7 @@
             {{ form_errors(form) }}
             {{ f.section('El requisito', [form.legalProvision, form.scope, form.environmentalVector, form.specificRequirement]) }}
             {{ f.section('Cumplimiento', [form.complianceEvidence, form.complianceStatus]) }}
-            {{ f.section('Revisión', [form.evaluationFrequency, form.lastReviewedOn, form.nextReviewOn]) }}
+            {{ f.section('Revisión', [form.evaluationFrequency, form.lastReviewedOn]) }}
             {{ f.actions(path('legal_requirement_index')) }}
         {{ form_end(form) }}
     </div>

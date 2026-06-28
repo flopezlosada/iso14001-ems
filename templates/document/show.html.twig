@@ -136,7 +136,7 @@
                                     {% if ap.digitallySigned %} <span class="badge badge--success" title="Firma digital adjunta">Firmada</span>{% endif %}
                                     <span class="mono muted" title="Hash de integridad: {{ ap.integrityHash|e('html_attr') }}">· {{ ap.integrityHash|slice(0, 10) }}…</span>
                                 {%- elseif can_approve and document.isActive and v.status.value in ['draft', 'in_review'] -%}
-                                    <form method="post" action="{{ path('document_revision_approve', { id: document.id, versionId: v.id }) }}" class="inline-form">
+                                    <form method="post" action="{{ path('document_revision_approve', { id: document.id, versionId: v.id }) }}" class="inline-form" data-confirm="¿Aprobar esta versión del documento? Quedará como versión vigente.">
                                         <input type="hidden" name="_token" value="{{ csrf_token('document_approve' ~ document.id) }}">
                                         <button class="btn secondary" type="submit">Aprobar</button>
                                     </form>

@@ -40,7 +40,13 @@
                                     <a href="{{ path('non_conformity_new', { origin: 'internal', description: 'Incumplimiento del requisito legal ' ~ requirement.reference ~ ' (' ~ requirement.legalProvision ~ '): ' ~ requirement.specificRequirement }) }}">Abrir NC</a>
                                 {%- endif -%}
                             </td>
-                            <td>{{ requirement.nextReviewOn ? requirement.nextReviewOn|date('d/m/Y') : '—' }}</td>
+                            <td>
+                                {%- if requirement.nextReviewOn -%}
+                                    {{ requirement.nextReviewOn|date('d/m/Y') }}
+                                    {%- if requirement.isReviewOverdueOn(today) %} <span class="badge badge--danger">Vencida</span>
+                                    {%- elseif requirement.isReviewDueSoonOn(today) %} <span class="badge badge--warning">Próxima</span>{% endif -%}
+                                {%- else -%}—{%- endif -%}
+                            </td>
                             <td><a href="{{ path('legal_requirement_edit', { id: requirement.id }) }}">Editar</a></td>
                         </tr>
                     {% endfor %}
