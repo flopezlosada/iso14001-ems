@@ -183,7 +183,7 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 500; color: var(--te
 .nav { display: flex; flex-direction: column; gap: 2px; }
 .nav a {
     display: block;
-    padding: 8px 12px;
+    padding: 7px 12px;
     border-radius: var(--radius);
     color: var(--text-muted);
     text-decoration: none;
@@ -192,6 +192,21 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 500; color: var(--te
 }
 .nav a:hover { background: var(--accent-weak); color: var(--text); }
 .nav a.is-active { background: var(--accent); color: var(--on-accent); }
+
+/* Pilares plegables del menú (ver nav-pillars.js). El grupo se oculta cuando el pilar está
+   colapsado; sin JS nunca se añade .is-collapsed, así que todo queda visible. */
+.nav-pillar { display: flex; flex-direction: column; gap: 2px; }
+.nav-group { display: flex; flex-direction: column; gap: 2px; }
+.nav-pillar.is-collapsed .nav-group { display: none; }
+
+/* Jerarquía visual de tres niveles para que no se confunda lo principal con lo de cada pilar:
+   1) enlaces principales (Inicio, Qué toca, Estructura, Documentos): hijos directos de .nav,
+      con color de texto pleno y algo más de peso;
+   2) cabecera de pilar: la etiqueta "eyebrow" en mayúsculas (.nav-label);
+   3) módulos dentro del pilar: sangrados bajo una guía vertical y atenuados, como subnivel. */
+.nav > a { color: var(--text); font-weight: 500; }
+.nav-group { margin-left: 1.1rem; border-left: 1px solid var(--border); }
+.nav-group a { padding-left: 14px; }
 
 .sidebar .sidebar-foot {
     margin-top: auto;
@@ -1066,7 +1081,23 @@ input[type="email"], input[type="text"], select, textarea {
     .seg { width: 100%; }
 }
 
-.nav-label { margin: 1.1rem 0 .3rem; padding: 0 .9rem; font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--text-faint); }
+/* Cabecera de pilar: es un <button> (plegable), pero conserva la estética de etiqueta "eyebrow".
+   La fila completa es clicable; el chevron a la derecha indica abierto/cerrado. */
+.nav-label {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    width: 100%; margin: .7rem 0 .3rem; padding: 4px .9rem;
+    background: transparent; border: 0; cursor: pointer; text-align: left;
+    font-family: inherit; font-size: 11px; font-weight: 600; letter-spacing: .04em;
+    text-transform: uppercase; color: var(--text-faint);
+}
+.nav-label:hover { color: var(--text-muted); }
+/* Chevron CSS (sin imagen): apunta hacia abajo cuando está abierto, a la derecha al colapsar. */
+.nav-label::after {
+    content: ""; width: 6px; height: 6px; flex: none; margin-right: 2px;
+    border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor;
+    transform: translateY(-1px) rotate(45deg); transition: transform .15s ease;
+}
+.nav-pillar.is-collapsed .nav-label::after { transform: translateY(1px) rotate(-45deg); }
 
 /* --- Obligations cockpit ("Qué toca" y "Estructura SGA") --- */
 /* Conmutador de ámbito (Mías / Todas): pastillas, misma estética que .theme-toggle. */
