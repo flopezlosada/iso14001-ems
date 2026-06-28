@@ -13,10 +13,15 @@ use League\OAuth2\Client\Provider\GoogleUser;
 use League\OAuth2\Client\Provider\ResourceOwnerInterface;
 use League\OAuth2\Client\Token\AccessToken;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Session\Session;
+use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\Exception\CustomUserMessageAuthenticationException;
 use Symfony\Component\Security\Http\Authenticator\Passport\Badge\UserBadge;
+use Symfony\Component\Security\Http\SecurityRequestAttributes;
 
 /**
  * Unit tests for {@see GoogleAuthenticator}. The access control is the allow-list (registered,
@@ -114,5 +119,65 @@ final class GoogleAuthenticatorTest extends TestCase
 
         $this->expectException(CustomUserMessageAuthenticationException::class);
         $authenticator->authenticate(new Request());
+    }
+
+    public function testAllowListRejectionMessageDoesNotEnumerate(): void
+    {
+        $users = $this->createStub(UserRepository::class);
+        $users->method('findActiveByEmail')->willReturn(null);
+
+        $passport = $this->authenticator($users, new GoogleUser(['email' => 'stranger@toq.io', 'sub' => '1']))
+            ->authenticate(new Request());
+
+        try {
+            ($passport->getBadge(UserBadge::class)->getUserLoader())('stranger@toq.io');
+            self::fail('Expected the allow-list rejection to throw.');
+        } catch (CustomUserMessageAuthenticationException $e) {
+            // Must not reveal that the address is (not) registered — same generic wording as any
+            // other sign-in failure, so the allow-list membership stays undisclosed.
+            self::assertStringNotContainsStringIgnoringCase('dada de alta', $e->getMessageKey());
+            self::assertStringNotContainsStringIgnoringCase('no registrad', $e->getMessageKey());
+        }
+    }
+
+    public function testFailureIsStoredForTheLoginPageNotAsAFlash(): void
+    {
+        $session = new Session(new MockArraySessionStorage());
+        $request = new Request();
+        $request->setSession($session);
+
+        $exception = new CustomUserMessageAuthenticationException('No se ha podido iniciar sesión. Inténtalo de nuevo.');
+        $response = $this->failingAuthenticator()->onAuthenticationFailure($request, $exception);
+
+        self::assertInstanceOf(RedirectResponse::class, $response);
+        self::assertSame('/login', $response->getTargetUrl());
+        // Stored under the standard auth-error key (read & cleared on the login page) — not a flash,
+        // which previously surfaced on the first authenticated page instead of the login screen.
+        self::assertSame($exception, $session->get(SecurityRequestAttributes::AUTHENTICATION_ERROR));
+        self::assertSame([], $session->getFlashBag()->peekAll());
+    }
+
+    public function testNonUserMessageFailureIsWrappedInAGenericMessage(): void
+    {
+        $request = new Request();
+        $request->setSession(new Session(new MockArraySessionStorage()));
+
+        $this->failingAuthenticator()->onAuthenticationFailure($request, new AuthenticationException('internal-key'));
+
+        $stored = $request->getSession()->get(SecurityRequestAttributes::AUTHENTICATION_ERROR);
+        self::assertInstanceOf(CustomUserMessageAuthenticationException::class, $stored);
+        self::assertSame('No se ha podido iniciar sesión. Inténtalo de nuevo.', $stored->getMessageKey());
+    }
+
+    /**
+     * An authenticator whose URL generator resolves the login route, for exercising the failure
+     * handler (the OAuth client is irrelevant there).
+     */
+    private function failingAuthenticator(): GoogleAuthenticator
+    {
+        $urlGenerator = $this->createStub(UrlGeneratorInterface::class);
+        $urlGenerator->method('generate')->willReturn('/login');
+
+        return new GoogleAuthenticator($this->createStub(ClientRegistry::class), $this->createStub(UserRepository::class), $urlGenerator);
     }
 }

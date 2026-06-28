@@ -14,6 +14,7 @@ use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Email;
 use Symfony\Component\RateLimiter\RateLimiterFactory;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
 use Symfony\Component\Security\Http\LoginLink\LoginLinkHandlerInterface;
 
 /**
@@ -41,11 +42,18 @@ class SecurityController extends AbstractController
      * Shows the e-mail form and, on submit, sends a magic login link to a known user.
      */
     #[Route('/login', name: 'login', methods: ['GET', 'POST'])]
-    public function login(Request $request, UserRepository $users, LoginLinkHandlerInterface $loginLinkHandler, MailerInterface $mailer): Response
+    public function login(Request $request, UserRepository $users, LoginLinkHandlerInterface $loginLinkHandler, MailerInterface $mailer, AuthenticationUtils $authenticationUtils): Response
     {
         if (!$request->isMethod('POST')) {
+            // Surface a failed sign-in (SSO or expired magic link) ON this page. The error is read
+            // from the standard session store (and cleared), so it no longer leaks as a flash onto
+            // the first authenticated page. The message is generic by design (see GoogleAuthenticator),
+            // so it does not reveal whether an address is registered.
+            $error = $authenticationUtils->getLastAuthenticationError();
+
             return $this->render('security/login.html.twig', [
                 'google_sso_enabled' => $this->googleSsoEnabled,
+                'error' => $error?->getMessageKey(),
             ]);
         }
 
