@@ -91,4 +91,38 @@ final class WasteRecordRepositoryTest extends KernelTestCase
 
         self::assertSame([], $this->records->yearlyTotalsKg());
     }
+
+    public function testFindForYearReturnsOnlyThatYearsDatedRecords(): void
+    {
+        $this->persistRecord('10', '2024-12-31', description: 'Diciembre 2024');
+        $this->persistRecord('20', '2025-01-01', description: 'Enero 2025');
+        $this->persistRecord('30', '2025-12-31', description: 'Diciembre 2025');
+        $this->persistRecord('40', '2026-01-01', description: 'Enero 2026');
+        // Undated record: must not leak into any year.
+        $this->persistRecord('50', null, description: 'Sin fecha');
+        $this->entityManager->flush();
+
+        $year2025 = $this->records->findForYear(2025);
+
+        self::assertCount(2, $year2025);
+        // Newest first within the year.
+        self::assertSame('Diciembre 2025', $year2025[0]->getDescription());
+        self::assertSame('Enero 2025', $year2025[1]->getDescription());
+    }
+
+    public function testFindUndatedReturnsOnlyRecordsWithoutDate(): void
+    {
+        $this->persistRecord('10', '2025-05-01', description: 'Con fecha');
+        $this->persistRecord('20', null, description: 'Sin fecha 1');
+        $this->persistRecord(null, null, description: 'Sin fecha 2');
+        $this->entityManager->flush();
+
+        $undated = $this->records->findUndated();
+
+        self::assertCount(2, $undated);
+        self::assertSame(2, $this->records->countUndated());
+        foreach ($undated as $record) {
+            self::assertNull($record->getPickupDate());
+        }
+    }
 }

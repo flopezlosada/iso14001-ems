@@ -19,15 +19,53 @@ class WasteRecordRepository extends ServiceEntityRepository
     }
 
     /**
-     * Returns the waste records most recently picked up, newest first.
+     * Returns the dated pick-ups of a given year, newest first, ready to render the year's waste
+     * table. Uses a date range instead of a YEAR() date-function so no DQL extension is needed,
+     * consistent with {@see yearlyTotalsKg()}.
      *
-     * @param int $limit maximum number of records
+     * Records with no pick-up date are deliberately excluded — they cannot be placed on any year and
+     * are surfaced separately by {@see findUndated()} so the split-by-year never loses them.
      *
-     * @return WasteRecord[] the records
+     * @param int $year the pick-up year
+     *
+     * @return WasteRecord[] the year's dated records, newest first
      */
-    public function findRecent(int $limit = 200): array
+    public function findForYear(int $year): array
     {
-        return $this->findBy([], ['pickupDate' => 'DESC', 'id' => 'DESC'], $limit);
+        $start = new \DateTimeImmutable(sprintf('%d-01-01', $year));
+        $end = $start->modify('+1 year');
+
+        return $this->createQueryBuilder('w')
+            ->andWhere('w.pickupDate >= :start')
+            ->andWhere('w.pickupDate < :end')
+            ->setParameter('start', $start)
+            ->setParameter('end', $end)
+            ->orderBy('w.pickupDate', 'DESC')
+            ->addOrderBy('w.id', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Returns the pick-ups with no date, newest-created first. The real historical register holds
+     * entries dated in free text (a month or a range, kept in notes); they have no year and would
+     * vanish from the per-year views, so they get their own list where the date can be filled in.
+     *
+     * @return WasteRecord[] the undated records
+     */
+    public function findUndated(): array
+    {
+        return $this->findBy(['pickupDate' => null], ['id' => 'DESC']);
+    }
+
+    /**
+     * Counts the pick-ups with no date, to badge the link to the undated list from the year views.
+     *
+     * @return int the number of undated records
+     */
+    public function countUndated(): int
+    {
+        return $this->count(['pickupDate' => null]);
     }
 
     /**

@@ -33,7 +33,7 @@ final class WasteControllerTest extends WebTestCase
         return $client;
     }
 
-    public function testListIsForbiddenWithoutPermission(): void
+    public function testIndexIsForbiddenWithoutPermission(): void
     {
         $client = static::createClient();
         $em = static::getContainer()->get(EntityManagerInterface::class);
@@ -64,17 +64,27 @@ final class WasteControllerTest extends WebTestCase
     {
         $client = $this->clientWithWasteReadOnly();
 
+        // The bare index redirects to the current year, which a read-only user may view.
         $client->request('GET', '/waste');
+        $client->followRedirect();
         self::assertResponseIsSuccessful();
 
         $client->request('POST', '/waste/new');
         self::assertResponseStatusCodeSame(403);
     }
 
-    public function testIndexRenders(): void
+    public function testIndexRedirectsToCurrentYear(): void
     {
         $client = $this->clientWithWasteWrite();
         $client->request('GET', '/waste');
+
+        self::assertResponseRedirects('/waste/'.date('Y'));
+    }
+
+    public function testYearViewRenders(): void
+    {
+        $client = $this->clientWithWasteWrite();
+        $client->request('GET', '/waste/'.date('Y'));
 
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('h1', 'Residuos');
@@ -94,7 +104,8 @@ final class WasteControllerTest extends WebTestCase
             'waste_record[manager]' => 'Gestor Autorizado SL',
         ]);
 
-        self::assertResponseRedirects('/waste');
+        // Lands on the year the record actually belongs to, not the bare index.
+        self::assertResponseRedirects('/waste/2026');
 
         $record = static::getContainer()->get(WasteRecordRepository::class)->findOneBy(['lerCode' => '200121']);
         self::assertNotNull($record);
@@ -103,6 +114,49 @@ final class WasteControllerTest extends WebTestCase
         self::assertNotNull(
             static::getContainer()->get(AuditLogRepository::class)->findOneBy(['action' => 'waste.created'])
         );
+    }
+
+    public function testSubmittingRecordWithoutDateRedirectsToUndatedList(): void
+    {
+        $client = $this->clientWithWasteWrite();
+        $client->request('GET', '/waste/new');
+
+        // No pick-up date: the record cannot be placed in any year, so it lands on the undated list.
+        $client->submitForm('Guardar', [
+            'waste_record[lerCode]' => '200201',
+            'waste_record[description]' => 'Restos vegetales (compostaje)',
+            'waste_record[quantityKg]' => '',
+            'waste_record[pickupDate]' => '',
+            'waste_record[manager]' => '',
+        ]);
+
+        self::assertResponseRedirects('/waste/sin-fecha');
+
+        $record = static::getContainer()->get(WasteRecordRepository::class)->findOneBy(['lerCode' => '200201']);
+        self::assertNotNull($record);
+        self::assertNull($record->getPickupDate());
+    }
+
+    public function testUndatedListRenders(): void
+    {
+        $client = $this->clientWithWasteReadOnly();
+        $client->request('GET', '/waste/sin-fecha');
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('h1', 'Residuos sin fecha');
+    }
+
+    public function testUndatedListIsForbiddenWithoutPermission(): void
+    {
+        $client = static::createClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $user = (new User())->setFullName('Sin permiso')->setEmail('noperm-undated@example.test')->setActive(true);
+        $em->persist($user);
+        $em->flush();
+        $client->loginUser($user);
+
+        $client->request('GET', '/waste/sin-fecha');
+        self::assertResponseStatusCodeSame(403);
     }
 
     public function testSubmittingInvalidRecordShowsErrorsAndDoesNotPersist(): void

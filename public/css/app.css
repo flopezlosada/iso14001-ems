@@ -401,21 +401,33 @@ tbody tr.is-in-force { background: var(--success-weak); }
 }
 
 /* ---- Herramientas de listado (table-tools.js): búsqueda, filtros, orden ---- */
+/* Barra de controles destacada sobre la tabla: superficie hundida + borde, para que
+   búsqueda y filtros se lean como herramientas (y se usen) en vez de pasar inadvertidos. */
 .table-tools {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 10px;
+    gap: 10px 12px;
     margin-bottom: 16px;
+    padding: 12px 14px;
+    background: var(--surface-sunken);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
 }
-.table-tools__search { flex: 1 1 240px; min-width: 200px; }
+.table-tools__search { flex: 1 1 260px; min-width: 220px; }
+/* El buscador lleva una lupa (SVG en data-URI: sin ficheros extra, el hosting va justo
+   de inodos) para que se reconozca como campo de búsqueda de un vistazo. */
 .table-tools__search input[type="search"] {
     width: 100%;
-    padding: 10px 12px;
+    padding: 10px 12px 10px 38px;
     border: 1px solid var(--border-strong);
     border-radius: var(--radius);
     font: 400 14px var(--font-body);
-    background: var(--surface);
+    background-color: var(--surface);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238A8F86' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: 13px center;
+    background-size: 15px;
     color: var(--text);
 }
 .table-tools__search input[type="search"]:focus { border-color: var(--accent); outline-offset: 0; }
