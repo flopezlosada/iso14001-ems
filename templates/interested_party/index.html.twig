@@ -5,7 +5,7 @@
 
 {# Botón que copia las partes interesadas del año anterior (solo trae las que falten). #}
 {% macro copy_previous_form(year) %}
-    <form method="post" action="{{ path('interested_party_copy_previous', { year: year }) }}" style="display:inline">
+    <form method="post" action="{{ path('interested_party_copy_previous', { year: year }) }}" style="display:inline" data-confirm="¿Copiar a {{ year }} las partes interesadas de {{ year - 1 }} que aún no existan?">
         <input type="hidden" name="_token" value="{{ csrf_token('copy_previous_interested_party' ~ year) }}">
         <button type="submit" class="btn secondary">Copiar de {{ year - 1 }}</button>
     </form>
