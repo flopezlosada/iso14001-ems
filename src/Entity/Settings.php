@@ -88,6 +88,15 @@ class Settings
     #[ORM\Column]
     private bool $autoNcFromUnmetObjectives = false;
 
+    /**
+     * Month (1-12) the annual calendar starts on, so the year-at-a-glance can span the centre's
+     * audit cycle instead of the calendar year. Presentation only: it does not redefine "the year"
+     * in any module, it just rotates where the 12-month calendar begins.
+     */
+    #[ORM\Column]
+    #[Assert\Range(min: 1, max: 12)]
+    private int $startMonth = 1;
+
     #[ORM\Column]
     private \DateTimeImmutable $updatedAt;
 
@@ -262,6 +271,24 @@ class Settings
     public function setAutoNcFromUnmetObjectives(bool $autoNcFromUnmetObjectives): static
     {
         $this->autoNcFromUnmetObjectives = $autoNcFromUnmetObjectives;
+
+        return $this;
+    }
+
+    /**
+     * @return int the month (1-12) the annual calendar starts on
+     */
+    public function getStartMonth(): int
+    {
+        return $this->startMonth;
+    }
+
+    /**
+     * @param int $startMonth the month (1-12) the annual calendar starts on
+     */
+    public function setStartMonth(int $startMonth): static
+    {
+        $this->startMonth = $startMonth;
 
         return $this;
     }

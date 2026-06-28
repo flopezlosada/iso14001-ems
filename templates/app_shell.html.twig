@@ -23,6 +23,7 @@
                 {# El día a día: por aquí entra el trabajo, no por la lista de módulos. #}
                 <a href="{{ path('app_homepage') }}" class="{{ route == 'app_homepage' ? 'is-active' }}">Inicio</a>
                 <a href="{{ path('obligation_index') }}" class="{{ route starts with 'obligation_index' ? 'is-active' }}">Qué toca</a>
+                <a href="{{ path('obligation_calendar') }}" class="{{ route starts with 'obligation_calendar' ? 'is-active' }}">Calendario</a>
                 <a href="{{ path('obligation_structure') }}" class="{{ route starts with 'obligation_structure' ? 'is-active' }}">Estructura del SGA</a>
                 <a href="{{ path('document_index') }}" class="{{ route starts with 'document_' ? 'is-active' }}">Documentos</a>
 

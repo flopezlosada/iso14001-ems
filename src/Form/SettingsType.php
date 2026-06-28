@@ -7,6 +7,7 @@ namespace App\Form;
 use App\Entity\Settings;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\Extension\Core\Type\PercentType;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -21,6 +22,12 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  */
 class SettingsType extends AbstractType
 {
+    /** Nombre de mes → número (1-12), para el selector del mes de inicio del calendario. */
+    private const MONTHS = [
+        'Enero' => 1, 'Febrero' => 2, 'Marzo' => 3, 'Abril' => 4, 'Mayo' => 5, 'Junio' => 6,
+        'Julio' => 7, 'Agosto' => 8, 'Septiembre' => 9, 'Octubre' => 10, 'Noviembre' => 11, 'Diciembre' => 12,
+    ];
+
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
@@ -60,6 +67,12 @@ class SettingsType extends AbstractType
                 'label' => 'No conformidad automática · Objetivos no cumplidos',
                 'required' => false,
                 'help' => 'Abre una no conformidad por cada objetivo marcado como no cumplido.',
+            ])
+            ->add('startMonth', ChoiceType::class, [
+                'label' => 'Calendario anual · mes de inicio',
+                'help' => 'Mes por el que empieza el calendario anual, para abarcar el ciclo de auditoría del centro. Solo afecta a la presentación del calendario.',
+                'choices' => self::MONTHS,
+                'required' => true,
             ]);
     }
 

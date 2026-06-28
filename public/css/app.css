@@ -34,6 +34,11 @@
     --review: #3F6079;
     --review-weak: #E5EBF0;
     --review-text: #2F4A60;
+    /* Categóricos de pilar PDCA (calendario): apagados y distintos del ámbar/rojo de urgencia. */
+    --pillar-plan: #5C7A99;
+    --pillar-do: #5F8A5A;
+    --pillar-check: #4F8A86;
+    --pillar-act: #9A6A86;
     --focus: #2F6B43;
 
     /* Tipografía */
@@ -80,6 +85,10 @@
     --review: #88A3C6;
     --review-weak: #1F2A39;
     --review-text: #B3C5DE;
+    --pillar-plan: #8FA9C4;
+    --pillar-do: #8FB98A;
+    --pillar-check: #74B8B0;
+    --pillar-act: #C49AB6;
     --focus: #6FB98A;
     color-scheme: dark;
 
@@ -1194,3 +1203,44 @@ input[type="email"], input[type="text"], select, textarea {
 .role-option__desc { font-size: 13px; color: var(--text-muted); line-height: 1.35; }
 /* Estado seleccionado: la casilla nativa es el control real; :has solo lo refuerza. */
 .role-option:has(.role-option__input:checked) { border-color: var(--accent); background: var(--accent-weak); }
+
+/* =============================================================================
+   Calendario anual de obligaciones (obligation_calendar)
+   El color del borde agrupa por pilar PDCA; el icono/texto identifican (no solo
+   color, por accesibilidad). La urgencia es un punto, no el color de fondo.
+   ============================================================================= */
+.cal-legend { list-style: none; display: flex; flex-wrap: wrap; gap: 8px 16px; margin: 14px 0 18px; padding: 0; font-size: 12px; color: var(--text-muted); }
+.cal-legend li { display: flex; align-items: center; gap: 6px; }
+.cal-dot { width: 9px; height: 9px; border-radius: 50%; flex: none; background: var(--text-faint); }
+.cal-dot--plan { background: var(--pillar-plan); }
+.cal-dot--do { background: var(--pillar-do); }
+.cal-dot--check { background: var(--pillar-check); }
+.cal-dot--act { background: var(--pillar-act); }
+.cal-dot--overdue { background: var(--danger); }
+.cal-dot--due_soon { background: var(--warning); }
+
+.cal-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; }
+.cal-month { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 12px; }
+.cal-month.is-current { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.cal-month-name { font-size: 15px; margin: 0 0 10px; }
+.cal-empty { margin: 0; font-size: 12.5px; }
+.cal-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+
+/* Cada marca: borde izquierdo en el color del pilar; toda la fila es clicable. */
+.cal-mark { border-left: 3px solid var(--mark-color, var(--border-strong)); border-radius: 2px; background: var(--surface-sunken); }
+.cal-mark--plan { --mark-color: var(--pillar-plan); }
+.cal-mark--do { --mark-color: var(--pillar-do); }
+.cal-mark--check { --mark-color: var(--pillar-check); }
+.cal-mark--act { --mark-color: var(--pillar-act); }
+.cal-mark--none { --mark-color: var(--border-strong); }
+.cal-mark a, .cal-mark .cal-mark-row { display: flex; align-items: center; gap: 6px; padding: 5px 8px; text-decoration: none; color: var(--text); font-size: 12.5px; }
+.cal-mark a:hover { background: var(--accent-weak); }
+.cal-mark-title { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cal-mark-code { font-size: 10px; flex: none; }
+
+.cal-event { margin-top: 22px; }
+.cal-event .cal-list { max-width: 540px; }
+.cal-legend-row { display: flex; flex-wrap: wrap; gap: 6px 28px; align-items: center; margin: 14px 0 18px; }
+.cal-legend-row .cal-legend { margin: 0; }
+.cal-legend-sep { font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: .12em; color: var(--text-faint); }
+.cal-note { margin: 16px 0 0; font-size: 12.5px; }
