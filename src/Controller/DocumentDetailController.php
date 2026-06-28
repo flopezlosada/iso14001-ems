@@ -10,6 +10,7 @@ use App\Entity\DocumentVersion;
 use App\Entity\User;
 use App\Enum\DocumentType;
 use App\Enum\VersionStatus;
+use App\Repository\AuditLogRepository;
 use App\Repository\DocumentRepository;
 use App\Security\Voter\DocumentVoter;
 use App\Service\AuditLogger;
@@ -150,14 +151,16 @@ final class DocumentDetailController extends AbstractController
     }
 
     /**
-     * Renders the document detail with its version history (newest revision first).
+     * Renders the document detail with its version history (newest revision first) and, for a
+     * periodic obligation, the trail of closed period reviews (from the audit log).
      *
-     * @param Document $document the document to show, resolved from the {id} route parameter
+     * @param Document           $document  the document to show, resolved from the {id} route parameter
+     * @param AuditLogRepository $auditLogs to list this obligation's period-review closures
      *
      * @return Response the rendered detail page
      */
     #[Route('/documentos/{id}', name: 'document_show', requirements: ['id' => '\d+'], methods: ['GET'])]
-    public function show(Document $document): Response
+    public function show(Document $document, AuditLogRepository $auditLogs): Response
     {
         $versions = $document->getVersions()->toArray();
         usort($versions, static fn (DocumentVersion $a, DocumentVersion $b): int => $b->getRevisionNumber() <=> $a->getRevisionNumber());
@@ -167,6 +170,9 @@ final class DocumentDetailController extends AbstractController
             'versions' => $versions,
             'current' => $document->getCurrentVersion(),
             'moduleRoute' => $document->getLinkedArea()?->indexRoute(),
+            // The trail of "marked done for the period" events, so the responsible can see when each
+            // review cycle was closed without a parallel data model (it lives in the audit log).
+            'reviews' => $auditLogs->findForSubject('Document', (string) $document->getId(), 'obligation.completed'),
         ]);
     }
 

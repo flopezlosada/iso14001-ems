@@ -29,4 +29,26 @@ class AuditLogRepository extends ServiceEntityRepository
     {
         return $this->findBy([], ['occurredAt' => 'DESC', 'id' => 'DESC'], $limit);
     }
+
+    /**
+     * Audit entries about one subject (e.g. a {@see \App\Entity\Document}), newest first, optionally
+     * narrowed to a single action. Used by the obligation detail page to show the trail of period
+     * reviews ('obligation.completed') without a parallel data model.
+     *
+     * @param string      $subjectType the logged subject type (e.g. 'Document')
+     * @param string      $subjectId   the subject id, as stored (string)
+     * @param string|null $action      restrict to this action, or null for every action
+     * @param int         $limit       maximum number of entries to return
+     *
+     * @return AuditLog[] the matching entries, newest first
+     */
+    public function findForSubject(string $subjectType, string $subjectId, ?string $action = null, int $limit = 50): array
+    {
+        $criteria = ['subjectType' => $subjectType, 'subjectId' => $subjectId];
+        if (null !== $action) {
+            $criteria['action'] = $action;
+        }
+
+        return $this->findBy($criteria, ['occurredAt' => 'DESC', 'id' => 'DESC'], $limit);
+    }
 }
