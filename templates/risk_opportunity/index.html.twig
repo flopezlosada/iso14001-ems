@@ -14,7 +14,7 @@
         <div>
             {% if can_write and previousExerciseCount > 0 %}
                 {# Crea borradores de valoración del curso actual copiando los del curso anterior (solo los que falten). #}
-                <form method="post" action="{{ path('risk_clone_assessments', { exercise: currentExercise }) }}" style="display:inline">
+                <form method="post" action="{{ path('risk_clone_assessments', { exercise: currentExercise }) }}" style="display:inline" data-confirm="¿Clonar a {{ currentExercise|e('html_attr') }} las valoraciones de riesgo del periodo anterior que aún no existan?">
                     <input type="hidden" name="_token" value="{{ csrf_token('risk_clone_assessments' ~ currentExercise) }}">
                     <button type="submit" class="btn secondary">Clonar valoraciones a {{ currentExercise }}</button>
                 </form>

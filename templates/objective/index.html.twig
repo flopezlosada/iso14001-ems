@@ -5,7 +5,7 @@
 
 {# Botón que copia los objetivos del curso anterior (solo trae los que falten). #}
 {% macro copy_previous_form(schoolYear, previousSchoolYear) %}
-    <form method="post" action="{{ path('objective_copy_previous', { schoolYear: schoolYear }) }}" style="display:inline">
+    <form method="post" action="{{ path('objective_copy_previous', { schoolYear: schoolYear }) }}" style="display:inline" data-confirm="¿Copiar a {{ schoolYear|e('html_attr') }} los objetivos de {{ previousSchoolYear|e('html_attr') }} que aún no existan?">
         <input type="hidden" name="_token" value="{{ csrf_token('copy_previous_objective' ~ schoolYear) }}">
         <button type="submit" class="btn secondary">Copiar de {{ previousSchoolYear }}</button>
     </form>
