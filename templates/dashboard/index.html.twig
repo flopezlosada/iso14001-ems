@@ -73,7 +73,9 @@
                         {% if item.route %}
                             <a class="btn" href="{{ path(item.route) }}">Rellenar</a>
                         {% else %}
-                            <span class="badge">Pendiente de módulo</span>
+                            {# Sin módulo CRUD propio (p. ej. la Política Ambiental): se gestiona desde
+                               su ficha de control documental, no desde una pantalla de captura de datos. #}
+                            <a class="btn secondary" href="{{ path('document_show', { id: item.id }) }}">Abrir ficha</a>
                         {% endif %}
                     </li>
                 {% endfor %}

@@ -1,6 +1,7 @@
 {# Reusable rendering of one obligation row, shared by the "Qué toca" and "Estructura SGA" views.
    `moduleRoutes` maps a linked Area value to its module index route; an obligation with no module
-   yet shows a "pending module" hint instead of a deep link. #}
+   (e.g. the Environmental Policy, managed through document control rather than a data-entry CRUD)
+   links to its control sheet ("Abrir ficha") instead. #}
 
 {% macro obligation_row(obl, moduleRoutes, canComplete = false, scope = null) %}
     {% set area = obl.linkedArea %}
@@ -26,7 +27,8 @@
             {% if area and moduleRoutes[area.value] is defined %}
                 <a class="btn secondary" href="{{ path(moduleRoutes[area.value]) }}">Cumplimentar</a>
             {% else %}
-                <span class="badge">Pendiente de módulo</span>
+                {# Sin módulo CRUD propio: se gestiona desde su ficha de control documental. #}
+                <a class="btn secondary" href="{{ path('document_show', { id: obl.id }) }}">Abrir ficha</a>
             {% endif %}
             {% if canComplete and obl.hasFixedCadence and is_granted('DOCUMENT_COMPLETE', obl) %}
                 <form method="post" action="{{ path('obligation_complete', { id: obl.id, scope: scope }) }}" class="inline-form">
