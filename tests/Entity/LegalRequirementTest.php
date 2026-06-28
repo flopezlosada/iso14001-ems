@@ -64,4 +64,35 @@ final class LegalRequirementTest extends TestCase
 
         self::assertEquals(new \DateTimeImmutable('2026-05-15'), $requirement->getNextReviewOn());
     }
+
+    public function testReviewUrgencyFlags(): void
+    {
+        $on = new \DateTimeImmutable('2026-06-15');
+
+        // Next review 2026-01-01 (annual from 2025-01-01) → overdue.
+        $overdue = (new LegalRequirement())
+            ->setEvaluationFrequency(EvaluationFrequency::ANNUAL)
+            ->setLastReviewedOn(new \DateTimeImmutable('2025-01-01'));
+        self::assertTrue($overdue->isReviewOverdueOn($on));
+        self::assertFalse($overdue->isReviewDueSoonOn($on));
+
+        // Next review 2026-07-01 (monthly from 2026-06-01) → within the 30-day window, not overdue.
+        $soon = (new LegalRequirement())
+            ->setEvaluationFrequency(EvaluationFrequency::MONTHLY)
+            ->setLastReviewedOn(new \DateTimeImmutable('2026-06-01'));
+        self::assertFalse($soon->isReviewOverdueOn($on));
+        self::assertTrue($soon->isReviewDueSoonOn($on));
+
+        // Next review 2027-06-01 (annual from 2026-06-01) → neither.
+        $onTrack = (new LegalRequirement())
+            ->setEvaluationFrequency(EvaluationFrequency::ANNUAL)
+            ->setLastReviewedOn(new \DateTimeImmutable('2026-06-01'));
+        self::assertFalse($onTrack->isReviewOverdueOn($on));
+        self::assertFalse($onTrack->isReviewDueSoonOn($on));
+
+        // No scheduled review → neither.
+        $unscheduled = new LegalRequirement();
+        self::assertFalse($unscheduled->isReviewOverdueOn($on));
+        self::assertFalse($unscheduled->isReviewDueSoonOn($on));
+    }
 }

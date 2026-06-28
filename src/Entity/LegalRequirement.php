@@ -257,6 +257,30 @@ class LegalRequirement
     }
 
     /**
+     * Whether the next review is already past due as of the given date.
+     *
+     * @param \DateTimeImmutable $on the reference date (typically today)
+     */
+    public function isReviewOverdueOn(\DateTimeImmutable $on): bool
+    {
+        return null !== $this->nextReviewOn && $this->nextReviewOn < $on;
+    }
+
+    /**
+     * Whether the next review is not yet due but falls within the upcoming window (so it should be
+     * flagged as approaching). Overdue reviews are reported by {@see isReviewOverdueOn()}, not here.
+     *
+     * @param \DateTimeImmutable $on       the reference date (typically today)
+     * @param int                $soonDays size of the "approaching" window, in days
+     */
+    public function isReviewDueSoonOn(\DateTimeImmutable $on, int $soonDays = 30): bool
+    {
+        return null !== $this->nextReviewOn
+            && $this->nextReviewOn >= $on
+            && $this->nextReviewOn <= $on->modify(sprintf('+%d days', $soonDays));
+    }
+
+    /**
      * Derives {@see $nextReviewOn} from the last review plus the evaluation cadence, so the next
      * inspection date stays consistent and is never hand-typed. Null when either input is missing.
      * Runs from the {@see setLastReviewedOn()} and {@see setEvaluationFrequency()} setters (not a
