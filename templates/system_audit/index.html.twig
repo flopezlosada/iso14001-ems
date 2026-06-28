@@ -55,7 +55,7 @@
                                 <a href="{{ path('system_audit_show', { id: audit.id }) }}">Ver</a>
                                 {% if can_write %}
                                     <a href="{{ path('system_audit_edit', { id: audit.id }) }}">Editar</a>
-                                    <form method="post" action="{{ path('system_audit_delete', { id: audit.id }) }}" onsubmit="return confirm('¿Eliminar la auditoría {{ audit.type.label|lower|e('js') }} {{ audit.year }}? Sus no conformidades se conservan, solo se desvinculan.');" style="display:inline">
+                                    <form method="post" action="{{ path('system_audit_delete', { id: audit.id }) }}" data-confirm="¿Eliminar la auditoría {{ audit.type.label|lower|e('html_attr') }} {{ audit.year }}? Sus no conformidades se conservan, solo se desvinculan." style="display:inline">
                                         <input type="hidden" name="_token" value="{{ csrf_token('delete_system_audit' ~ audit.id) }}">
                                         <button type="submit" class="btn secondary">Eliminar</button>
                                     </form>

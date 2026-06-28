@@ -66,7 +66,7 @@
                             <td>
                                 {% if can_write %}
                                     <a href="{{ path('interested_party_edit', { year: year, id: party.id }) }}">Editar</a>
-                                    <form method="post" action="{{ path('interested_party_delete', { year: year, id: party.id }) }}" onsubmit="return confirm('¿Eliminar la parte interesada «{{ party.name|e('js') }}»?');" style="display:inline">
+                                    <form method="post" action="{{ path('interested_party_delete', { year: year, id: party.id }) }}" data-confirm="¿Eliminar la parte interesada «{{ party.name|e('html_attr') }}»?" style="display:inline">
                                         <input type="hidden" name="_token" value="{{ csrf_token('delete_interested_party' ~ party.id) }}">
                                         <button type="submit" class="btn secondary">Eliminar</button>
                                     </form>
