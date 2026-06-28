@@ -29,6 +29,26 @@ class LegalRequirementRepository extends ServiceEntityRepository
     }
 
     /**
+     * Requirements whose next review is overdue or falls within the upcoming window, soonest first.
+     * Drives the review reminder digest; requirements without a scheduled review are excluded.
+     *
+     * @param \DateTimeImmutable $on       the reference date (typically today)
+     * @param int                $soonDays how many days ahead still count as "due"
+     *
+     * @return LegalRequirement[] requirements needing review attention
+     */
+    public function findDueForReview(\DateTimeImmutable $on, int $soonDays = 30): array
+    {
+        return $this->createQueryBuilder('lr')
+            ->andWhere('lr.nextReviewOn IS NOT NULL')
+            ->andWhere('lr.nextReviewOn <= :limit')
+            ->setParameter('limit', $on->modify(sprintf('+%d days', $soonDays))->format('Y-m-d'))
+            ->orderBy('lr.nextReviewOn', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
      * Next sequential number for a new requirement (current maximum plus one; 1 when none exist).
      *
      * @return int the next sequence number (>= 1)

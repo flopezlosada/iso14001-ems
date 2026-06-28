@@ -66,12 +66,7 @@ class LegalRequirementType extends AbstractType
                 'widget' => 'single_text',
                 'required' => false,
                 'input' => 'datetime_immutable',
-            ])
-            ->add('nextReviewOn', DateType::class, [
-                'label' => 'Próxima revisión',
-                'widget' => 'single_text',
-                'required' => false,
-                'input' => 'datetime_immutable',
+                'help' => 'La próxima revisión se calcula sola: última revisión + frecuencia de evaluación.',
             ]);
     }
 
