@@ -40,8 +40,9 @@ final class NonConformitiesSummaryProvider implements SectionSummaryProvider
             $status = $nc->getStatus();
             $counts[$status->value] = ($counts[$status->value] ?? 0) + 1;
             $lines[] = sprintf(
-                '- %s: %s [%s]',
+                '- %s (%s): %s [%s]',
                 $nc->getReference(),
+                $nc->getOrigin()->label(),
                 $nc->getDescription(),
                 $status->label(),
             );

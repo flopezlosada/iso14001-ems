@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Service\ManagementReview\Provider;
 
 use App\Entity\SystemAudit;
-use App\Enum\NonConformityOrigin;
 use App\Enum\ReviewSectionKey;
 use App\Repository\NonConformityRepository;
 use App\Repository\SystemAuditRepository;
@@ -50,10 +49,10 @@ final class SystemAuditsSummaryProvider implements SectionSummaryProvider
         $header = sprintf('Auditorías del año %d: %d.', $year, \count($audits));
         $parts = [$header, '', ...$lines];
 
-        $findingsLine = $this->findingsLine($year);
-        if ('' !== $findingsLine) {
+        $findings = $this->findingsBlock($year);
+        if ('' !== $findings) {
             $parts[] = '';
-            $parts[] = $findingsLine;
+            $parts[] = $findings;
         }
 
         return implode("\n", $parts);
@@ -81,29 +80,48 @@ final class SystemAuditsSummaryProvider implements SectionSummaryProvider
     }
 
     /**
-     * A line with the count of audit non-conformities of the year, broken down by origin, or an
-     * empty string when there are none.
+     * The non-conformities raised by the year's audits, each with its reference, description, status
+     * and resolution plan (the corrective actions, with responsible and due date). Empty string when
+     * there are none. This is the detail the management review needs: what was found and how it will
+     * be resolved, not just a count.
      *
      * @param int $year the reference year
      *
-     * @return string the findings line, or '' if there are no audit non-conformities
+     * @return string the findings block, or '' if there are no audit non-conformities
      */
-    private function findingsLine(int $year): string
+    private function findingsBlock(int $year): string
     {
-        $counts = $this->nonConformities->countAuditFindingsByOriginForYear($year);
-        $internal = $counts[NonConformityOrigin::INTERNAL_AUDIT->value] ?? 0;
-        $external = $counts[NonConformityOrigin::EXTERNAL_AUDIT->value] ?? 0;
-        $total = $internal + $external;
-
-        if (0 === $total) {
+        $findings = $this->nonConformities->findAuditFindingsForYear($year);
+        if ([] === $findings) {
             return '';
         }
 
-        return sprintf(
-            'No conformidades detectadas en auditoría: %d (interna: %d, externa: %d).',
-            $total,
-            $internal,
-            $external,
-        );
+        $lines = [sprintf('No conformidades detectadas en auditoría: %d.', \count($findings))];
+        foreach ($findings as $nc) {
+            $lines[] = sprintf(
+                '- %s (%s): %s [%s]',
+                $nc->getReference(),
+                $nc->getOrigin()->label(),
+                $nc->getDescription(),
+                $nc->getStatus()->label(),
+            );
+
+            if ($nc->getCorrectiveActions()->isEmpty()) {
+                $lines[] = '    Plan de resolución: pendiente de definir.';
+                continue;
+            }
+
+            foreach ($nc->getCorrectiveActions() as $action) {
+                $responsible = $action->getResponsible();
+                $lines[] = sprintf(
+                    '    Plan de resolución: %s (responsable: %s; prevista: %s).',
+                    $action->getDescription(),
+                    null !== $responsible ? $responsible->getFullName() : 'sin asignar',
+                    null !== $action->getPlannedDate() ? $action->getPlannedDate()->format('d/m/Y') : 'sin fecha',
+                );
+            }
+        }
+
+        return implode("\n", $lines);
     }
 }

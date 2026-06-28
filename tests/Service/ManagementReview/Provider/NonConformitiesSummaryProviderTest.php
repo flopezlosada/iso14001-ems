@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Service\ManagementReview\Provider;
 
 use App\Entity\NonConformity;
+use App\Enum\NonConformityOrigin;
 use App\Enum\NonConformityStatus;
 use App\Repository\NonConformityRepository;
 use App\Service\ManagementReview\Provider\NonConformitiesSummaryProvider;
@@ -17,6 +18,7 @@ final class NonConformitiesSummaryProviderTest extends TestCase
         return (new NonConformity())
             ->setReference($reference)
             ->setYear($year)
+            ->setOrigin(NonConformityOrigin::INTERNAL_AUDIT)
             ->setDescription($description)
             ->setStatus($status);
     }
@@ -33,7 +35,8 @@ final class NonConformitiesSummaryProviderTest extends TestCase
         $summary = (new NonConformitiesSummaryProvider($repo))->summarize('2025-2026');
 
         self::assertStringContainsString('año 2026', $summary);
-        self::assertStringContainsString('NC.AE.2026.01', $summary);
+        // Each line now carries the origin for traceability.
+        self::assertStringContainsString('NC.AE.2026.01 (Auditoría interna):', $summary);
         self::assertStringContainsString('NC.AI.2026.02', $summary);
         self::assertStringNotContainsString('NC.AE.2025.09', $summary);
     }

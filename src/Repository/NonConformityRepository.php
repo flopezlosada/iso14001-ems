@@ -67,33 +67,27 @@ class NonConformityRepository extends ServiceEntityRepository
     }
 
     /**
-     * Counts, per audit origin, the audit non-conformities of a given reference year, in a single
-     * query (so there is no per-audit lookup). Used by the management-review summary to report how
-     * many findings the year's audits produced.
+     * The audit non-conformities of a reference year (internal or external audit origin), with their
+     * corrective actions and each action's responsible eagerly loaded in a single query, ordered by
+     * reference. Lets the management-review summary list every finding with its resolution plan
+     * without a per-non-conformity or per-action lookup (no N+1).
      *
      * @param int $year the reference year
      *
-     * @return array<string, int> count keyed by {@see NonConformityOrigin} value, only for
-     *                            the audit origins that have at least one
+     * @return NonConformity[] the year's audit findings
      */
-    public function countAuditFindingsByOriginForYear(int $year): array
+    public function findAuditFindingsForYear(int $year): array
     {
-        $rows = $this->createQueryBuilder('nc')
-            ->select('nc.origin AS origin', 'COUNT(nc.id) AS total')
+        return $this->createQueryBuilder('nc')
+            ->leftJoin('nc.correctiveActions', 'ca')->addSelect('ca')
+            ->leftJoin('ca.responsible', 'r')->addSelect('r')
             ->where('nc.origin IN (:origins)')
             ->andWhere('nc.year = :year')
             ->setParameter('origins', [NonConformityOrigin::INTERNAL_AUDIT, NonConformityOrigin::EXTERNAL_AUDIT])
             ->setParameter('year', $year)
-            ->groupBy('nc.origin')
+            ->orderBy('nc.reference', 'ASC')
             ->getQuery()
             ->getResult();
-
-        $counts = [];
-        foreach ($rows as $row) {
-            $counts[$row['origin']->value] = (int) $row['total'];
-        }
-
-        return $counts;
     }
 
     /**
