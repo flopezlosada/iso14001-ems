@@ -838,39 +838,63 @@ input[type="email"], input[type="text"], select, textarea {
 .dash-note { display: flex; align-items: center; gap: 8px; margin: 16px 0; font-size: 14px; color: var(--text-muted); }
 
 /* ---- Worklist del inicio ("lo que me toca") ------------------------------
-   Semáforo de tres cifras (vencidas / próximas / al día) sobre MIS obligaciones,
-   seguido de la lista de lo accionable. El borde izquierdo de color es la única
-   señal cromática; las cifras a cero se atenúan para no "gritar" sin motivo. */
+   Semáforo de tres cifras (vencidas / próximas / al día) sobre MIS obligaciones:
+   es el PUNTO FOCAL de la pantalla. La cifra manda — serif grande a plena
+   saturación de estado, con la etiqueta reducida a pie de marcador. Las cifras a
+   cero se retiran (apagadas) para que las que importan brillen; y la alarma real
+   —vencidas con cuenta— recibe tinte + borde de estado, el único color fuerte
+   justificado del tablero. */
 .worklist-stats {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-    margin: 4px 0 24px;
+    gap: 14px;
+    margin: 8px 0 32px;
 }
 .stat {
     display: flex;
     flex-direction: column;
-    gap: 2px;
-    padding: 16px 18px;
+    gap: 8px;
+    padding: 22px 24px 20px;
     border: 1px solid var(--border);
-    border-left-width: 3px;
     border-radius: var(--radius-lg);
     background: var(--surface);
     text-decoration: none;
     color: var(--text);
-    transition: background .12s ease;
+    transition: border-color .12s ease, background .12s ease;
 }
-.stat:hover { background: var(--surface-sunken); }
-.stat-figure { font-family: var(--font-display); font-size: 30px; line-height: 1; }
-.stat-label { font-size: 13px; color: var(--text-muted); }
-.stat--danger { border-left-color: var(--danger); }
-.stat--warning { border-left-color: var(--warning); }
-.stat--success { border-left-color: var(--success); }
-.stat--danger .stat-figure { color: var(--danger-text); }
-.stat--warning .stat-figure { color: var(--warning-text); }
-.stat--success .stat-figure { color: var(--success-text); }
-.stat.is-zero { opacity: .55; }
-.stat.is-zero .stat-figure { color: var(--text-muted); }
+.stat:hover { border-color: var(--border-strong); }
+.stat-figure {
+    font-family: var(--font-display);
+    font-size: clamp(2.75rem, 6vw, 3.5rem);
+    font-weight: 500;
+    line-height: .9;
+    letter-spacing: -.02em;
+    font-variant-numeric: tabular-nums;
+}
+.stat-label {
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+/* La cifra es la señal: estado a plena saturación. La identidad de cada cifra no
+   recae solo en el color (WCAG 1.4.1): la etiqueta de texto ya distingue las tres,
+   y la alarma —vencidas— suma una segunda vía visual (tinte + borde) más abajo. */
+.stat--danger  .stat-figure { color: var(--danger); }
+.stat--warning .stat-figure { color: var(--warning); }
+.stat--success .stat-figure { color: var(--success); }
+/* Vencidas con cuenta: la alarma reclama la mirada con tinte y borde de estado. */
+.stat--danger:not(.is-zero) {
+    background: var(--danger-weak);
+    border-color: var(--danger);
+}
+.stat--danger:not(.is-zero) .stat-figure { color: var(--danger-text); }
+.stat--danger:not(.is-zero) .stat-label { color: var(--danger-text); }
+/* Cifras a cero: se apagan y ceden el foco a lo que sí pide acción. */
+.stat.is-zero { background: var(--surface); }
+.stat.is-zero .stat-figure { color: var(--text-faint); }
+.stat.is-zero .stat-label { color: var(--text-faint); }
 
 .worklist { list-style: none; margin: 0 0 18px; padding: 0; }
 .worklist-item {
@@ -914,6 +938,10 @@ input[type="email"], input[type="text"], select, textarea {
 @media (max-width: 760px) {
     .dash-greeting { flex-direction: column-reverse; align-items: flex-start; gap: 12px; }
     .dash-greeting h1 { font-size: 26px; }
+    /* En móvil las tres cifras siguen en fila: estrecha el aire para que no se desborden. */
+    .worklist-stats { gap: 8px; }
+    .stat { padding: 16px 14px 14px; }
+    .stat-figure { font-size: clamp(2.25rem, 11vw, 2.75rem); }
     .activity li { grid-template-columns: 56px 1fr; }
     .activity-who { grid-column: 2; }
     /* La fila de tarea apila: etiqueta + título arriba; vencimiento y botón debajo. */
