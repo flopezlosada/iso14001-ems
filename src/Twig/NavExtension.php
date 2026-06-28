@@ -51,7 +51,33 @@ class NavExtension extends AbstractExtension
     {
         return [
             new TwigFunction('nav_pillars', $this->navPillars(...)),
+            new TwigFunction('area_pillars', $this->areaPillars(...)),
         ];
+    }
+
+    /**
+     * Every functional area grouped by its PDCA phase, in the same menu order as {@see navPillars()}
+     * but WITHOUT any permission filter. For admin screens that must show the whole catalog (the
+     * role permission editor), where hiding areas the editor cannot personally read would be wrong.
+     *
+     * @return list<array{phase: PdcaPhase, areas: list<Area>}> phases in cycle order, each with its areas
+     */
+    public function areaPillars(): array
+    {
+        $byPhase = [];
+        foreach ($this->orderedAreas() as $area) {
+            $byPhase[$area->phase()->value][] = $area;
+        }
+
+        $pillars = [];
+        foreach (PdcaPhase::cases() as $phase) {
+            $areas = $byPhase[$phase->value] ?? [];
+            if ([] !== $areas) {
+                $pillars[] = ['phase' => $phase, 'areas' => $areas];
+            }
+        }
+
+        return $pillars;
     }
 
     /**

@@ -33,45 +33,57 @@ final class RoleFixtures extends AbstractGoldenFixture
      */
     public static function catalog(): array
     {
-        // code => [display name, area => level]. Areas absent from the map grant no access.
+        // code => [display name, description, area => level]. Areas absent from the map grant no
+        // access. The description is shown to the admin when assigning roles to a person.
         $w = PermissionLevel::WRITE;
         $r = PermissionLevel::READ;
         $all = array_fill_keys(array_map(static fn (Area $a) => $a->value, Area::cases()), $w);
+        $allRead = array_fill_keys(array_map(static fn (Area $a) => $a->value, Area::cases()), $r);
 
         $roles = [
-            'admin' => ['Administrador', $all],
-            'direction' => ['Dirección', $all],
-            'ems_manager' => ['Responsable del SGA', $all],
-            'quality' => ['Responsable de Calidad', [
+            'admin' => ['Administrador', 'Acceso total y administración de usuarios, roles y configuración del sistema.', $all],
+            'direction' => ['Dirección', 'Dirección del centro: acceso completo a todas las áreas del SGA.', $all],
+            'ems_manager' => ['Responsable del SGA', 'Responsable del Sistema de Gestión Ambiental: gestiona todas las áreas.', $all],
+            'quality' => ['Responsable de Calidad', 'Gestiona las no conformidades; consulta aspectos, requisitos legales y proveedores.', [
                 Area::NONCONFORMITY->value => $w,
                 Area::ASPECT->value => $r,
                 Area::LEGAL_REQUIREMENT->value => $r,
                 Area::SUPPLIER->value => $r,
             ]],
-            'maintenance' => ['Mantenimiento', [
+            'maintenance' => ['Mantenimiento', 'Registra consumos, residuos y simulacros de emergencia.', [
                 Area::CONSUMPTION->value => $w,
                 Area::WASTE->value => $w,
                 Area::EMERGENCY->value => $w,
             ]],
-            'secretary' => ['Secretaría', [
+            'secretary' => ['Secretaría', 'Gestiona formación y proveedores; consulta los requisitos legales.', [
                 Area::TRAINING->value => $w,
                 Area::SUPPLIER->value => $w,
                 Area::LEGAL_REQUIREMENT->value => $r,
             ]],
-            // Responsibles that appear in the document register but have no module yet: they own
-            // "pending-module" obligations (upload a file / mark done). No area grants until their
-            // module exists — consistent with Area only listing modules that are actually built.
-            'cfpg' => ['Resp. Mantenimiento (CFGS Jardinería)', []],
-            'cleaning' => ['Personal de Limpieza y Mantenimiento', []],
+            // Personnel in charge of machinery and infrastructure (informe ISO 14001): operational
+            // control is their record and they take part in emergency drills. Earlier these roles
+            // were left empty "until their module exists" — but the operational-control module is
+            // built, so the grant is now real (decidido con dirección 2026-06-28).
+            'cfpg' => ['Resp. Mantenimiento (CFGS Jardinería)', 'Control de maquinaria e infraestructuras: control operacional y simulacros.', [
+                Area::OPERATIONAL_CONTROL->value => $w,
+                Area::EMERGENCY->value => $w,
+            ]],
+            'cleaning' => ['Personal de Limpieza y Mantenimiento', 'Limpieza y mantenimiento: control operacional y simulacros.', [
+                Area::OPERATIONAL_CONTROL->value => $w,
+                Area::EMERGENCY->value => $w,
+            ]],
+            // External auditor: read-only access to every content area for the certification audit,
+            // never write, never admin (informe ISO 14001, sección 6).
+            'auditor' => ['Auditor externo', 'Acceso de solo lectura a todas las áreas para la auditoría externa.', $allRead],
         ];
 
         $catalog = [];
-        foreach ($roles as $code => [$name, $permissions]) {
+        foreach ($roles as $code => [$name, $description, $permissions]) {
             $role = new Role();
             // Only the 'admin' role carries the admin flag. The runtime migration backfills
             // existing databases; a fresh fixtures load (local/CI/clean deploy) needs it set here
             // or no user would ever obtain ROLE_ADMIN and /admin + /audit would be locked out.
-            $role->setCode($code)->setName($name)->setAdmin('admin' === $code);
+            $role->setCode($code)->setName($name)->setDescription($description)->setAdmin('admin' === $code);
             foreach ($permissions as $area => $level) {
                 $role->setLevel(Area::from($area), $level);
             }

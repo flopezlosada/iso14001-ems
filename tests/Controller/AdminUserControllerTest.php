@@ -51,6 +51,42 @@ final class AdminUserControllerTest extends WebTestCase
         self::assertResponseStatusCodeSame(403);
     }
 
+    public function testRolePickerShowsEachRoleNameAndDescription(): void
+    {
+        $client = static::createClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $role = new Role();
+        $role->setCode('mant')->setName('Mantenimiento')->setDescription('Registra consumos, residuos y simulacros.');
+        $em->persist($role);
+        $em->flush();
+
+        $client->loginUser($this->persistUser('picker-admin@example.test', true));
+        $client->request('GET', '/admin/users/new');
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('.role-option__name', 'Mantenimiento');
+        self::assertSelectorTextContains('.role-option__desc', 'Registra consumos, residuos y simulacros.');
+    }
+
+    public function testRolePickerRendersRoleWithoutDescription(): void
+    {
+        // Roles created through the admin UI may have no description; the card must still render
+        // (name only, no description line) without a Twig error.
+        $client = static::createClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $role = new Role();
+        $role->setCode('nodesc')->setName('Sin descripción');
+        $em->persist($role);
+        $em->flush();
+
+        $client->loginUser($this->persistUser('admin-nodesc@example.test', true));
+        $client->request('GET', '/admin/users/new');
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('.role-option__name', 'Sin descripción');
+        self::assertSelectorNotExists('.role-option__desc');
+    }
+
     public function testAdminCanRegisterAUserWithARole(): void
     {
         $client = static::createClient();

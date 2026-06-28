@@ -33,7 +33,6 @@ class AdminRoleController extends AbstractController
     {
         return $this->render('admin/role/index.html.twig', [
             'roles' => $roles->findAllOrdered(),
-            'areas' => Area::cases(),
         ]);
     }
 

@@ -162,6 +162,28 @@ class Role
     }
 
     /**
+     * How many areas this role grants at each level, for the one-line summary in the role list
+     * ("Escritura en 4 · Lectura en 3 · Sin acceso al resto"). Admin roles bypass the matrix, so
+     * callers should special-case {@see isAdmin()} before using these counts.
+     *
+     * @return array{write: int, read: int, none: int} number of areas per access level
+     */
+    public function levelCounts(): array
+    {
+        $counts = [
+            PermissionLevel::WRITE->value => 0,
+            PermissionLevel::READ->value => 0,
+            PermissionLevel::NONE->value => 0,
+        ];
+
+        foreach (Area::cases() as $area) {
+            ++$counts[$this->getLevel($area)->value];
+        }
+
+        return $counts;
+    }
+
+    /**
      * @return Collection<int, User> the people who currently hold this responsibility
      */
     public function getUsers(): Collection

@@ -116,6 +116,30 @@ final class NavExtensionTest extends TestCase
         self::assertSame('non_conformity', $byLabel['No conformidades']);
     }
 
+    public function testAreaPillarsCoverEveryAreaInCycleOrderIgnoringPermissions(): void
+    {
+        // The role editor must show the whole catalog, so areaPillars ignores the checker: even one
+        // that denies everything yields all four phases with every area.
+        $pillars = $this->extensionGranting([])->areaPillars();
+
+        self::assertSame(
+            ['plan', 'do', 'check', 'act'],
+            array_map(static fn (array $p) => $p['phase']->value, $pillars),
+            'The four PDCA phases must appear in cycle order.',
+        );
+
+        $areas = [];
+        foreach ($pillars as $pillar) {
+            foreach ($pillar['areas'] as $area) {
+                $areas[] = $area;
+            }
+        }
+        self::assertCount(\count(Area::cases()), $areas, 'No area may be missing from the editor.');
+        foreach (Area::cases() as $area) {
+            self::assertContains($area, $areas);
+        }
+    }
+
     public function testRiskAreaRoutesActivateTheRiskOpportunityItem(): void
     {
         // Riesgos uses 'risk_index' → prefix 'risk'. The process-areas catalogue (risk_area_*) is

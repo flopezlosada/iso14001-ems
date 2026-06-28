@@ -43,19 +43,25 @@
                 <span class="perm-admin__text">{{ form.admin.vars.label }}<small>{{ form.admin.vars.help }}</small></span>
             </label>
 
+            {# Las 17 áreas agrupadas por los 4 pilares PDCA (mismo orden que el menú, vía
+               area_pillars()) para escanear mejor. El control segmentado por fila no cambia. #}
             <div class="perm-rows" data-perm-matrix>
-                {% for child in form %}
-                    {% if child.vars.name starts with 'perm_' %}
-                        <div class="perm-row">
-                            <span class="perm-row__label">{{ child.vars.label }}</span>
-                            <div class="seg">
-                                {% for opt in child %}
-                                    {{ form_widget(opt, { attr: { class: 'seg__input' } }) }}
-                                    <label class="seg__btn" for="{{ opt.vars.id }}">{{ opt.vars.label }}</label>
-                                {% endfor %}
+                {% for pillar in area_pillars() %}
+                    <div class="perm-group">
+                        <h3 class="perm-group__head"><span class="perm-group__code">{{ pillar.phase.folderCode }}</span> {{ pillar.phase.label }}</h3>
+                        {% for area in pillar.areas %}
+                            {% set child = form['perm_' ~ area.value] %}
+                            <div class="perm-row">
+                                <span class="perm-row__label">{{ child.vars.label }}</span>
+                                <div class="seg">
+                                    {% for opt in child %}
+                                        {{ form_widget(opt, { attr: { class: 'seg__input' } }) }}
+                                        <label class="seg__btn" for="{{ opt.vars.id }}">{{ opt.vars.label }}</label>
+                                    {% endfor %}
+                                </div>
                             </div>
-                        </div>
-                    {% endif %}
+                        {% endfor %}
+                    </div>
                 {% endfor %}
             </div>
 
