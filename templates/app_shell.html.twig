@@ -30,19 +30,29 @@
                    Mejora). La lista la construye nav_pillars(): solo las áreas que el usuario puede leer
                    y solo los pilares con alguna área visible. Normalmente se llega a cada módulo desde su
                    obligación; esto es el acceso directo. #}
+                {# Cada pilar es plegable (nav-pillars.js): solo se expande el del módulo actual, para que
+                   quien ve muchas áreas no tenga una pared de enlaces. Sin JS quedan todos abiertos. #}
                 {% for pillar in nav_pillars() %}
-                    <p class="nav-label">{{ pillar.label }}</p>
-                    {% for item in pillar.items %}
-                        <a href="{{ path(item.route) }}" class="{{ route starts with item.prefix ? 'is-active' }}">{{ item.label }}</a>
-                    {% endfor %}
+                    <div class="nav-pillar" data-nav-pillar>
+                        <button type="button" class="nav-label" aria-controls="navgrp-{{ loop.index }}">{{ pillar.label }}</button>
+                        <div class="nav-group" id="navgrp-{{ loop.index }}">
+                            {% for item in pillar.items %}
+                                <a href="{{ path(item.route) }}" class="{{ route starts with item.prefix ? 'is-active' }}">{{ item.label }}</a>
+                            {% endfor %}
+                        </div>
+                    </div>
                 {% endfor %}
                 {% if is_granted('ROLE_ADMIN') %}
-                    <p class="nav-label">Administración</p>
-                    <a href="{{ path('audit_index') }}" class="{{ route starts with 'audit' ? 'is-active' }}">Registro de actividad</a>
-                    <a href="{{ path('admin_user_index') }}" class="{{ route starts with 'admin_user' ? 'is-active' }}">Usuarios</a>
-                    <a href="{{ path('admin_role_index') }}" class="{{ route starts with 'admin_role' ? 'is-active' }}">Roles y permisos</a>
-                    <a href="{{ path('admin_settings_edit') }}" class="{{ route starts with 'admin_settings' ? 'is-active' }}">Ajustes</a>
-                    <a href="{{ path('admin_operational_control_item_index') }}" class="{{ route starts with 'admin_operational_control_item' ? 'is-active' }}">Checklist control operacional</a>
+                    <div class="nav-pillar" data-nav-pillar>
+                        <button type="button" class="nav-label" aria-controls="navgrp-admin">Administración</button>
+                        <div class="nav-group" id="navgrp-admin">
+                            <a href="{{ path('audit_index') }}" class="{{ route starts with 'audit' ? 'is-active' }}">Registro de actividad</a>
+                            <a href="{{ path('admin_user_index') }}" class="{{ route starts with 'admin_user' ? 'is-active' }}">Usuarios</a>
+                            <a href="{{ path('admin_role_index') }}" class="{{ route starts with 'admin_role' ? 'is-active' }}">Roles y permisos</a>
+                            <a href="{{ path('admin_settings_edit') }}" class="{{ route starts with 'admin_settings' ? 'is-active' }}">Ajustes</a>
+                            <a href="{{ path('admin_operational_control_item_index') }}" class="{{ route starts with 'admin_operational_control_item' ? 'is-active' }}">Checklist control operacional</a>
+                        </div>
+                    </div>
                 {% endif %}
             </nav>
 
