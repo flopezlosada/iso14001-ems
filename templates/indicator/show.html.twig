@@ -49,11 +49,11 @@
                         <tr>
                             <td>{{ measurement.year }}</td>
                             <td>{{ month_names[measurement.month] }}</td>
-                            <td class="mono">{{ measurement.value }}</td>
+                            <td class="mono">{{ measurement.value|decimal }}</td>
                             <td>
                                 {%- if measurement.breached -%}
                                     Sí ·
-                                    <a href="{{ path('non_conformity_new', { origin: 'internal', description: 'Indicador fuera del valor de referencia: ' ~ indicator.name ~ ' (' ~ month_names[measurement.month] ~ ' ' ~ measurement.year ~ '), valor ' ~ measurement.value ~ ', referencia ' ~ (indicator.referenceValue ?? 'n/d') }) }}">Abrir NC</a>
+                                    <a href="{{ path('non_conformity_new', { origin: 'internal', description: 'Indicador fuera del valor de referencia: ' ~ indicator.name ~ ' (' ~ month_names[measurement.month] ~ ' ' ~ measurement.year ~ '), valor ' ~ measurement.value|decimal ~ ', referencia ' ~ (indicator.referenceValue ?? 'n/d') }) }}">Abrir NC</a>
                                 {%- else -%}No{%- endif -%}
                             </td>
                             <td><a href="{{ path('indicator_measurement_edit', { id: indicator.id, measurementId: measurement.id }) }}">Editar</a></td>
