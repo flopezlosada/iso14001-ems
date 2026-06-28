@@ -24,12 +24,23 @@ final class AreaTest extends TestCase
         }
     }
 
-    public function testEveryAreaHasAPhase(): void
+    public function testEveryAreaMapsToAPhaseAndEveryPhaseIsUsed(): void
     {
+        $usedPhases = [];
         foreach (Area::cases() as $area) {
             // A new Area without a phase() arm throws UnhandledMatchError here, not at first render.
-            self::assertInstanceOf(PdcaPhase::class, $area->phase());
+            $usedPhases[$area->phase()->value] = true;
         }
+
+        $allPhases = [];
+        foreach (PdcaPhase::cases() as $phase) {
+            $allPhases[$phase->value] = true;
+        }
+
+        ksort($usedPhases);
+        ksort($allPhases);
+        // Every PDCA folder has at least one area (no empty pillar by construction).
+        self::assertSame($allPhases, $usedPhases);
     }
 
     public function testDafoAreaMapsToItsModule(): void
