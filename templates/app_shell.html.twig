@@ -26,28 +26,16 @@
                 <a href="{{ path('obligation_structure') }}" class="{{ route starts with 'obligation_structure' ? 'is-active' }}">Estructura del SGA</a>
                 <a href="{{ path('document_index') }}" class="{{ route starts with 'document_' ? 'is-active' }}">Documentos</a>
 
-                {# Módulos: normalmente se llega a ellos desde cada obligación; aquí como acceso directo,
-                   en dos grupos: lo que se registra de forma operativa y el ciclo de evaluación/mejora. #}
-                <p class="nav-label">Registros</p>
-                <a href="{{ path('consumption_index') }}" class="{{ route starts with 'consumption' ? 'is-active' }}">Consumos</a>
-                <a href="{{ path('waste_index') }}" class="{{ route starts with 'waste' ? 'is-active' }}">Residuos</a>
-                <a href="{{ path('emergency_drill_index') }}" class="{{ route starts with 'emergency_drill' ? 'is-active' }}">Simulacros</a>
-                <a href="{{ path('operational_control_index') }}" class="{{ route starts with 'operational_control' ? 'is-active' }}">Control operacional</a>
-                <a href="{{ path('training_index') }}" class="{{ route starts with 'training' ? 'is-active' }}">Formación</a>
-                <a href="{{ path('supplier_index') }}" class="{{ route starts with 'supplier' ? 'is-active' }}">Proveedores</a>
-                <a href="{{ path('communication_index') }}" class="{{ route starts with 'communication' ? 'is-active' }}">Comunicaciones</a>
-
-                <p class="nav-label">Evaluación y mejora</p>
-                <a href="{{ path('interested_party_index') }}" class="{{ route starts with 'interested_party' ? 'is-active' }}">Partes interesadas</a>
-                <a href="{{ path('dafo_index') }}" class="{{ route starts with 'dafo' ? 'is-active' }}">Análisis DAFO</a>
-                <a href="{{ path('aspect_index') }}" class="{{ route starts with 'aspect' ? 'is-active' }}">Aspectos ambientales</a>
-                <a href="{{ path('risk_index') }}" class="{{ route starts with 'risk' ? 'is-active' }}">Riesgos y oportunidades</a>
-                <a href="{{ path('objective_index') }}" class="{{ route starts with 'objective' ? 'is-active' }}">Objetivos</a>
-                <a href="{{ path('indicator_index') }}" class="{{ route starts with 'indicator' ? 'is-active' }}">Indicadores</a>
-                <a href="{{ path('legal_requirement_index') }}" class="{{ route starts with 'legal_requirement' ? 'is-active' }}">Requisitos legales</a>
-                <a href="{{ path('non_conformity_index') }}" class="{{ route starts with 'non_conformity' ? 'is-active' }}">No conformidades</a>
-                <a href="{{ path('system_audit_index') }}" class="{{ route starts with 'system_audit' ? 'is-active' }}">Auditorías</a>
-                <a href="{{ path('management_review_index') }}" class="{{ route starts with 'management_review' ? 'is-active' }}">Revisión por la dirección</a>
+                {# Módulos agrupados por las carpetas PDCA del centro (Planificar/Implementación/Verificar/
+                   Mejora). La lista la construye nav_pillars(): solo las áreas que el usuario puede leer
+                   y solo los pilares con alguna área visible. Normalmente se llega a cada módulo desde su
+                   obligación; esto es el acceso directo. #}
+                {% for pillar in nav_pillars() %}
+                    <p class="nav-label">{{ pillar.label }}</p>
+                    {% for item in pillar.items %}
+                        <a href="{{ path(item.route) }}" class="{{ route starts with item.prefix ? 'is-active' }}">{{ item.label }}</a>
+                    {% endfor %}
+                {% endfor %}
                 {% if is_granted('ROLE_ADMIN') %}
                     <p class="nav-label">Administración</p>
                     <a href="{{ path('audit_index') }}" class="{{ route starts with 'audit' ? 'is-active' }}">Registro de actividad</a>
