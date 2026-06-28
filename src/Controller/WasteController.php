@@ -29,14 +29,15 @@ class WasteController extends AbstractController
     {
     }
 
+    /**
+     * Redirects to the current year's waste register.
+     */
     #[Route('', name: 'waste_index', methods: ['GET'])]
-    public function index(WasteRecordRepository $records): Response
+    public function index(): Response
     {
         $this->denyAccessUnlessGranted(AreaVoter::READ, Area::WASTE);
 
-        return $this->render('waste/index.html.twig', [
-            'records' => $records->findRecent(),
-        ]);
+        return $this->redirectToRoute('waste_year', ['year' => (int) date('Y')]);
     }
 
     /**
@@ -77,12 +78,42 @@ class WasteController extends AbstractController
         ]);
     }
 
+    /**
+     * Lists the pick-ups with no date assigned (historical entries dated in free text). Kept apart
+     * from the per-year views, which can only show dated records, so these are never lost.
+     */
+    #[Route('/sin-fecha', name: 'waste_undated', methods: ['GET'])]
+    public function undated(WasteRecordRepository $records): Response
+    {
+        $this->denyAccessUnlessGranted(AreaVoter::READ, Area::WASTE);
+
+        return $this->render('waste/undated.html.twig', [
+            'records' => $records->findUndated(),
+        ]);
+    }
+
     #[Route('/new', name: 'waste_new', methods: ['GET', 'POST'])]
     public function new(Request $request, EntityManagerInterface $em): Response
     {
         $this->denyAccessUnlessGranted(AreaVoter::WRITE, Area::WASTE);
 
         return $this->handleForm(new WasteRecord(), $request, $em);
+    }
+
+    /**
+     * Lists the dated pick-ups of the given year, with a notice linking to the undated ones. Declared
+     * after the literal routes (/new, /sin-fecha, /tendencia) so the dynamic {year} never shadows them.
+     */
+    #[Route('/{year}', name: 'waste_year', requirements: ['year' => '\d{4}'], methods: ['GET'])]
+    public function year(int $year, WasteRecordRepository $records): Response
+    {
+        $this->denyAccessUnlessGranted(AreaVoter::READ, Area::WASTE);
+
+        return $this->render('waste/index.html.twig', [
+            'year' => $year,
+            'records' => $records->findForYear($year),
+            'undatedCount' => $records->countUndated(),
+        ]);
     }
 
     #[Route('/{id}/edit', name: 'waste_edit', requirements: ['id' => '\d+'], methods: ['GET', 'POST'])]
@@ -116,7 +147,13 @@ class WasteController extends AbstractController
             );
             $this->addFlash('success', 'Registro de residuo guardado.');
 
-            return $this->redirectToRoute('waste_index');
+            // Land on the page where the record actually shows: its pick-up year, or the undated
+            // list when it has no date — not always the current year, which might not contain it.
+            $pickupDate = $record->getPickupDate();
+
+            return null !== $pickupDate
+                ? $this->redirectToRoute('waste_year', ['year' => (int) $pickupDate->format('Y')])
+                : $this->redirectToRoute('waste_undated');
         }
 
         return $this->render('waste/form.html.twig', [
