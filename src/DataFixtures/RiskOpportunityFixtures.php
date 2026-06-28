@@ -8,6 +8,7 @@ use App\Entity\ProcessArea;
 use App\Entity\RiskAction;
 use App\Entity\RiskAssessment;
 use App\Entity\RiskOpportunity;
+use App\Entity\Role;
 use App\Entity\User;
 use App\Enum\RiskLevel;
 use App\Enum\RiskOpportunityType;
@@ -27,7 +28,9 @@ use Doctrine\Persistence\ObjectManager;
  */
 final class RiskOpportunityFixtures extends AbstractDemoFixture implements DependentFixtureInterface
 {
-    private const string EXERCISE = '2025/2026';
+    // Canonical school-year format is hyphenated ("YYYY-YYYY"); it is what SchoolYear emits and what
+    // the RiskAssessment Assert\Regex enforces. A slash here would seed data the entity rejects.
+    private const string EXERCISE = '2025-2026';
 
     public function __construct(private readonly RiskScoreCalculator $calculator)
     {
@@ -57,7 +60,7 @@ final class RiskOpportunityFixtures extends AbstractDemoFixture implements Depen
                 $riskAction = new RiskAction();
                 $riskAction->setAssessment($assessment)
                     ->setDescription($action['description'])
-                    ->setResponsible($action['responsible'])
+                    ->setResponsible($this->getReference(RoleFixtures::ref($action['responsible']), Role::class))
                     ->setDeadline($action['deadline']);
                 $assessment->addAction($riskAction);
             }
@@ -71,7 +74,8 @@ final class RiskOpportunityFixtures extends AbstractDemoFixture implements Depen
     /**
      * @return list<array{type: RiskOpportunityType, description: string, area: string,
      *     probability: RiskLevel, impact: RiskLevel, justification: string,
-     *     action?: array{description: string, responsible: string, deadline: string}}>
+     *     action?: array{description: string, responsible: string, deadline: string}}> where
+     *     action.responsible is a role code ({@see RoleFixtures})
      */
     private function definitions(): array
     {
@@ -88,7 +92,7 @@ final class RiskOpportunityFixtures extends AbstractDemoFixture implements Depen
                 'justification' => 'Histórico de una NC en auditoría y normativa exigente de residuos peligrosos.',
                 'action' => [
                     'description' => 'Implantar un calendario de recogidas con gestor autorizado y revisar el archivo cronológico.',
-                    'responsible' => 'Responsable del SGA', 'deadline' => 'Diciembre 2025',
+                    'responsible' => 'ems_manager', 'deadline' => 'Diciembre 2025',
                 ],
             ],
             [
@@ -99,7 +103,7 @@ final class RiskOpportunityFixtures extends AbstractDemoFixture implements Depen
                 'justification' => 'La normativa ambiental cambia con frecuencia y afecta a varios vectores.',
                 'action' => [
                     'description' => 'Revisión semestral del registro de requisitos legales con fuente actualizada.',
-                    'responsible' => 'Secretaría', 'deadline' => 'Revisión semestral',
+                    'responsible' => 'secretary', 'deadline' => 'Revisión semestral',
                 ],
             ],
             [
@@ -124,7 +128,7 @@ final class RiskOpportunityFixtures extends AbstractDemoFixture implements Depen
                 'justification' => 'Existen subvenciones y el ahorro potencial es elevado.',
                 'action' => [
                     'description' => 'Solicitar subvención para placas fotovoltaicas y completar el cambio a iluminación LED.',
-                    'responsible' => 'Dirección', 'deadline' => 'Curso 2025/2026',
+                    'responsible' => 'direction', 'deadline' => 'Curso 2025-2026',
                 ],
             ],
             [
@@ -139,6 +143,6 @@ final class RiskOpportunityFixtures extends AbstractDemoFixture implements Depen
 
     public function getDependencies(): array
     {
-        return [ProcessAreaFixtures::class, UserFixtures::class];
+        return [ProcessAreaFixtures::class, UserFixtures::class, RoleFixtures::class];
     }
 }

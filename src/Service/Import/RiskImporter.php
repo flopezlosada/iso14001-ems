@@ -8,10 +8,12 @@ use App\Entity\ProcessArea;
 use App\Entity\RiskAction;
 use App\Entity\RiskAssessment;
 use App\Entity\RiskOpportunity;
+use App\Entity\Role;
 use App\Enum\RiskLevel;
 use App\Enum\RiskOpportunityType;
 use App\Repository\ProcessAreaRepository;
 use App\Repository\RiskOpportunityRepository;
+use App\Repository\RoleRepository;
 use App\Service\RiskScoreCalculator;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
@@ -33,12 +35,26 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
  */
 final class RiskImporter extends AbstractDatasetImporter implements DatasetImporter
 {
+    /**
+     * Maps the sheet's free-text responsible (upper-cased) to a role code in the catalogue. Anything
+     * not listed is flagged for manual review rather than guessed (see resolveResponsible()).
+     */
+    private const array RESPONSIBLE_ROLE_MAP = [
+        'RESPO SGMA' => 'ems_manager',
+        'RESPO MANTENIMIENTO' => 'maintenance',
+        'RESPO INFORMATICA' => 'it',
+    ];
+
+    /** @var array<string, Role|null> roles resolved by code during this run */
+    private array $roleCache = [];
+
     public function __construct(
         private readonly ProcessAreaRepository $processAreas,
         private readonly RiskOpportunityRepository $risks,
         private readonly EntityManagerInterface $entityManager,
         private readonly ValidatorInterface $validator,
         private readonly RiskScoreCalculator $calculator,
+        private readonly RoleRepository $roles,
     ) {
     }
 
@@ -55,6 +71,7 @@ final class RiskImporter extends AbstractDatasetImporter implements DatasetImpor
     public function import(iterable $rows, bool $dryRun): ImportReport
     {
         $report = new ImportReport();
+        $this->roleCache = []; // the importer is a singleton; never carry a cache across runs
         $line = 1; // header is line 1
         // In-call identity maps: findOneBy cannot see entities not flushed yet, so a process area or
         // risk first seen on an earlier row must be reused from here, not re-created.
@@ -78,7 +95,9 @@ final class RiskImporter extends AbstractDatasetImporter implements DatasetImpor
             }
 
             $description = trim($row['description'] ?? '');
-            $exercise = trim($row['exercise'] ?? '');
+            // Normalise the separator: the source may carry a slash ("2024/2025"); the entity stores
+            // the hyphenated form (and its Assert\Regex only accepts it). Same as ObjectiveImporter.
+            $exercise = str_replace('/', '-', trim($row['exercise'] ?? ''));
             $areaName = trim($row['process_area'] ?? '');
 
             $area = $this->resolveArea($areaName, $areaCache, $report, $line, $row);
@@ -105,7 +124,7 @@ final class RiskImporter extends AbstractDatasetImporter implements DatasetImpor
             $isNew = false;
             $risk = $this->upsertRisk($type, $description, $area, $riskCache, $isNew);
             $assessment = $this->upsertAssessment($risk, $exercise, $probability, $impact, $row);
-            $this->upsertAction($assessment, $row);
+            $this->upsertAction($assessment, $row, $line, $report);
 
             // Counted per risk/opportunity: a new item is "created", a recurring one (typically the
             // same risk seen in a later term) is "updated" as its assessment is added/refreshed.
@@ -215,7 +234,7 @@ final class RiskImporter extends AbstractDatasetImporter implements DatasetImpor
      *
      * @param array<string, string> $row
      */
-    private function upsertAction(RiskAssessment $assessment, array $row): void
+    private function upsertAction(RiskAssessment $assessment, array $row, int $line, ImportReport $report): void
     {
         $description = trim($row['action'] ?? '');
         if ('' === $description) {
@@ -234,10 +253,40 @@ final class RiskImporter extends AbstractDatasetImporter implements DatasetImpor
             $assessment->addAction($action);
         }
         $action
-            ->setResponsible($this->nullable($row['responsible'] ?? ''))
+            ->setResponsible($this->resolveResponsible($row['responsible'] ?? '', $line, $report))
             ->setDeadline($this->nullable($row['deadline'] ?? ''))
             ->setEfficacy($this->nullable($row['efficacy'] ?? ''))
             ->setEvaluatedAt($this->date($row['evaluated_at'] ?? ''));
+    }
+
+    /**
+     * Resolves the free-text "responsible" of the source sheet to a {@see Role}. Known functional
+     * names map to role codes ({@see self::RESPONSIBLE_ROLE_MAP}); a blank cell yields null silently,
+     * while a non-blank value with no mapping is left null and flagged for manual review (never a
+     * silent loss). Roles are looked up once and cached for the run.
+     */
+    private function resolveResponsible(string $raw, int $line, ImportReport $report): ?Role
+    {
+        $value = trim($raw);
+        if ('' === $value) {
+            return null;
+        }
+
+        $code = self::RESPONSIBLE_ROLE_MAP[mb_strtoupper($value)] ?? null;
+        if (null === $code) {
+            $report->flag($line, sprintf('Responsable "%s" no corresponde a ningún rol; acción importada sin responsable.', $value));
+
+            return null;
+        }
+
+        if (!\array_key_exists($code, $this->roleCache)) {
+            $this->roleCache[$code] = $this->roles->findOneBy(['code' => $code]);
+        }
+        if (null === $this->roleCache[$code]) {
+            $report->flag($line, sprintf('El rol "%s" (de "%s") no existe en el catálogo; acción importada sin responsable.', $code, $value));
+        }
+
+        return $this->roleCache[$code];
     }
 
     /**

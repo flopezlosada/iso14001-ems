@@ -1244,3 +1244,12 @@ input[type="email"], input[type="text"], select, textarea {
 .cal-legend-row .cal-legend { margin: 0; }
 .cal-legend-sep { font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: .12em; color: var(--text-faint); }
 .cal-note { margin: 16px 0 0; font-size: 12.5px; }
+
+/* Dynamic CollectionType rows (e.g. risk action plan): each entry is a self-contained card with a
+   numbered header ("Acción 1, 2…") and its own small "Quitar", so it is obvious each block is one
+   item and what add/remove affect. The global "+ Añadir" sits in a single .form-actions bar below. */
+.collection-item { border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; background: var(--surface-sunken); }
+.collection-item + .collection-item { margin-top: 14px; }
+.collection-item__bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+.collection-item__title { font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: .12em; color: var(--text-faint); }
+.btn-sm { padding: 4px 12px; font-size: 13px; }

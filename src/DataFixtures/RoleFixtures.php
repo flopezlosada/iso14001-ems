@@ -74,6 +74,9 @@ final class RoleFixtures extends AbstractGoldenFixture
                 Area::SUPPLIER->value => $w,
                 Area::LEGAL_REQUIREMENT->value => $r,
             ]],
+            // Functional responsibility role (no area module is "owned" by IT): exists so it can be the
+            // responsible of risk action-plan items (e.g. "RESPO INFORMÁTICA" in the F.08.0). No grants.
+            'it' => ['Responsable de Informática', 'Responsable de los sistemas informáticos del centro; puede figurar como responsable de acciones del plan de riesgos.', []],
             // Personnel in charge of machinery and infrastructure (informe ISO 14001): operational
             // control is their record and they take part in emergency drills. Earlier these roles
             // were left empty "until their module exists" — but the operational-control module is

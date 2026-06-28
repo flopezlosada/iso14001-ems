@@ -7,6 +7,7 @@ namespace App\Tests\Service\Import;
 use App\Entity\RiskAction;
 use App\Entity\RiskAssessment;
 use App\Entity\RiskOpportunity;
+use App\Entity\Role;
 use App\Enum\RiskCategory;
 use App\Enum\RiskLevel;
 use App\Enum\RiskOpportunityType;
@@ -37,6 +38,10 @@ final class RiskImporterTest extends KernelTestCase
         $this->risks = $container->get(RiskOpportunityRepository::class);
         $this->processAreas = $container->get(ProcessAreaRepository::class);
         $this->entityManager = $container->get(EntityManagerInterface::class);
+
+        // The importer maps the sheet's "RESPO SGMA" to the 'ems_manager' role; it must exist to resolve.
+        $this->entityManager->persist((new Role())->setCode('ems_manager')->setName('Responsable del SGA'));
+        $this->entityManager->flush();
     }
 
     /**
@@ -109,6 +114,24 @@ final class RiskImporterTest extends KernelTestCase
         self::assertInstanceOf(RiskAction::class, $action);
         self::assertSame('ANUAL', $action->getDeadline(), 'El plazo en texto se conserva tal cual.');
         self::assertSame('2024-10-01', $action->getEvaluatedAt()?->format('Y-m-d'));
+        // "RESPO SGMA" resolves to the ems_manager role.
+        self::assertSame('ems_manager', $action->getResponsible()?->getCode());
+    }
+
+    public function testUnknownResponsibleIsLeftNullAndFlagged(): void
+    {
+        $report = $this->importer->import([$this->row(['responsible' => 'RESPO DESCONOCIDO'])], false);
+        $this->entityManager->clear();
+
+        // Not a rejection (the row is imported), but flagged for manual review, with no responsible.
+        self::assertSame(1, $report->getCreated());
+        self::assertNotEmpty($report->getFlagged());
+
+        $risk = $this->findByDescription('Falta de conocimientos ambientales del personal.');
+        self::assertNotNull($risk);
+        $action = $this->assessmentFor($risk, '2024-2025')->getActions()->first();
+        self::assertInstanceOf(RiskAction::class, $action);
+        self::assertNull($action->getResponsible());
     }
 
     public function testScoreAndCategoryAreComputedNotReadFromSheet(): void

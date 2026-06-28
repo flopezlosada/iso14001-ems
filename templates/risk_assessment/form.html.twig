@@ -13,15 +13,15 @@
 {% block body %}
     <div class="page-head">
         <div>
-            <h1>{{ isNew ? 'Nueva valoración' : 'Editar valoración ' ~ assessment.exercise }} · {{ item.type.label }}</h1>
-            <p class="lead">{{ item.description }}</p>
+            <p class="eyebrow">{{ item.type.label }} · {{ isNew ? 'Nueva valoración' : 'Editar valoración ' ~ assessment.exercise }}</p>
+            <h1>{{ item.description }}</h1>
         </div>
     </div>
 
     <div class="card form-card form-card--wide">
         {{ form_start(form, { 'attr': { 'novalidate': 'novalidate' } }) }}
             {{ form_errors(form) }}
-            {% for field in [form.exercise, form.probability, form.impact, form.justification, form.revisionNumber] %}
+            {% for field in [form.exercise, form.probability, form.impact, form.justification] %}
                 <div class="form-row">
                     {{ form_label(field) }}
                     {{ form_widget(field) }}
@@ -31,8 +31,45 @@
             {% endfor %}
 
             <h2>Plan de acción</h2>
-            <p class="help">Una o más acciones para abordar el {{ item.type.label|lower }}.</p>
-            {{ form_row(form.actions) }}
+            <p class="help">Una o más acciones para abordar {{ item.type.withDefiniteArticle }}.</p>
+
+            {# Prototype for a new action row, rendered with the same per-field layout as the rows below
+               so a JS-added entry looks identical. __name__ is the index placeholder collection.js fills. #}
+            {% set actionPrototype %}
+                {% for sub in form.actions.vars.prototype %}
+                    <div class="form-row">
+                        {{ form_label(sub) }}
+                        {{ form_widget(sub) }}
+                        {% if sub.vars.help %}<p class="help">{{ sub.vars.help }}</p>{% endif %}
+                        {{ form_errors(sub) }}
+                    </div>
+                {% endfor %}
+            {% endset %}
+
+            <div id="actions-collection" class="collection" data-prototype="{{ actionPrototype|e('html_attr') }}" data-index="{{ form.actions|length }}" data-collection-item-label="Acción">
+                {% for action in form.actions %}
+                    <div class="collection-item">
+                        <div class="collection-item__bar">
+                            <span class="collection-item__title" data-collection-label="Acción">Acción {{ loop.index }}</span>
+                            <button type="button" class="btn secondary btn-sm collection-remove" data-collection-remove>Quitar</button>
+                        </div>
+                        {% for sub in action %}
+                            <div class="form-row">
+                                {{ form_label(sub) }}
+                                {{ form_widget(sub) }}
+                                {% if sub.vars.help %}<p class="help">{{ sub.vars.help }}</p>{% endif %}
+                                {{ form_errors(sub) }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn secondary" data-collection-add="actions-collection">+ Añadir acción</button>
+            </div>
+            {# Rendered by hand above; tell the form the field is done so form_end()'s form_rest() does
+               not dump the collection's "Plan de acción" label again at the bottom. #}
+            {% do form.actions.setRendered %}
 
             <p class="help">La puntuación (PxI) y la categoría se calculan automáticamente al guardar.</p>
             {{ f.actions(path('risk_show', { id: item.id })) }}

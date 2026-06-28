@@ -214,7 +214,8 @@ final class RiskOpportunityControllerTest extends WebTestCase
         $risk->addAssessment($assessment);
 
         if (null !== $actionDescription) {
-            $assessment->addAction((new RiskAction())->setDescription($actionDescription)->setResponsible('RESPO SGMA'));
+            // Responsible (a Role) is optional and not asserted here, so it is left unset.
+            $assessment->addAction((new RiskAction())->setDescription($actionDescription));
         }
 
         $em->persist($assessment);

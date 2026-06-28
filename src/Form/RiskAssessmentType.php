@@ -7,11 +7,10 @@ namespace App\Form;
 use App\Entity\RiskAssessment;
 use App\Enum\RiskLevel;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\CollectionType;
 use Symfony\Component\Form\Extension\Core\Type\EnumType;
-use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
-use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
@@ -29,9 +28,15 @@ class RiskAssessmentType extends AbstractType
         $levelLabel = static fn (RiskLevel $level): string => sprintf('%s (%d)', $level->label(), $level->value);
 
         $builder
-            ->add('exercise', TextType::class, [
+            // The course is a closed set of valid school years (not free text), so a typo or an
+            // invented year is impossible. On edit it is locked: a valuation never changes the year
+            // it belongs to (that is what the per-course unique constraint protects), so a correction
+            // is an edit of the same year, never a move to another.
+            ->add('exercise', ChoiceType::class, [
                 'label' => 'Curso',
-                'help' => 'Formato AAAA-AAAA, p. ej. 2025-2026.',
+                'choices' => array_combine($options['exercise_choices'], $options['exercise_choices']),
+                'placeholder' => false,
+                'disabled' => true === $options['lock_exercise'],
             ])
             ->add('probability', EnumType::class, [
                 'class' => RiskLevel::class,
@@ -48,9 +53,8 @@ class RiskAssessmentType extends AbstractType
                 'label' => 'Motivo / Justificación',
                 'required' => false,
             ])
-            ->add('revisionNumber', IntegerType::class, [
-                'label' => 'Nº de revisión',
-            ])
+            // The revision number is not user-editable: it is bumped automatically when an approved
+            // valuation is edited (a new revision), in RiskAssessmentController::handleForm().
             ->add('actions', CollectionType::class, [
                 'entry_type' => RiskActionType::class,
                 'label' => 'Plan de acción',
@@ -66,6 +70,12 @@ class RiskAssessmentType extends AbstractType
     {
         $resolver->setDefaults([
             'data_class' => RiskAssessment::class,
+            // The school years offered in the "Curso" selector, in canonical "YYYY-YYYY" format.
+            'exercise_choices' => [],
+            // When true the "Curso" selector is locked (used on edit: the year is immutable).
+            'lock_exercise' => false,
         ]);
+        $resolver->setAllowedTypes('exercise_choices', 'string[]');
+        $resolver->setAllowedTypes('lock_exercise', 'bool');
     }
 }

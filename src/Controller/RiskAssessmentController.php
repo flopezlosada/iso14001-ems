@@ -13,6 +13,7 @@ use App\Security\Voter\AreaVoter;
 use App\Security\Voter\RiskAssessmentVoter;
 use App\Service\AuditLogger;
 use App\Service\RiskScoreCalculator;
+use App\Util\SchoolYear;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -45,10 +46,29 @@ class RiskAssessmentController extends AbstractController
     {
         $this->denyAccessUnlessGranted(AreaVoter::WRITE, Area::RISK_OPPORTUNITY);
 
+        // Offer the previous/current/next school year, minus the ones this item is already valued for:
+        // a valuation is unique per course, so offering an already-valued year would only dead-end on
+        // the unique-constraint error.
+        $current = SchoolYear::current(new \DateTimeImmutable('today'));
+        $valued = $this->valuedExercises($item);
+        $available = array_values(array_filter(
+            [SchoolYear::previous($current), $current, SchoolYear::next($current)],
+            static fn (string $year): bool => !isset($valued[$year]),
+        ));
+
+        if ([] === $available) {
+            $this->addFlash('error', 'Este riesgo/oportunidad ya tiene valoración para los cursos disponibles. Edita la existente para corregirla.');
+
+            return $this->redirectToRoute('risk_show', ['id' => $item->getId()]);
+        }
+
         $assessment = new RiskAssessment();
+        // Land the selector on the current year when it is still free; otherwise on the first available
+        // one, so the preselected value is always a valid choice.
+        $assessment->setExercise(\in_array($current, $available, true) ? $current : $available[0]);
         $item->addAssessment($assessment);
 
-        return $this->handleForm($assessment, $item, $request, $em);
+        return $this->handleForm($assessment, $item, $request, $em, $available, lockExercise: false);
     }
 
     /**
@@ -68,7 +88,9 @@ class RiskAssessmentController extends AbstractController
             throw $this->createNotFoundException('The assessment does not belong to the given item.');
         }
 
-        return $this->handleForm($assessment, $item, $request, $em);
+        // The course is immutable on edit (a valuation never moves to another year), so the only
+        // choice is the one it already belongs to, and the selector is locked.
+        return $this->handleForm($assessment, $item, $request, $em, [$assessment->getExercise()], lockExercise: true);
     }
 
     /**
@@ -121,17 +143,29 @@ class RiskAssessmentController extends AbstractController
      * Builds and processes the valuation form, computing the score and persisting on a valid
      * submission. Bumping the revision number on an approved valuation clears its approval: a new
      * revision is a fresh draft that Dirección must sign off again.
+     *
+     * @param list<string> $exerciseChoices the school years offered in the "Curso" selector
+     * @param bool          $lockExercise   whether the "Curso" selector is locked (true on edit)
      */
-    private function handleForm(RiskAssessment $assessment, RiskOpportunity $item, Request $request, EntityManagerInterface $em): Response
+    private function handleForm(RiskAssessment $assessment, RiskOpportunity $item, Request $request, EntityManagerInterface $em, array $exerciseChoices, bool $lockExercise): Response
     {
         $isNew = null === $assessment->getId();
-        $originalRevision = $assessment->getRevisionNumber();
+        $wasApproved = null !== $assessment->getApprovedBy();
+        // Snapshot the approved content before binding, to tell a real change from a no-op save.
+        $signatureBefore = $wasApproved ? $this->contentSignature($assessment) : null;
 
-        $form = $this->createForm(RiskAssessmentType::class, $assessment);
+        $form = $this->createForm(RiskAssessmentType::class, $assessment, [
+            'exercise_choices' => $exerciseChoices,
+            'lock_exercise' => $lockExercise,
+        ]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            if (!$isNew && $assessment->getRevisionNumber() !== $originalRevision && null !== $assessment->getApprovedBy()) {
+            // A real edit of an already-approved valuation is a new revision: bump the number and send
+            // it back to draft (pending) so Dirección approves the change again. A no-op save (nothing
+            // actually changed) must NOT touch the revision or the approval.
+            if ($wasApproved && $signatureBefore !== $this->contentSignature($assessment)) {
+                $assessment->setRevisionNumber($assessment->getRevisionNumber() + 1);
                 $assessment->setApprovedBy(null)->setApprovedAt(null);
             }
 
@@ -157,5 +191,59 @@ class RiskAssessmentController extends AbstractController
             'assessment' => $assessment,
             'isNew' => $isNew,
         ]);
+    }
+
+    /**
+     * A stable fingerprint of the valuation's meaningful content (scoring factors, justification and
+     * the action plan), used to tell a real edit from a no-op save. The score/category are excluded
+     * (they are derived) and so are approval and revision (they are the consequence, not the content).
+     * Nulls and empty strings are normalised so "" and null compare equal.
+     *
+     * @param RiskAssessment $assessment the valuation to fingerprint
+     *
+     * @return string the content fingerprint
+     */
+    private function contentSignature(RiskAssessment $assessment): string
+    {
+        $parts = [
+            (string) $assessment->getProbability()->value,
+            (string) $assessment->getImpact()->value,
+            (string) $assessment->getJustification(),
+        ];
+        foreach ($assessment->getActions() as $action) {
+            $parts[] = [
+                (string) $action->getDescription(),
+                (string) $action->getResponsible()?->getId(),
+                (string) $action->getDeadline(),
+                (string) $action->getEfficacy(),
+                $action->getEvaluatedAt()?->format('Y-m-d') ?? '',
+            ];
+        }
+
+        // JSON (not a delimiter join) so a newline in the justification or a "|" in a field cannot
+        // forge a collision between two different contents. Actions are ordered (RiskAssessment's
+        // OrderBy), so the fingerprint is stable across reloads.
+        return json_encode($parts, JSON_THROW_ON_ERROR);
+    }
+
+    /**
+     * The school years the item is already valued for, as a set keyed by year ("YYYY-YYYY" => true)
+     * for O(1) lookups. Only persisted valuations count, so a not-yet-saved draft does not exclude
+     * its own year.
+     *
+     * @param RiskOpportunity $item the risk/opportunity whose valuations to inspect
+     *
+     * @return array<string, true> the already-valued school years as a lookup set
+     */
+    private function valuedExercises(RiskOpportunity $item): array
+    {
+        $valued = [];
+        foreach ($item->getAssessments() as $assessment) {
+            if (null !== $assessment->getId()) {
+                $valued[$assessment->getExercise()] = true;
+            }
+        }
+
+        return $valued;
     }
 }
