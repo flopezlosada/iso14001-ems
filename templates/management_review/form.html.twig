@@ -35,8 +35,10 @@
                         {% if is_auto %}
                             <p class="help">Generado automáticamente a partir de los demás módulos: solo revisión. Usa «Regenerar datos automáticos» si ha cambiado algún módulo.</p>
                         {% endif %}
-                        {{ form_widget(child.content) }}
-                        {{ form_errors(child.content) }}
+                        {% if child.decision is defined %}
+                            {{ form_row(child.decision) }}
+                        {% endif %}
+                        {{ form_row(child.content) }}
                     </fieldset>
                 {% endfor %}
             {% endif %}

@@ -79,6 +79,8 @@ final class ManagementReviewControllerTest extends WebTestCase
         self::assertSelectorExists('textarea[disabled]');
         // ...while the decision/manual sections stay editable.
         self::assertSelectorExists('textarea:not([disabled])');
+        // The six output (decision) sections each render a closed verdict dropdown.
+        self::assertCount(6, $client->getCrawler()->filter('select[id$="_decision"]'));
     }
 
     public function testRegeneratingADraftRedirectsBackToEdit(): void

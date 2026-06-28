@@ -101,9 +101,12 @@
     <h2>3. Elementos de salida (§9.3.3)</h2>
     {% for section in outputs %}
         <h3>3.{{ loop.index }}. {{ section.sectionKey.label }}</h3>
+        {% if section.decision %}
+            <p class="section-body"><strong>{{ section.decision }}</strong></p>
+        {% endif %}
         {% if section.content %}
             <p class="section-body">{{ section.content }}</p>
-        {% else %}
+        {% elseif not section.decision %}
             <p class="section-body muted">Sin contenido.</p>
         {% endif %}
     {% endfor %}
