@@ -56,7 +56,7 @@
                     <li class="worklist-item">
                         <span class="badge {{ is_overdue ? 'badge--danger' : 'badge--warning' }}">{{ item.urgency.label }}</span>
                         <div class="worklist-main">
-                            <span class="worklist-title">{{ item.title }}</span>
+                            <a class="worklist-title" href="{{ path('document_show', { id: item.id }) }}">{{ item.title }}</a>
                             {% if item.code %}<span class="worklist-code mono muted">{{ item.code }}</span>{% endif %}
                         </div>
                         <span class="worklist-due {{ is_overdue ? 'is-overdue' : 'muted' }}">

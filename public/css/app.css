@@ -910,7 +910,8 @@ input[type="email"], input[type="text"], select, textarea {
 .worklist-item .badge,
 .worklist-item .btn { flex: none; }
 .worklist-main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-.worklist-title { font-weight: 500; }
+.worklist-title { font-weight: 500; color: var(--text); text-decoration: none; }
+.worklist-title:hover { text-decoration: underline; }
 .worklist-code { font-size: 11px; }
 .worklist-due { flex: 0 0 auto; font-size: 13px; white-space: nowrap; color: var(--text-muted); }
 .worklist-due.is-overdue { color: var(--danger-text); font-weight: 500; }
