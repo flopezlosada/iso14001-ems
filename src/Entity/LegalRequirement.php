@@ -221,6 +221,7 @@ class LegalRequirement
     public function setEvaluationFrequency(?EvaluationFrequency $evaluationFrequency): static
     {
         $this->evaluationFrequency = $evaluationFrequency;
+        $this->recomputeNextReview();
 
         return $this;
     }
@@ -233,6 +234,7 @@ class LegalRequirement
     public function setLastReviewedOn(?\DateTimeImmutable $lastReviewedOn): static
     {
         $this->lastReviewedOn = $lastReviewedOn;
+        $this->recomputeNextReview();
 
         return $this;
     }
@@ -242,11 +244,29 @@ class LegalRequirement
         return $this->nextReviewOn;
     }
 
+    /**
+     * Overrides the derived next-review date. Reserved for the ETL, which carries the centre's real
+     * inspection dates (some are fixed by the regulator and do not follow the cadence). The UI never
+     * sets this: there {@see $nextReviewOn} is always derived by {@see recomputeNextReview()}.
+     */
     public function setNextReviewOn(?\DateTimeImmutable $nextReviewOn): static
     {
         $this->nextReviewOn = $nextReviewOn;
 
         return $this;
+    }
+
+    /**
+     * Derives {@see $nextReviewOn} from the last review plus the evaluation cadence, so the next
+     * inspection date stays consistent and is never hand-typed. Null when either input is missing.
+     * Runs from the {@see setLastReviewedOn()} and {@see setEvaluationFrequency()} setters (not a
+     * PreUpdate hook, where changes to the value would fall outside Doctrine's change set).
+     */
+    private function recomputeNextReview(): void
+    {
+        $this->nextReviewOn = (null !== $this->lastReviewedOn && null !== $this->evaluationFrequency)
+            ? $this->lastReviewedOn->modify(sprintf('+%d months', $this->evaluationFrequency->intervalMonths()))
+            : null;
     }
 
     public function getCreatedAt(): \DateTimeImmutable

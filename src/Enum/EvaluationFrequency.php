@@ -29,4 +29,20 @@ enum EvaluationFrequency: string
             self::MONTHLY => 'Mensual',
         };
     }
+
+    /**
+     * Number of months between two compliance evaluations, used to derive the next review date from
+     * the last one. Every cadence is periodic, so this is always a positive integer.
+     *
+     * @return int months between reviews
+     */
+    public function intervalMonths(): int
+    {
+        return match ($this) {
+            self::ANNUAL => 12,
+            self::BIANNUAL => 6,
+            self::QUARTERLY => 3,
+            self::MONTHLY => 1,
+        };
+    }
 }

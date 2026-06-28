@@ -43,8 +43,7 @@ final class LegalRequirementFixtures extends AbstractDemoFixture
                 ->setComplianceStatus($status)
                 ->setEvaluationFrequency($frequency)
                 ->setComplianceEvidence(ComplianceStatus::COMPLIANT === $status ? 'Evidencia archivada en la carpeta del SGA.' : null)
-                ->setLastReviewedOn(new \DateTimeImmutable('2025-09-01'))
-                ->setNextReviewOn(new \DateTimeImmutable('2026-09-01'));
+                ->setLastReviewedOn(new \DateTimeImmutable('2025-09-01'));
             $manager->persist($legal);
         }
 
