@@ -1,9 +1,10 @@
 {# Reusable rendering of one obligation row, shared by the "Qué toca" and "Estructura SGA" views.
    `moduleRoutes` maps a linked Area value to its module index route. An obligation that is filled in
    from a module (e.g. Riesgos y Oportunidades) links its title straight to that module —where the
-   real work happens— and keeps an "Ficha" shortcut to its control sheet. An obligation with no
-   module (e.g. the Environmental Policy, managed through document control rather than a data-entry
-   CRUD) links its title to the control sheet, since there is nothing to fill in. #}
+   real work happens— and offers both a "Cumplimentar" and a "Control documental" action. An
+   obligation with no module (e.g. the Environmental Policy) links its title to its control sheet and
+   only offers "Control documental", since there is nothing to fill in. Every obligation always has a
+   control sheet, so the "Control documental" action is shown on every row. #}
 
 {% macro obligation_row(obl, moduleRoutes, canComplete = false, scope = null) %}
     {% set area = obl.linkedArea %}
@@ -28,9 +29,10 @@
         </td>
         <td class="row-actions">
             {% if hasModule %}
-                {# El título ya lleva al módulo de cumplimentación; este atajo conserva el acceso a la ficha. #}
-                <a class="btn secondary" href="{{ path('document_show', { id: obl.id }) }}">Ficha</a>
+                <a class="btn secondary" href="{{ path(moduleRoutes[area.value]) }}">Cumplimentar</a>
             {% endif %}
+            {# Toda obligación tiene ficha de control documental, tenga módulo de cumplimentación o no. #}
+            <a class="btn secondary" href="{{ path('document_show', { id: obl.id }) }}">Control documental</a>
             {% if canComplete and obl.hasFixedCadence and is_granted('DOCUMENT_COMPLETE', obl) %}
                 <form method="post" action="{{ path('obligation_complete', { id: obl.id, scope: scope }) }}" class="inline-form">
                     <input type="hidden" name="_token" value="{{ csrf_token('obligation_complete' ~ obl.id) }}">
