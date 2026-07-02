@@ -36,7 +36,7 @@
                             <td class="muted">{{ aspect.unit ?? '—' }}</td>
                             <td>
                                 {%- if latest -%}
-                                    {{ latest.significant ? 'Significativo' : 'No significativo' }}
+                                    {% if latest.significant %}<span class="badge badge--warning">Significativo</span>{% else %}<span class="muted">No significativo</span>{% endif %}
                                     <span class="muted">· {{ latest.significanceScore }} ({{ latest.year }})</span>
                                 {%- else -%}
                                     <span class="muted">Sin evaluar</span>
