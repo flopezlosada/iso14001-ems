@@ -498,6 +498,9 @@ tbody tr.is-in-force { background: var(--success-weak); }
    de inodos) para que se reconozca como campo de búsqueda de un vistazo. */
 .table-tools__search input[type="search"] {
     width: 100%;
+    box-sizing: border-box;
+    appearance: none;
+    -webkit-appearance: none;
     padding: 10px 12px 10px 38px;
     border: 1px solid var(--border-strong);
     border-radius: var(--radius);
@@ -559,11 +562,25 @@ a.badge:hover { border-color: currentColor; }
 
 /* Ficha de una acción del plan (PC.03.0 §5.3): descripción y eficacia son texto libre y pueden ser
    largos, así que se muestran en bloques apilados, NO en una tabla que los recortaría. */
-.action-item { padding: 14px 0; border-top: 1px solid var(--border); }
-.action-item:first-child { border-top: none; padding-top: 2px; }
-.action-desc { margin: 0; font-weight: 500; }
-.action-meta { font-size: 13px; margin: 4px 0; }
-.action-efficacy { margin: 4px 0 0; }
+.action-item {
+    padding: 14px 16px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    margin-bottom: 10px;
+}
+.action-item:last-child { margin-bottom: 0; }
+.action-desc { margin: 0 0 10px; font-weight: 600; }
+.action-meta { display: flex; flex-wrap: wrap; gap: 4px 22px; margin: 0; }
+.action-meta .meta-item { font-size: 14px; color: var(--text); }
+.meta-label { color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: .02em; margin-right: 6px; }
+.action-efficacy {
+    margin: 12px 0 0;
+    padding: 10px 12px;
+    background: var(--surface-sunken);
+    border-radius: var(--radius);
+}
+.action-efficacy .meta-label { display: block; margin: 0 0 3px; }
 
 /* ---- Formularios -------------------------------------------------------- */
 /* Tarjeta contenedora de un formulario de alta/edición: ancho de línea cómodo y único

@@ -76,13 +76,13 @@
             {% for action in assessment.actions %}
                 <div class="action-item">
                     <p class="action-desc">{{ action.description|nl2br }}</p>
-                    <p class="action-meta muted">
-                        Responsable: {{ action.responsible ? action.responsible.name : '—' }}
-                        · Plazo: {{ action.deadline ?? '—' }}
-                        · Evaluada: {{ action.evaluatedAt ? action.evaluatedAt|date('d/m/Y') : '—' }}
-                    </p>
+                    <div class="action-meta">
+                        <span class="meta-item"><span class="meta-label">Responsable</span>{{ action.responsible ? action.responsible.name : '—' }}</span>
+                        <span class="meta-item"><span class="meta-label">Plazo</span>{{ action.deadline ?? '—' }}</span>
+                        <span class="meta-item"><span class="meta-label">Evaluada</span>{{ action.evaluatedAt ? action.evaluatedAt|date('d/m/Y') : '—' }}</span>
+                    </div>
                     {% if action.efficacy %}
-                        <p class="action-efficacy"><span class="muted">Eficacia:</span> {{ action.efficacy|nl2br }}</p>
+                        <div class="action-efficacy"><span class="meta-label">Eficacia</span>{{ action.efficacy|nl2br }}</div>
                     {% endif %}
                 </div>
             {% endfor %}
