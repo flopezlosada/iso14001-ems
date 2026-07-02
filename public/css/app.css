@@ -653,7 +653,15 @@ input[type="email"], input[type="text"], select, textarea {
     background: var(--surface);
     color: var(--text);
 }
-.form-row textarea { min-height: 84px; resize: vertical; }
+/* Textareas más holgados y que crecen con el contenido: field-sizing:content los auto-ajusta en
+   navegadores modernos (degradación limpia al resize manual en los que no lo soporten). */
+.form-row textarea {
+    min-height: 120px;
+    line-height: 1.5;
+    resize: vertical;
+    field-sizing: content;
+    max-height: 60vh;
+}
 /* Select cerrado: chevron propio (como csa-vega). OJO: la lista DESPLEGADA es nativa del
    SO; en macOS con el SO en oscuro se pinta oscura y el CSS no la fuerza. Para control
    total habría que un dropdown propio en JS (componente, como csa-dropdown de csa-vega). */
