@@ -557,6 +557,14 @@ thead th.is-sortable:focus-visible { outline: 2px solid var(--focus); outline-of
 a.badge { text-decoration: none; cursor: pointer; }
 a.badge:hover { border-color: currentColor; }
 
+/* Ficha de una acción del plan (PC.03.0 §5.3): descripción y eficacia son texto libre y pueden ser
+   largos, así que se muestran en bloques apilados, NO en una tabla que los recortaría. */
+.action-item { padding: 14px 0; border-top: 1px solid var(--border); }
+.action-item:first-child { border-top: none; padding-top: 2px; }
+.action-desc { margin: 0; font-weight: 500; }
+.action-meta { font-size: 13px; margin: 4px 0; }
+.action-efficacy { margin: 4px 0 0; }
+
 /* ---- Formularios -------------------------------------------------------- */
 /* Tarjeta contenedora de un formulario de alta/edición: ancho de línea cómodo y único
    (antes cada plantilla llevaba un style="max-width" inline distinto). */

@@ -26,7 +26,7 @@
     <div class="card">
         <dl class="detail-grid">
             <dt>Curso</dt><dd>{{ assessment.exercise }}</dd>
-            <dt>Probabilidad</dt><dd class="mono">{{ assessment.probability.value }}</dd>
+            <dt>{{ item.type.firstFactorLabel }}</dt><dd class="mono">{{ assessment.probability.value }}</dd>
             <dt>Impacto</dt><dd class="mono">{{ assessment.impact.value }}</dd>
             <dt>Valoración (P×I)</dt>
             <dd>
@@ -38,25 +38,25 @@
                 {% endif %}
             </dd>
             <dt>Revisión</dt><dd>Rev. {{ assessment.revisionNumber }}</dd>
+            <dt>Aprobación</dt>
+            <dd>
+                {% if assessment.approvedBy %}
+                    <span class="badge badge--success">Aprobada</span>
+                    <span class="muted">por {{ assessment.approvedBy.fullName }} · {{ assessment.approvedAt|date('d/m/Y') }}</span>
+                {% else %}
+                    <span class="badge badge--warning">Pendiente de aprobar</span>
+                    {% if is_granted('RISK_ASSESSMENT_APPROVE', assessment) %}
+                        <form method="post" action="{{ path('risk_assessment_approve', { id: item.id, assessmentId: assessment.id }) }}" class="inline-form" data-confirm="¿Aprobar esta valoración del {{ item.type.label|lower|e('html_attr') }} para el curso {{ assessment.exercise }}? Quedará firmada por ti.">
+                            <input type="hidden" name="_token" value="{{ csrf_token('risk_assessment_approve' ~ assessment.id) }}">
+                            <button class="btn secondary" type="submit">Aprobar</button>
+                        </form>
+                    {% endif %}
+                {% endif %}
+            </dd>
         </dl>
         {% if assessment.justification %}
             <h2>Justificación</h2>
             <p>{{ assessment.justification|nl2br }}</p>
-        {% endif %}
-    </div>
-
-    <div class="page-head"><div><h2>Aprobación</h2></div></div>
-    <div class="card">
-        {% if assessment.approvedBy %}
-            <p>Aprobada por <strong>{{ assessment.approvedBy.fullName }}</strong> <span class="muted">· {{ assessment.approvedAt|date('d/m/Y') }}</span></p>
-        {% else %}
-            <p class="muted">Esta valoración aún no está aprobada por Dirección.</p>
-            {% if is_granted('RISK_ASSESSMENT_APPROVE', assessment) %}
-                <form method="post" action="{{ path('risk_assessment_approve', { id: item.id, assessmentId: assessment.id }) }}" class="inline-form" data-confirm="¿Aprobar esta valoración del {{ item.type.label|lower|e('html_attr') }} para el curso {{ assessment.exercise }}? Quedará firmada por ti.">
-                    <input type="hidden" name="_token" value="{{ csrf_token('risk_assessment_approve' ~ assessment.id) }}">
-                    <button class="btn" type="submit">Aprobar</button>
-                </form>
-            {% endif %}
         {% endif %}
     </div>
 
@@ -72,22 +72,20 @@
                 <p class="muted">Sin plan de acción. Por su categoría no es obligatorio.</p>
             {% endif %}
         {% else %}
-            <table>
-                <thead>
-                    <tr><th>Acción</th><th>Responsable</th><th>Plazo</th><th>Eficacia</th><th>Evaluada</th></tr>
-                </thead>
-                <tbody>
-                    {% for action in assessment.actions %}
-                        <tr>
-                            <td>{{ action.description }}</td>
-                            <td class="muted">{{ action.responsible ? action.responsible.name : '—' }}</td>
-                            <td class="muted">{{ action.deadline ?? '—' }}</td>
-                            <td class="muted">{{ action.efficacy ?? '—' }}</td>
-                            <td class="muted">{{ action.evaluatedAt ? action.evaluatedAt|date('d/m/Y') : '—' }}</td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+            {# Un plan de acción tiene textos largos (descripción y eficacia): fichas, no una tabla. #}
+            {% for action in assessment.actions %}
+                <div class="action-item">
+                    <p class="action-desc">{{ action.description|nl2br }}</p>
+                    <p class="action-meta muted">
+                        Responsable: {{ action.responsible ? action.responsible.name : '—' }}
+                        · Plazo: {{ action.deadline ?? '—' }}
+                        · Evaluada: {{ action.evaluatedAt ? action.evaluatedAt|date('d/m/Y') : '—' }}
+                    </p>
+                    {% if action.efficacy %}
+                        <p class="action-efficacy"><span class="muted">Eficacia:</span> {{ action.efficacy|nl2br }}</p>
+                    {% endif %}
+                </div>
+            {% endfor %}
         {% endif %}
     </div>
 {% endblock %}

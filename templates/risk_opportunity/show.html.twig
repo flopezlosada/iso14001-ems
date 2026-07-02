@@ -38,7 +38,7 @@
                 <tbody>
                     {% for assessment in item.assessments %}
                         <tr>
-                            <td>{{ assessment.exercise }}</td>
+                            <td><a class="cell-link" href="{{ path('risk_assessment_show', { id: item.id, assessmentId: assessment.id }) }}">{{ assessment.exercise }}</a></td>
                             <td class="mono">{{ assessment.probability.value }}</td>
                             <td class="mono">{{ assessment.impact.value }}</td>
                             <td class="mono">{{ assessment.score }}</td>
@@ -57,7 +57,11 @@
                                     <span class="muted">Pendiente</span>
                                 {%- endif -%}
                             </td>
-                            <td><a href="{{ path('risk_assessment_edit', { id: item.id, assessmentId: assessment.id }) }}">Editar</a></td>
+                            <td>
+                                <a href="{{ path('risk_assessment_show', { id: item.id, assessmentId: assessment.id }) }}">Ver</a>
+                                <span class="muted"> · </span>
+                                <a href="{{ path('risk_assessment_edit', { id: item.id, assessmentId: assessment.id }) }}">Editar</a>
+                            </td>
                         </tr>
                     {% endfor %}
                 </tbody>
