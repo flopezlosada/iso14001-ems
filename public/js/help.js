@@ -20,14 +20,17 @@
         var style = document.createElement('style');
         style.id = 'help-styles';
         style.textContent = [
-            // Sized in em so it scales with whatever text it sits next to (a big heading or a small
-            // column header), and muted at rest so a page full of them does not shout; the accent
-            // only shows on hover/focus.
-            '.help-btn{display:inline-flex;align-items:center;justify-content:center;width:1.15em;',
-            'height:1.15em;border-radius:50%;border:1px solid currentColor;color:var(--text-faint,#9aa0a6);',
-            'background:transparent;font-weight:600;font-size:.72em;line-height:1;text-decoration:none;',
-            'flex:none;vertical-align:middle;margin-inline-start:.4em;opacity:.85;}',
-            '.help-btn:hover,.help-btn:focus-visible{color:var(--accent,#2563eb);opacity:1;}',
+            // The button is just a box sized in em (scales with the text next to it); the circle and
+            // the perfectly-centred "?" are the SVG inside. Muted at rest so a page full of them does
+            // not shout; accent on hover/focus. The SVG's dominant-baseline guarantees the glyph is
+            // centred whatever the surrounding font.
+            '.help-btn{display:inline-flex;width:1.05em;height:1.05em;flex:none;vertical-align:-0.12em;',
+            'margin-inline-start:.35em;color:var(--text-muted,#5f6b7a);text-decoration:none;}',
+            '.help-btn:hover,.help-btn:focus-visible{color:var(--accent,#2563eb);}',
+            '.help-btn__icon{width:100%;height:100%;display:block;}',
+            '.help-btn__icon circle{fill:none;stroke:currentColor;stroke-width:1.4;}',
+            '.help-btn__icon text{fill:currentColor;font-size:12px;font-weight:700;',
+            'font-family:var(--font-body,system-ui),sans-serif;}',
             // Wraps a field label + its "?" on one line; takes over the label block spacing so the
             // nested <label> (no longer a direct child of .form-row) keeps its look.
             '.help-field-label{display:flex;align-items:center;margin-bottom:6px;font-weight:500;color:var(--text,#1a1a1a);}',
