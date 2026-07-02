@@ -56,13 +56,22 @@ class HelpExtension extends AbstractExtension
         $href = $this->urls->generate('help_show', ['slug' => $topic->slug]);
         $label = htmlspecialchars('Ayuda: '.$topic->title, \ENT_QUOTES);
 
+        // The "?" is drawn as SVG (circle + centred glyph) rather than a bare text node: SVG's
+        // dominant-baseline centres it perfectly whatever the surrounding font, fixing the previous
+        // "sticks to the top" look.
+        $icon = '<svg class="help-btn__icon" viewBox="0 0 20 20" aria-hidden="true" focusable="false">'
+            .'<circle cx="10" cy="10" r="9"/>'
+            .'<text x="10" y="10" text-anchor="middle" dominant-baseline="central">?</text>'
+            .'</svg>';
+
         return sprintf(
-            '<a class="help-btn" href="%s" data-help="%s" data-help-title="%s" aria-label="%s" title="%s">?</a>',
+            '<a class="help-btn" href="%s" data-help="%s" data-help-title="%s" aria-label="%s" title="%s">%s</a>',
             htmlspecialchars($href, \ENT_QUOTES),
             htmlspecialchars($topic->slug, \ENT_QUOTES),
             htmlspecialchars($topic->title, \ENT_QUOTES),
             $label,
             $label,
+            $icon,
         );
     }
 
