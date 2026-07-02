@@ -1,0 +1,25 @@
+slug: documento-estado
+title: Estado del documento
+summary: >
+    Combina dos cosas: si la obligación asociada está al día (pendiente / hecho / no aplica) y, si el
+    documento no está activo, en qué punto de su ciclo de vida se encuentra (borrador, en revisión,
+    obsoleta…).
+legal:
+    - label: 'ISO 14001:2015 · apartado 7.5.2 (Creación y actualización)'
+      note: >
+          La norma exige que los documentos se revisen y aprueben en cuanto a su idoneidad antes de
+          su uso. El ciclo borrador → revisión → aprobada lo concreta el procedimiento PC.01.0.
+      url: 'https://www.iso.org/standard/60857.html'
+docs:
+    - PC.01.0
+body: |
+    <p>La columna Estado resume la situación del documento de un vistazo.</p>
+    <h2>El ciclo de vida</h2>
+    <p>Un documento pasa por: <strong>Borrador</strong> (se está redactando) →
+    <strong>En revisión</strong> (alguien distinto lo revisa) → <strong>Aprobada / en vigor</strong>.
+    Regla del procedimiento: <em>no se aprueba sin revisar antes</em>. Cuando se sustituye, queda
+    <strong>Obsoleta</strong>; si se retira, <strong>Cancelada</strong>.</p>
+    <h2>Dos cosas distintas</h2>
+    <p>No confundas el <strong>estado de la obligación</strong> (si toca cumplimentarla: pendiente,
+    hecho, no aplica) con el <strong>ciclo de vida</strong> del documento (borrador, en vigor,
+    obsoleta). Un documento en vigor puede tener una obligación pendiente (toca revisarlo este año).</p>

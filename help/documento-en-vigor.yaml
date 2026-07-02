@@ -1,0 +1,19 @@
+slug: documento-en-vigor
+title: Versión en vigor
+summary: >
+    Es la revisión vigente del documento (su número de revisión y la fecha de emisión). Solo hay una
+    en vigor a la vez; al aprobar una nueva, la anterior queda obsoleta.
+legal:
+    - label: 'ISO 14001:2015 · apartado 7.5.3 (Control de la información documentada)'
+      note: >
+          La norma exige controlar los cambios y asegurar que en cada punto de uso está disponible la
+          versión pertinente (vigente), evitando el uso de versiones obsoletas.
+      url: 'https://www.iso.org/standard/60857.html'
+docs:
+    - PC.01.0
+body: |
+    <p>Un documento va cambiando con el tiempo, y cada cambio genera una <strong>revisión</strong>
+    nueva. La columna muestra cuál es la que manda ahora mismo: "Rev. 2 · 14/03/2026", por ejemplo.</p>
+    <p>Regla de oro del control documental: <strong>solo una versión está en vigor</strong>. Cuando se
+    aprueba una revisión nueva, la anterior pasa a obsoleta y no debe usarse. Así nadie trabaja con una
+    versión caducada.</p>
