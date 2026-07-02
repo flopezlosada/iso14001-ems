@@ -1,0 +1,18 @@
+slug: riesgo-impacto
+title: Impacto
+summary: >
+    La magnitud del efecto si el riesgo se materializa (o si se aprovecha la oportunidad). Es el segundo
+    factor de la valoración: mucho impacto y mucha probabilidad = alta relevancia.
+legal:
+    - label: 'ISO 14001:2015 · apartado 6.1.1 (Acciones para abordar riesgos y oportunidades)'
+      note: >
+          Criterio de valoración del centro (PC.03.0). Junto con la probabilidad determina la
+          relevancia y, con ella, si hace falta un plan de acción.
+      url: 'https://www.iso.org/standard/60857.html'
+docs:
+    - PC.03.0
+body: |
+    <p>Valora <strong>cuánto afectaría</strong> si ocurre: no es lo mismo un contratiempo menor que
+    algo que comprometa el cumplimiento legal o un impacto ambiental serio.</p>
+    <p>El sistema multiplica probabilidad × impacto para situar el riesgo en una categoría de
+    relevancia (baja, moderada, alta).</p>

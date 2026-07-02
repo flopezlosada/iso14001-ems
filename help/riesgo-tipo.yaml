@@ -1,0 +1,23 @@
+slug: riesgo-tipo
+title: Riesgo u oportunidad
+summary: >
+    Un riesgo es algo que puede ir mal (nace de una debilidad o amenaza del DAFO); una oportunidad es
+    algo bueno que se puede aprovechar (de una fortaleza u oportunidad). Se gestionan en el mismo sitio.
+legal:
+    - label: 'ISO 14001:2015 · apartado 6.1.1 (Acciones para abordar riesgos y oportunidades)'
+      note: >
+          La norma pide determinar los riesgos y oportunidades que hay que abordar para asegurar que el
+          sistema logra sus resultados y prevenir efectos no deseados.
+      url: 'https://www.iso.org/standard/60857.html'
+docs:
+    - PC.03.0
+    - F.08.0
+body: |
+    <p>Ambos salen del <strong>DAFO</strong> y se valoran igual (probabilidad × impacto), pero apuntan
+    en direcciones opuestas:</p>
+    <ul>
+        <li><strong>Riesgo</strong>: una amenaza o debilidad que, si se materializa, perjudica al
+        centro o al medio. Se busca <em>reducir</em> su probabilidad o su impacto.</li>
+        <li><strong>Oportunidad</strong>: una fortaleza o circunstancia favorable que conviene
+        <em>aprovechar</em> (una ayuda, una mejora posible).</li>
+    </ul>

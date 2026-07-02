@@ -30,6 +30,7 @@ class RiskOpportunityType extends AbstractType
                 'class' => ItemType::class,
                 'label' => 'Tipo',
                 'choice_label' => static fn (ItemType $t): string => $t->label(),
+                'help_slug' => 'riesgo-tipo',
             ])
             ->add('description', TextareaType::class, [
                 'label' => 'Descripción',

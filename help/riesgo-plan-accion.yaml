@@ -1,0 +1,22 @@
+slug: riesgo-plan-accion
+title: Plan de acción
+summary: >
+    Las acciones para abordar el riesgo (reducirlo) o la oportunidad (aprovecharla). Es obligatorio
+    para los de relevancia alta o moderada; cada acción lleva responsable y plazo.
+legal:
+    - label: 'ISO 14001:2015 · apartado 6.1.1 (Acciones para abordar riesgos y oportunidades)'
+      note: >
+          La norma exige planificar las acciones, integrarlas en los procesos del sistema y evaluar su
+          eficacia. La cadencia (anual, con revisión semestral) la marca el procedimiento PC.03.0.
+      url: 'https://www.iso.org/standard/60857.html'
+docs:
+    - PC.03.0
+    - F.08.0
+body: |
+    <p>El plan de acción es el "y ahora qué hago con esto". Para un <strong>riesgo</strong>, medidas que
+    bajen su probabilidad o su impacto; para una <strong>oportunidad</strong>, pasos para aprovecharla.</p>
+    <ul>
+        <li>Obligatorio para relevancia <strong>alta o moderada</strong>; opcional para baja.</li>
+        <li>Cada acción con su <strong>responsable</strong> y <strong>plazo</strong>.</li>
+        <li>Planificación anual y <strong>revisión semestral</strong> del avance.</li>
+    </ul>

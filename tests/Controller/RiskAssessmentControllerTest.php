@@ -96,6 +96,8 @@ final class RiskAssessmentControllerTest extends WebTestCase
         // The already-valued current year is gone; the still-free next year is offered.
         self::assertNotContains($current, $offered);
         self::assertContains(SchoolYear::next($current), $offered);
+        // Per-field contextual help renders on the valuation form (guards against a slug typo).
+        self::assertSelectorExists('.help-field-label a.help-btn[data-help="riesgo-probabilidad"]');
     }
 
     public function testNewRedirectsWhenEveryAvailableYearIsAlreadyValued(): void
