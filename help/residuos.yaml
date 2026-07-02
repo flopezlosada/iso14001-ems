@@ -1,0 +1,39 @@
+slug: residuos
+title: Residuos
+routes:
+    - waste_index
+summary: >
+    Aquí se lleva el control de los residuos que genera el centro: en cada retirada se anota la
+    cantidad y el gestor que se los lleva. Sirve para cuantificar lo que producimos y justificar su
+    correcta gestión.
+legal:
+    - label: 'ISO 14001:2015 · apartado 8.1 (Planificación y control operacional)'
+      note: >
+          La norma exige controlar los procesos necesarios para cumplir los requisitos del sistema;
+          la segregación y entrega de residuos a gestor autorizado es uno de esos controles.
+      url: 'https://www.iso.org/standard/60857.html'
+    - label: 'Ley 7/2022, de 8 de abril, de residuos y suelos contaminados para una economía circular'
+      note: >
+          Marco legal español de residuos: obliga a una correcta separación por tipos y a su entrega a
+          gestor autorizado, con trazabilidad de las retiradas. Revisa siempre la normativa vigente
+          aplicable al centro.
+      url: 'https://www.boe.es/eli/es/l/2022/04/08/7/con'
+docs:
+    - RG-08.06
+    - F-6.1.3
+body: |
+    <p>Los residuos son uno de los aspectos ambientales más visibles de un centro y de los más
+    regulados. Este módulo mantiene el archivo cronológico: qué sale, cuánto y quién se lo lleva.</p>
+
+    <h2>Cómo funciona, paso a paso</h2>
+    <ol>
+        <li>En cada <strong>retirada</strong>, registra el tipo de residuo, la cantidad y el
+        <strong>gestor autorizado</strong> que lo recoge.</li>
+        <li>Mensualmente, cuantifica lo generado a partir de ese archivo cronológico.</li>
+        <li>Conserva los justificantes de entrega: son la prueba de la correcta gestión ante una
+        auditoría o inspección.</li>
+    </ol>
+
+    <h2>Ojo</h2>
+    <p>Cada residuo tiene su circuito (papel, tóner, pilas, fluorescentes, aceites, RAEE…). Entregar a
+    un gestor no autorizado, o mezclar residuos peligrosos, es un incumplimiento legal, no solo del SGA.</p>

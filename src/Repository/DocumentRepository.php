@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Repository;
 
 use App\Entity\Document;
+use App\Enum\DocumentLifecycle;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -55,5 +56,42 @@ class DocumentRepository extends ServiceEntityRepository
             ->orderBy('d.code', 'ASC')
             ->getQuery()
             ->getResult();
+    }
+
+    /**
+     * Resolves a set of in-force ISO codes to their documents in a single query, so help pages can
+     * deep-link their referenced SGA documents without an N+1 lookup (one query per code). Matches
+     * the current {@see Document::$code} of documents still ACTIVE (cancelled/archived ones are
+     * excluded): the domain reuses codes over time, so filtering by lifecycle keeps the link pointing
+     * at the version in force. Codes with no live document are simply absent from the map.
+     *
+     * @param list<string> $codes the ISO codes to resolve (e.g. ['PG-06.01', 'RG-06.01.01'])
+     *
+     * @return array<string, Document> the found documents indexed by their code
+     */
+    public function findByCodes(array $codes): array
+    {
+        if ([] === $codes) {
+            return [];
+        }
+
+        /** @var list<Document> $documents */
+        $documents = $this->createQueryBuilder('d')
+            ->where('d.code IN (:codes)')
+            ->andWhere('d.lifecycle = :lifecycle')
+            ->setParameter('codes', $codes)
+            ->setParameter('lifecycle', DocumentLifecycle::ACTIVE)
+            ->getQuery()
+            ->getResult();
+
+        $byCode = [];
+        foreach ($documents as $document) {
+            $code = $document->getCode();
+            if (null !== $code) {
+                $byCode[$code] = $document;
+            }
+        }
+
+        return $byCode;
     }
 }

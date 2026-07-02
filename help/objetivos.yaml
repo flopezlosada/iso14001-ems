@@ -1,0 +1,35 @@
+slug: objetivos
+title: Objetivos ambientales
+routes:
+    - objective_index
+summary: >
+    Los objetivos ambientales son las metas medibles que el centro se marca para mejorar (p. ej.
+    "reducir el consumo eléctrico un 5%"). Cada objetivo tiene su ficha y se revisa a lo largo del
+    curso para ver si se va cumpliendo.
+legal:
+    - label: 'ISO 14001:2015 · apartado 6.2 (Objetivos ambientales y planificación para lograrlos)'
+      note: >
+          La norma exige establecer objetivos ambientales coherentes con la política, medibles y
+          objeto de seguimiento, y planificar qué se hará, con qué recursos, quién es responsable,
+          cuándo y cómo se evaluarán los resultados.
+      url: 'https://www.iso.org/standard/60857.html'
+docs:
+    - PG-06.04
+    - F.07.01
+    - F.07.0
+body: |
+    <p>Los objetivos son el "hacia dónde" del sistema. Deben salir de lo que de verdad importa
+    (aspectos significativos, riesgos, expectativas de las partes interesadas), no de la nada.</p>
+
+    <h2>Cómo funciona, paso a paso</h2>
+    <ol>
+        <li>Añade los objetivos del año al <strong>listado general</strong> (p. ej. reducir un consumo,
+        mejorar la segregación de residuos).</li>
+        <li>Crea una <strong>ficha por objetivo</strong> con su meta medible, responsable y plazo.</li>
+        <li>Haz <strong>revisión semestral</strong> del grado de cumplimiento; arrastra los no
+        terminados del año anterior.</li>
+    </ol>
+
+    <h2>Qué hace un buen objetivo</h2>
+    <p>Que sea <strong>medible</strong> (un número y un plazo) y que se pueda seguir con un indicador.
+    "Mejorar el medio ambiente" no es un objetivo; "reducir el consumo de papel un 10% este curso" sí.</p>

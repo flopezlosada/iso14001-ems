@@ -1,0 +1,33 @@
+slug: control-operacional
+title: Control operacional
+routes:
+    - operational_control_index
+summary: >
+    Es la checklist periódica con la que se comprueba que las instalaciones y las operaciones del día
+    a día están bajo control: cada ítem se marca como conforme o no conforme.
+legal:
+    - label: 'ISO 14001:2015 · apartado 8.1 (Planificación y control operacional)'
+      note: >
+          La norma exige establecer, implementar y controlar los procesos necesarios para cumplir los
+          requisitos ambientales y llevar a cabo las acciones planificadas. La checklist es la
+          evidencia de ese control.
+      url: 'https://www.iso.org/standard/60857.html'
+docs:
+    - PG-08.01
+    - RG-08.01.01
+body: |
+    <p>El control operacional es la comprobación rutinaria de que lo importante sigue en orden: que no
+    hay fugas, que los consumos son razonables, que las instalaciones funcionan como deben.</p>
+
+    <h2>Cómo funciona, paso a paso</h2>
+    <ol>
+        <li>Cada periodo, recorre la <strong>checklist</strong> de ítems (consumos, instalaciones,
+        zonas comunes…).</li>
+        <li>Marca cada ítem como <strong>conforme</strong> o <strong>no conforme</strong>.</li>
+        <li>Un ítem no conforme debe derivar en una <strong>no conformidad</strong> con su acción
+        correctiva.</li>
+    </ol>
+
+    <h2>Para qué sirve</h2>
+    <p>Detectar problemas pronto, cuando son pequeños. La checklist convierte "estar pendiente" en algo
+    sistemático que no depende de que alguien se acuerde. Los ítems los configura la administración.</p>

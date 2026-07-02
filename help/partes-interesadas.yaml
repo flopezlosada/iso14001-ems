@@ -1,0 +1,32 @@
+slug: partes-interesadas
+title: Partes interesadas
+routes:
+    - interested_party_index
+summary: >
+    Las partes interesadas son quienes afectan o se ven afectados por el desempeño ambiental del
+    centro: alumnado, familias, personal, administración educativa, vecinos, proveedores, gestores
+    de residuos… Aquí se identifican y se anota qué necesitan o esperan de nosotros.
+legal:
+    - label: 'ISO 14001:2015 · apartado 4.2 (Necesidades y expectativas de las partes interesadas)'
+      note: >
+          La norma exige determinar las partes interesadas pertinentes para el sistema ambiental y
+          cuáles de sus necesidades y expectativas se convierten en requisitos que el centro asume.
+      url: 'https://www.iso.org/standard/60857.html'
+docs:
+    - F.04.0
+body: |
+    <p>Saber quién nos observa y qué espera de nosotros es parte del "contexto" del sistema: orienta
+    los objetivos y las comunicaciones. Este módulo mantiene el listado de partes interesadas (PPI).</p>
+
+    <h2>Cómo funciona, paso a paso</h2>
+    <ol>
+        <li>Da de alta cada parte interesada, interna (personal, alumnado) o externa (familias,
+        ayuntamiento, proveedores, gestores de residuos…).</li>
+        <li>Anota sus <strong>necesidades y expectativas</strong> en materia ambiental y cualquier
+        incidencia que se haya tenido con ellas.</li>
+        <li>Revísalo cuando cambie el contexto (nueva normativa, nuevas partes, quejas recibidas).</li>
+    </ol>
+
+    <h2>Por qué importa</h2>
+    <p>Las expectativas relevantes de las partes interesadas alimentan el análisis de riesgos, los
+    objetivos ambientales y el plan de comunicaciones. No es un trámite: es de dónde salen prioridades.</p>

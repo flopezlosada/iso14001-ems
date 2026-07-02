@@ -1,0 +1,38 @@
+# La política ambiental es un documento (PA.01.0), no un módulo con ruta propia, así que este tema no
+# declara `routes`: su botón "?" se coloca de forma explícita con {{ help_button('politica-ambiental') }}
+# en la ficha del documento cuando se quiera.
+slug: politica-ambiental
+title: Política ambiental
+summary: >
+    La política ambiental es el compromiso público que firma la dirección: marca el rumbo del centro
+    en materia de medio ambiente (cumplir la ley, prevenir la contaminación, mejorar de forma
+    continua) y es el marco del que cuelga todo lo demás.
+legal:
+    - label: 'ISO 14001:2015 · apartado 5.2 (Política ambiental)'
+      note: >
+          La norma exige que la alta dirección establezca una política ambiental apropiada al centro,
+          que incluya el compromiso de proteger el medio y prevenir la contaminación, de cumplir los
+          requisitos legales y de mejorar continuamente; debe estar documentada, comunicarse dentro
+          del centro y estar disponible para las partes interesadas.
+      url: 'https://www.iso.org/standard/60857.html'
+docs:
+    - PA.01.0
+body: |
+    <p>La política ambiental es la "declaración de intenciones" del centro, pero con consecuencias: es
+    la vara con la que se mide todo lo demás. Un objetivo o una decisión que la contradiga está mal.</p>
+
+    <h2>Qué debe contener</h2>
+    <ul>
+        <li>El compromiso de <strong>proteger el medio ambiente</strong> y prevenir la contaminación.</li>
+        <li>El compromiso de <strong>cumplir los requisitos legales</strong> aplicables.</li>
+        <li>El compromiso de <strong>mejora continua</strong> del sistema.</li>
+        <li>El alcance del sistema y la ubicación de las instalaciones.</li>
+    </ul>
+
+    <h2>Qué hay que hacer con ella</h2>
+    <ol>
+        <li>Que la <strong>firme la dirección</strong> (es su compromiso, no el del responsable del SGA).</li>
+        <li><strong>Difundirla</strong>: publicarla (tablón, web), comunicarla al personal y alumnado y
+        enviarla a los proveedores.</li>
+        <li>Revisarla periódicamente para que siga siendo apropiada al centro.</li>
+    </ol>

@@ -111,6 +111,9 @@
                             </div>
                         </div>
                     {% endif %}
+                    {# Ayuda contextual de la pantalla actual: help_button() resuelve el tema por la
+                       ruta y no pinta nada si esta pantalla no tiene ayuda asociada todavía. #}
+                    {% if app.user %}{{ help_button() }}{% endif %}
                     <div class="theme-toggle" role="group" aria-label="Tema de color">
                         <button type="button" data-theme-value="light" aria-pressed="true">Claro</button>
                         <button type="button" data-theme-value="dark" aria-pressed="false">Oscuro</button>

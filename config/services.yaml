@@ -18,6 +18,8 @@ parameters:
     # centre overrides it per environment via APP_ORG_NAME (kept out of the repo on purpose).
     app.organization_name: '%env(default:app_organization_name_default:APP_ORG_NAME)%'
     app_organization_name_default: 'Centro educativo'
+    # Directory holding the contextual-help topic files (help/*.yaml), read by HelpRegistry.
+    app.help_dir: '%kernel.project_dir%/help'
 
 services:
     # default configuration for services in *this* file
@@ -27,6 +29,7 @@ services:
         bind:
             string $uploadsDir: '%app.uploads_dir%'
             string $organizationName: '%app.organization_name%'
+            string $helpDir: '%app.help_dir%'
 
     # makes classes in src/ available to be used as services
     # this creates a service per class whose id is the fully-qualified class name

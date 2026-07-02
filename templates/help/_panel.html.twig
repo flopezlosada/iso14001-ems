@@ -1,0 +1,23 @@
+{# Fragmento del popover de ayuda, cargado por help.js dentro del modal. Sin layout: solo el
+   contenido. El resumen y las referencias legales van aquí; la explicación completa se enlaza al
+   final para no saturar el popover. #}
+<div class="help-panel__body">
+    <p class="help-panel__summary">{{ topic.summary }}</p>
+
+    {% if topic.legal is not empty %}
+        <div class="help-panel__legal">
+            <h3>Qué exige la norma</h3>
+            <ul>
+                {% for ref in topic.legal %}
+                    <li>
+                        <strong>{{ ref.label }}</strong>
+                        {% if ref.url %} — <a href="{{ ref.url }}" target="_blank" rel="noopener noreferrer">fuente oficial ↗</a>{% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+</div>
+<p class="help-panel__more">
+    <a href="{{ path('help_show', { slug: topic.slug }) }}">Ver la explicación completa →</a>
+</p>

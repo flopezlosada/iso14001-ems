@@ -1,0 +1,32 @@
+slug: revision-por-la-direccion
+title: Revisión por la dirección
+routes:
+    - management_review_index
+summary: >
+    Es la reunión anual en la que la dirección revisa el sistema entero (objetivos, indicadores,
+    auditorías, no conformidades, comunicaciones…) y decide mejoras. Queda recogida en un acta.
+legal:
+    - label: 'ISO 14001:2015 · apartado 9.3 (Revisión por la dirección)'
+      note: >
+          La norma exige que la alta dirección revise el sistema a intervalos planificados a partir de
+          unas entradas definidas (estado de acciones previas, cambios, desempeño, cumplimiento legal,
+          etc.) y que de la revisión salgan decisiones sobre mejoras, cambios y recursos.
+      url: 'https://www.iso.org/standard/60857.html'
+docs:
+    - PG-09.03.00
+    - RG-09.03.01
+body: |
+    <p>Es el momento en que la dirección toma perspectiva: mira todo el curso de un vistazo y decide.
+    Cierra el ciclo anual del sistema y da entrada al siguiente.</p>
+
+    <h2>Cómo funciona, paso a paso</h2>
+    <ol>
+        <li>La aplicación <strong>agrega automáticamente</strong> las entradas del año (objetivos,
+        indicadores, auditorías, no conformidades, comunicaciones…) en un borrador editable.</li>
+        <li>La dirección revisa, matiza y añade sus conclusiones y decisiones.</li>
+        <li>Se genera el <strong>acta</strong> oficial, con su fecha, revisión y firma de dirección.</li>
+    </ol>
+
+    <h2>Por qué es el vértice del sistema</h2>
+    <p>Es donde el sistema demuestra que sirve para <em>decidir</em>, no solo para archivar papeles. Las
+    decisiones que salen de aquí (nuevos objetivos, recursos) arrancan el ciclo del curso siguiente.</p>

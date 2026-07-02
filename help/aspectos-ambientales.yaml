@@ -1,0 +1,72 @@
+# Tema de ayuda del módulo "Aspectos ambientales".
+#
+# Un fichero por tema. Los metadatos (title, summary, routes, legal, docs) alimentan la micro-ayuda
+# (el botón "?" de la pantalla) y el índice; `body` es el HTML de la página extensa /ayuda/{slug}.
+#
+# El contenido está versionado en git y lo redacta el equipo, NO es entrada de usuario: por eso el
+# cuerpo se pinta con |raw sin sanear. Si algún día lo edita gente ajena al repo, habría que sanear.
+
+slug: aspectos-ambientales
+title: Aspectos ambientales
+
+# `routes` conecta el tema con las pantallas donde aparece el botón "?": cuando estás en cualquiera
+# de estas rutas, la ayuda contextual de la cabecera abre este tema.
+routes:
+    - aspect_index
+    - aspect_show
+    - aspect_new
+    - aspect_edit
+    - aspect_evaluation_new
+    - aspect_evaluation_edit
+
+# Resumen breve y en lenguaje llano para el panel emergente. Texto plano (se muestra escapado).
+summary: >
+    Un aspecto ambiental es cualquier forma en que las actividades del centro interactúan con el
+    medio: consumos de agua o luz, residuos, vertidos, ruido… Aquí los identificas y, cada año,
+    valoras cuáles son "significativos" (los que más impactan) para priorizar sobre ellos.
+
+# Referencias legales/normativas: resumen propio + enlace a la fuente oficial (la "ley de verdad").
+legal:
+    - label: 'ISO 14001:2015 · apartado 6.1.2 (Aspectos ambientales)'
+      note: >
+          La norma obliga a identificar los aspectos ambientales de las actividades, productos y
+          servicios que el centro puede controlar o influir, y a determinar cuáles tienen un impacto
+          significativo mediante criterios establecidos. Esos aspectos significativos son la entrada
+          para fijar objetivos y controles.
+      url: 'https://www.iso.org/standard/60857.html'
+
+# Documentos oficiales del propio SGA (viven en el módulo Documentos). Se referencian por su código;
+# si el documento existe en la aplicación, la página de ayuda enlaza directamente a su ficha.
+docs:
+    - PG-06.01
+    - RG-06.01.01
+
+# Cuerpo de la página extensa. HTML semántico simple; usa las clases del sistema de diseño existente.
+body: |
+    <p>Identificar los aspectos ambientales es el punto de partida de todo el sistema: si no sabes
+    <em>cómo</em> afecta el centro al medio, no puedes decidir dónde actuar. Este módulo mantiene el
+    catálogo de aspectos y su evaluación anual de significancia.</p>
+
+    <h2>Cómo funciona, paso a paso</h2>
+    <ol>
+        <li><strong>Registra un aspecto</strong> con «Registrar aspecto»: dale un nombre claro, elige
+        su categoría (consumo, residuo, vertido…) y la unidad de medida si aplica.</li>
+        <li><strong>Evalúalo cada año.</strong> Desde la ficha del aspecto añades la evaluación del
+        curso. El sistema calcula la <em>significancia</em> combinando los criterios definidos; según
+        el umbral, el aspecto queda como «Significativo» o «No significativo».</li>
+        <li><strong>Prioriza sobre los significativos.</strong> Los aspectos significativos son los
+        que deben alimentar objetivos ambientales y controles operacionales.</li>
+    </ol>
+
+    <h2>Qué es la "significancia"</h2>
+    <p>Es una puntuación que mide cuánto impacta un aspecto, para poder ordenarlos por prioridad en
+    vez de tratarlos todos igual. El motor de cálculo aplica los criterios y umbrales configurados
+    por la dirección; no tienes que calcularla a mano.</p>
+
+    <h2>Errores frecuentes</h2>
+    <ul>
+        <li>Registrar el aspecto pero <strong>no evaluarlo</strong>: sin evaluación no hay
+        significancia y no entra en la priorización.</li>
+        <li>Confundir un aspecto (la interacción con el medio, p. ej. «consumo de agua») con el
+        <em>impacto</em> (la consecuencia, p. ej. «agotamiento del recurso»).</li>
+    </ul>

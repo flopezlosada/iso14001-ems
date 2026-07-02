@@ -1,0 +1,32 @@
+{% extends 'app_shell.html.twig' %}
+
+{% block title %}Ayuda{% endblock %}
+
+{% block breadcrumb %}<a href="{{ path('app_homepage') }}">Inicio</a><span class="sep">/</span>Ayuda{% endblock %}
+
+{% block body %}
+    <div class="page-head">
+        <div>
+            <h1>Ayuda</h1>
+            <p class="lead">Explicaciones de cómo funciona cada módulo y qué exige la norma, con enlaces a los documentos oficiales.</p>
+        </div>
+    </div>
+
+    <div class="card">
+        {% if topics is empty %}
+            <div class="empty-state">
+                <h2>Aún no hay temas de ayuda</h2>
+                <p>La ayuda se irá completando módulo a módulo.</p>
+            </div>
+        {% else %}
+            <ul class="help-topic-list">
+                {% for topic in topics %}
+                    <li>
+                        <a class="cell-link" href="{{ path('help_show', { slug: topic.slug }) }}">{{ topic.title }}</a>
+                        <p class="muted">{{ topic.summary }}</p>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </div>
+{% endblock %}

@@ -1,0 +1,35 @@
+slug: riesgos-oportunidades
+title: Riesgos y oportunidades
+routes:
+    - risk_index
+summary: >
+    A partir del DAFO, aquí conviertes debilidades y amenazas en riesgos, y fortalezas y
+    oportunidades en oportunidades. Cada uno se evalúa (probabilidad × impacto) y, si es relevante,
+    se le define un plan de acción.
+legal:
+    - label: 'ISO 14001:2015 · apartado 6.1.1 (Acciones para abordar riesgos y oportunidades)'
+      note: >
+          La norma exige determinar los riesgos y oportunidades relacionados con los aspectos
+          ambientales, los requisitos legales y demás cuestiones del contexto, y planificar acciones
+          para abordarlos e integrarlas en el sistema.
+      url: 'https://www.iso.org/standard/60857.html'
+docs:
+    - PC.03.0
+    - F.08.0
+body: |
+    <p>Este módulo cierra la planificación: traduce el contexto (DAFO) en cosas concretas que hay que
+    vigilar o aprovechar, y en planes de acción cuando la relevancia lo justifica.</p>
+
+    <h2>Cómo funciona, paso a paso</h2>
+    <ol>
+        <li>Parte del DAFO: identifica <strong>riesgos</strong> (de debilidades/amenazas) y
+        <strong>oportunidades</strong> (de fortalezas/oportunidades).</li>
+        <li>Evalúa cada uno por <strong>probabilidad × impacto</strong> para obtener su relevancia.</li>
+        <li>Para los de relevancia <strong>alta o moderada</strong>, define un plan de acción con
+        responsable y plazo.</li>
+        <li>Planificación anual, con revisión semestral del avance.</li>
+    </ol>
+
+    <h2>Ojo</h2>
+    <p>No todo riesgo necesita acción: solo los relevantes. El objetivo es priorizar el esfuerzo, no
+    generar planes para todo.</p>
