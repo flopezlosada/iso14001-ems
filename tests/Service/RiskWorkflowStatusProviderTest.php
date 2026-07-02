@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Service;
 
+use App\Entity\DafoAnalysis;
 use App\Entity\RiskAction;
 use App\Entity\RiskAssessment;
 use App\Entity\User;
@@ -40,7 +41,7 @@ final class RiskWorkflowStatusProviderTest extends TestCase
         $provider = new RiskWorkflowStatusProvider(
             $this->risksReturning(5),
             $this->assessmentsReturning('2025-2026', [$critical, $trivial, $moderate]),
-            $this->dafoReturning('2025-2026', true),
+            $this->dafoReturning('2025-2026', new DafoAnalysis()),
         );
 
         $status = $provider->for('2025-2026');
@@ -64,7 +65,7 @@ final class RiskWorkflowStatusProviderTest extends TestCase
         $provider = new RiskWorkflowStatusProvider(
             $this->risksReturning(1),
             $this->assessmentsReturning('2025-2026', [$approved]),
-            $this->dafoReturning('2025-2026', true),
+            $this->dafoReturning('2025-2026', new DafoAnalysis()),
         );
 
         self::assertTrue($provider->for('2025-2026')->isComplete());
@@ -89,10 +90,10 @@ final class RiskWorkflowStatusProviderTest extends TestCase
         return $repo;
     }
 
-    private function dafoReturning(string $exercise, bool $exists): DafoAnalysisRepository
+    private function dafoReturning(string $exercise, ?DafoAnalysis $dafo): DafoAnalysisRepository
     {
         $repo = $this->createMock(DafoAnalysisRepository::class);
-        $repo->method('existsForSchoolYear')->with($exercise)->willReturn($exists);
+        $repo->method('findOneBy')->with(['schoolYear' => $exercise])->willReturn($dafo);
 
         return $repo;
     }

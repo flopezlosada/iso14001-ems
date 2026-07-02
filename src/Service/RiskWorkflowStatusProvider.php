@@ -31,7 +31,7 @@ final readonly class RiskWorkflowStatusProvider
      */
     public function for(string $exercise): RiskWorkflowStatus
     {
-        $dafoReady = $this->dafo->existsForSchoolYear($exercise);
+        $dafo = $this->dafo->findOneBy(['schoolYear' => $exercise]);
         $totalItems = $this->risks->count([]);
 
         $valuations = $this->assessments->findByExerciseWithActions($exercise);
@@ -51,6 +51,6 @@ final readonly class RiskWorkflowStatusProvider
             }
         }
 
-        return new RiskWorkflowStatus($exercise, $dafoReady, $totalItems, $unvalued, $unapproved, $relevantWithoutActions);
+        return new RiskWorkflowStatus($exercise, null !== $dafo, $dafo?->getId(), $totalItems, $unvalued, $unapproved, $relevantWithoutActions);
     }
 }

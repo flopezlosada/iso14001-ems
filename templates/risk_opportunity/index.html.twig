@@ -35,51 +35,60 @@
             </div>
             {% if status.isComplete %}<span class="badge badge--success">Al día para {{ currentExercise }}</span>{% endif %}
         </div>
+        {% set has_items = status.totalItems > 0 %}
         <ol class="workflow-steps">
             <li>
-                <span class="step-what">1. Contexto — análisis DAFO del curso <span class="muted">(F.06.0)</span></span>
+                <span class="step-what">Contexto — análisis DAFO del curso <span class="muted">(F.06.0)</span></span>
                 {% if status.dafoReady %}
                     <span class="badge badge--success">Hecho</span>
-                    <a class="muted" href="{{ path('dafo_index') }}">ver</a>
+                    <a class="muted" href="{{ path('dafo_show', { id: status.dafoId }) }}">ver el DAFO {{ currentExercise }}</a>
                 {% else %}
                     <span class="badge badge--warning">Pendiente</span>
-                    <a class="btn secondary" href="{{ path('dafo_index') }}">Crear el DAFO</a>
+                    <a class="btn secondary" href="{{ path('dafo_new') }}">Crear el DAFO {{ currentExercise }}</a>
                 {% endif %}
             </li>
             <li>
-                <span class="step-what">2. Identificar riesgos y oportunidades</span>
-                <span class="muted">{{ status.totalItems }} registrado(s)</span>
+                <span class="step-what">Identificar riesgos y oportunidades</span>
+                <span class="badge">{{ status.totalItems }} registrado(s)</span>
                 {% if can_write %}<a class="btn secondary" href="{{ path('risk_new') }}">+ Registrar</a>{% endif %}
             </li>
-            {% if status.totalItems > 0 %}
-                <li>
-                    <span class="step-what">3. Valorar este curso (probabilidad × impacto)</span>
-                    {% if status.unvalued > 0 %}
-                        <a href="#inventario"><span class="badge badge--warning">{{ status.unvalued }} sin valorar</span></a>
-                    {% else %}
-                        <span class="badge badge--success">Hecho</span>
-                    {% endif %}
-                </li>
-                <li>
-                    <span class="step-what">4. Aprobar las valoraciones (Dirección)</span>
-                    {% if status.unapproved > 0 %}
-                        <a href="#inventario"><span class="badge badge--warning">{{ status.unapproved }} sin aprobar</span></a>
-                    {% else %}
-                        <span class="badge badge--success">Hecho</span>
-                    {% endif %}
-                </li>
-                <li>
-                    <span class="step-what">5. Plan de acción para los relevantes</span>
-                    {% if status.relevantWithoutActions > 0 %}
-                        <a href="#inventario"><span class="badge badge--warning">{{ status.relevantWithoutActions }} sin acción</span></a>
-                    {% else %}
-                        <span class="badge badge--success">Hecho</span>
-                    {% endif %}
-                </li>
-            {% endif %}
-            <li>
-                <span class="step-what">6. Cerrar el periodo</span>
-                <a class="btn secondary" href="{{ path('obligation_index') }}">Marcar revisado en «Qué toca»</a>
+            <li class="{{ has_items ? '' : 'is-blocked' }}">
+                <span class="step-what">Valorar este curso (probabilidad × impacto)</span>
+                {% if not has_items %}
+                    <span class="muted">Requiere riesgos registrados</span>
+                {% elseif status.unvalued > 0 %}
+                    <a class="btn secondary" href="{{ path('risk_index') }}?filtro={{ 'estado:Sin valorar'|url_encode }}#inventario">{{ status.unvalued }} sin valorar →</a>
+                {% else %}
+                    <span class="badge badge--success">Hecho</span>
+                {% endif %}
+            </li>
+            <li class="{{ has_items ? '' : 'is-blocked' }}">
+                <span class="step-what">Aprobar las valoraciones (Dirección)</span>
+                {% if not has_items %}
+                    <span class="muted">Requiere riesgos valorados</span>
+                {% elseif status.unapproved > 0 %}
+                    <a class="btn secondary" href="{{ path('risk_index') }}?filtro={{ 'estado:Pendiente de aprobar'|url_encode }}#inventario">{{ status.unapproved }} sin aprobar →</a>
+                {% else %}
+                    <span class="badge badge--success">Hecho</span>
+                {% endif %}
+            </li>
+            <li class="{{ has_items ? '' : 'is-blocked' }}">
+                <span class="step-what">Plan de acción para los relevantes <span class="muted">(crítico/moderado)</span></span>
+                {% if not has_items %}
+                    <span class="muted">Requiere riesgos valorados</span>
+                {% elseif status.relevantWithoutActions > 0 %}
+                    <a class="btn secondary" href="{{ path('risk_index') }}?filtro={{ 'plan:Falta'|url_encode }}#inventario">{{ status.relevantWithoutActions }} sin acción →</a>
+                {% else %}
+                    <span class="badge badge--success">Hecho</span>
+                {% endif %}
+            </li>
+            <li class="{{ status.isComplete ? '' : 'is-blocked' }}">
+                <span class="step-what">Cerrar el periodo</span>
+                {% if status.isComplete %}
+                    <a class="btn secondary" href="{{ path('obligation_index') }}">Marcar revisado en «Qué toca»</a>
+                {% else %}
+                    <span class="muted">Disponible cuando el resto esté al día</span>
+                {% endif %}
             </li>
         </ol>
     </div>
@@ -95,22 +104,25 @@
             <table data-list-tools>
                 <thead>
                     <tr>
-                        <th data-filter>Tipo {{ help_button('riesgo-tipo') }}</th><th>Descripción</th><th>Proceso / Área</th><th>Valoración actual {{ help_button('riesgo-valoracion') }}</th>
+                        <th data-filter="tipo">Tipo {{ help_button('riesgo-tipo') }}</th><th>Descripción</th><th data-filter="area">Proceso / Área</th><th data-filter="estado">Estado ({{ currentExercise }})</th><th data-filter="plan">Plan de acción</th><th>Valoración {{ help_button('riesgo-valoracion') }}</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for item in items %}
-                        {% set latest = item.latestAssessment %}
+                        {# Estado del ítem RESPECTO AL CURSO ACTUAL (no la última valoración, que puede ser de otro curso). #}
+                        {% set a = item.assessmentFor(currentExercise) %}
+                        {% set relevant = a and a.category and a.category.requiresActionPlan %}
                         <tr>
                             <td>{{ item.type.label }}</td>
                             <td><a class="cell-link" href="{{ path('risk_show', { id: item.id }) }}">{{ item.description }}</a></td>
                             <td class="muted">{{ item.processArea.name }}</td>
+                            <td>{{ a is null ? 'Sin valorar' : (a.approvedBy ? 'Aprobado' : 'Pendiente de aprobar') }}</td>
+                            <td>{{ relevant ? (a.actions|length > 0 ? 'Hecho' : 'Falta') : '—' }}</td>
                             <td>
-                                {%- if latest -%}
-                                    {{ latest.category ? latest.category.label(item.type) : '—' }}
-                                    <span class="muted">· {{ latest.score }} ({{ latest.exercise }})</span>
+                                {%- if a and a.category -%}
+                                    {{ a.category.label(item.type) }} <span class="muted">· {{ a.score }}</span>
                                 {%- else -%}
-                                    <span class="muted">Sin valorar</span>
+                                    <span class="muted">—</span>
                                 {%- endif -%}
                             </td>
                         </tr>

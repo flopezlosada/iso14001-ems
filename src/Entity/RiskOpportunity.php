@@ -142,6 +142,26 @@ class RiskOpportunity
         return $this->assessments->first() ?: null;
     }
 
+    /**
+     * The valuation for a given exercise, or null if the item has not been valued that school year.
+     * Iterates the already-loaded collection, so it triggers no query when the assessments are
+     * eager-fetched (as in the module listing).
+     *
+     * @param string $exercise the school year, in "YYYY-YYYY" format
+     *
+     * @return RiskAssessment|null the valuation of that exercise, or null when there is none
+     */
+    public function assessmentFor(string $exercise): ?RiskAssessment
+    {
+        foreach ($this->assessments as $assessment) {
+            if ($assessment->getExercise() === $exercise) {
+                return $assessment;
+            }
+        }
+
+        return null;
+    }
+
     public function getCreatedAt(): \DateTimeImmutable
     {
         return $this->createdAt;

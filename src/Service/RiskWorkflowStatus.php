@@ -14,16 +14,18 @@ namespace App\Service;
 final readonly class RiskWorkflowStatus
 {
     /**
-     * @param string $exercise               the school year this snapshot describes ("YYYY-YYYY")
-     * @param bool   $dafoReady              whether the DAFO (context, F.06.0) exists for this exercise
-     * @param int    $totalItems            number of risks/opportunities registered
-     * @param int    $unvalued              risks/opportunities with no valuation for this exercise
-     * @param int    $unapproved            valuations of this exercise still pending Direction's approval
-     * @param int    $relevantWithoutActions relevant valuations (moderate/critical) with no action plan
+     * @param string   $exercise               the school year this snapshot describes ("YYYY-YYYY")
+     * @param bool     $dafoReady              whether the DAFO (context, F.06.0) exists for this exercise
+     * @param int|null $dafoId                 the id of that DAFO (to link straight to it), or null if none
+     * @param int      $totalItems            number of risks/opportunities registered
+     * @param int      $unvalued              risks/opportunities with no valuation for this exercise
+     * @param int      $unapproved            valuations of this exercise still pending Direction's approval
+     * @param int      $relevantWithoutActions relevant valuations (moderate/critical) with no action plan
      */
     public function __construct(
         public string $exercise,
         public bool $dafoReady,
+        public ?int $dafoId,
         public int $totalItems,
         public int $unvalued,
         public int $unapproved,

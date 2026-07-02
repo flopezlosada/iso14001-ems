@@ -159,7 +159,7 @@
             });
             wrap.appendChild(select);
             toolbar.appendChild(wrap);
-            filters.push({ index: index, select: select });
+            filters.push({ index: index, select: select, key: th.getAttribute('data-filter') });
         });
 
         // ---- Mensaje "sin resultados" ----
@@ -192,6 +192,28 @@
             debounce = setTimeout(apply, 200);
         });
         filters.forEach(function (f) { f.select.addEventListener('change', apply); });
+
+        // Preselección de filtro vía URL (?filtro=clave:valor), para enlazar a un listado ya filtrado
+        // (p. ej. desde una guía de "qué falta"). La clave es el valor de data-filter de la columna.
+        // Aditivo: sin el parámetro, o si el valor no existe como opción, no cambia nada.
+        var requested = new URLSearchParams(window.location.search).get('filtro');
+        if (requested) {
+            var sep = requested.indexOf(':');
+            var key = sep === -1 ? requested : requested.slice(0, sep);
+            var value = sep === -1 ? '' : requested.slice(sep + 1);
+            filters.forEach(function (f) {
+                if (f.key !== key) {
+                    return;
+                }
+                for (var i = 0; i < f.select.options.length; i++) {
+                    if (f.select.options[i].value === value) {
+                        f.select.value = value;
+                        apply();
+                        break;
+                    }
+                }
+            });
+        }
 
         // ---- Ordenación por columna ----
         headers.forEach(function (th, index) {
