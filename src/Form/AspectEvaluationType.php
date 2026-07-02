@@ -40,14 +40,17 @@ class AspectEvaluationType extends AbstractType
                 ->add('probability', EnumType::class, [
                     'class' => ScoreLevel::class, 'label' => 'Probabilidad de ocurrencia',
                     'required' => false, 'placeholder' => 'Sin evaluar', 'choice_label' => $scoreLabel,
+                    'help_slug' => 'aspecto-probabilidad',
                 ])
                 ->add('control', EnumType::class, [
                     'class' => ScoreLevel::class, 'label' => 'Capacidad de control',
                     'required' => false, 'placeholder' => 'Sin evaluar', 'choice_label' => $scoreLabel,
+                    'help_slug' => 'aspecto-control',
                 ])
                 ->add('severity', EnumType::class, [
                     'class' => ScoreLevel::class, 'label' => 'Severidad de las consecuencias',
                     'required' => false, 'placeholder' => 'Sin evaluar', 'choice_label' => $scoreLabel,
+                    'help_slug' => 'aspecto-severidad',
                 ]);
         } elseif (AspectType::INDIRECT === $type) {
             $builder
@@ -55,6 +58,7 @@ class AspectEvaluationType extends AbstractType
                     'class' => InfluenceLevel::class, 'label' => 'Capacidad de influencia',
                     'required' => false, 'placeholder' => 'Sin evaluar',
                     'choice_label' => static fn (InfluenceLevel $l): string => sprintf('%s (%d)', $l->label(), $l->value),
+                    'help_slug' => 'aspecto-influencia',
                 ])
                 ->add('significant', CheckboxType::class, [
                     'label' => 'Significativo',

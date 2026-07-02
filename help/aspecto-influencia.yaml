@@ -1,0 +1,20 @@
+slug: aspecto-influencia
+title: Capacidad de influencia
+summary: >
+    En un aspecto indirecto (lo que no controlas directamente, pero puedes influir: lo que hacen
+    proveedores, contratas o usuarios), mide cuánto puede el centro influir para reducir su impacto.
+legal:
+    - label: 'ISO 14001:2015 · apartado 6.1.2 (Aspectos ambientales)'
+      note: >
+          Criterio para los aspectos indirectos. El procedimiento no define un umbral automático para
+          ellos: la significancia se marca manualmente (ver el registro RG-06.01.01).
+      url: 'https://www.iso.org/standard/60857.html'
+docs:
+    - RG-06.01.01
+body: |
+    <p>Un aspecto <strong>indirecto</strong> es aquel sobre el que el centro no manda del todo, pero sí
+    puede <strong>influir</strong>: el consumo de una contrata, la gestión de residuos de un proveedor,
+    los hábitos del alumnado.</p>
+    <p>Aquí valoras esa capacidad de influencia. Como el procedimiento no fija un umbral automático
+    para los indirectos, tras valorarla decides <strong>manualmente</strong> si el aspecto es
+    significativo (con la casilla correspondiente).</p>
