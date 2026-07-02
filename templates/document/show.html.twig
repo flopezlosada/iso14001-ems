@@ -22,13 +22,19 @@
         <div>
             <p class="eyebrow">{% if document.code %}<span class="mono">{{ document.code }}</span> · {% endif %}{{ document.type.label }}</p>
             <h1>{{ document.title }}</h1>
-            <p class="lead">
-                {% if current %}
-                    En vigor: revisión {{ current.revisionNumber }} · {{ current.issueDate|date('d/m/Y') }}
-                {% else %}
-                    <span class="badge badge--warning">Sin versión en vigor</span>
-                {% endif %}
-            </p>
+            {# "Versión en vigor" solo aplica a documentos que se redactan (política/manual/procedimiento).
+               Un formato/registro no tiene texto aprobado: su contenido vive en el módulo. #}
+            {% if document.type.isDrafted %}
+                <p class="lead">
+                    {% if current %}
+                        En vigor: revisión {{ current.revisionNumber }} · {{ current.issueDate|date('d/m/Y') }}
+                    {% else %}
+                        <span class="badge badge--warning">Sin versión en vigor</span>
+                    {% endif %}
+                </p>
+            {% else %}
+                <p class="lead muted">{{ document.type.label }} · se cumplimenta en su módulo</p>
+            {% endif %}
         </div>
         {% if moduleRoute %}<a class="btn secondary" href="{{ path(moduleRoute) }}">Ir al módulo</a>{% endif %}
     </div>
@@ -50,7 +56,10 @@
         {% endif %}
     </div>
 
-    {# El documento en sí: el contenido de la revisión en vigor. Es lo que se imprime en el PDF. #}
+    {# El documento redactado (solo política/manual/procedimiento): editor, cuerpo y ciclo de versiones.
+       Un formato/registro no se redacta —su contenido vive en el módulo—, así que este bloque y el
+       historial de versiones no se muestran para ellos. #}
+    {% if document.type.isDrafted %}
     <div class="page-head">
         <div><h2>Documento</h2></div>
         {% if document.isActive and is_granted('DOCUMENT_ISSUE', document) %}
@@ -73,6 +82,7 @@
             <p class="muted">Aún no hay contenido redactado del documento.{% if document.isActive and is_granted('DOCUMENT_ISSUE', document) %} Redáctalo para crearlo.{% endif %}</p>
         {% endif %}
     </div>
+    {% endif %}
 
     {# Cierres de revisión de periodo (del audit-log): cuándo se marcó "hecho" cada periodo desde
        "Qué toca". No aplica a documentos redactados: para ellos la revisión periódica ES emitir una
@@ -96,6 +106,7 @@
         </div>
     {% endif %}
 
+    {% if document.type.isDrafted %}
     <div class="page-head">
         <div><h2>Historial de versiones {{ help_button('documento-ciclo-revision') }}</h2></div>
         {% if document.isActive and is_granted('DOCUMENT_ISSUE', document) and not hasOpenRevision and versions is not empty %}
@@ -177,6 +188,7 @@
             </table>
         {% endif %}
     </div>
+    {% endif %}
 
     {# Acciones administrativas del documento, al final: poco frecuentes y de cuidado (anular/archivar). #}
     {% if is_granted('DOCUMENT_LIFECYCLE', document) %}
