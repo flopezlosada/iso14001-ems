@@ -1,0 +1,23 @@
+slug: riesgo-valoracion
+title: Valoración y relevancia
+summary: >
+    La puntuación (probabilidad × impacto) y la categoría que sale de ella (baja / moderada / alta).
+    Los de relevancia alta o moderada son los que exigen un plan de acción.
+legal:
+    - label: 'ISO 14001:2015 · apartado 6.1.1 (Acciones para abordar riesgos y oportunidades)'
+      note: >
+          La norma exige planificar acciones para abordar los riesgos y oportunidades significativos e
+          integrarlas en el sistema. El umbral de relevancia lo fija el procedimiento PC.03.0.
+      url: 'https://www.iso.org/standard/60857.html'
+docs:
+    - PC.03.0
+    - F.08.0
+body: |
+    <p>La valoración resume, en un número y una categoría, cuánta atención merece cada riesgo u
+    oportunidad, para no tratarlos todos igual.</p>
+    <ul>
+        <li><strong>Alta / Moderada</strong>: hay que definir un <strong>plan de acción</strong>.</li>
+        <li><strong>Baja</strong>: se mantiene bajo observación, sin acción obligatoria.</li>
+    </ul>
+    <p>Se recalcula cada vez que revalúas (planificación anual, revisión semestral), así que la
+    relevancia puede cambiar de un curso a otro.</p>

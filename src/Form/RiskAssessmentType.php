@@ -43,11 +43,13 @@ class RiskAssessmentType extends AbstractType
                 'label' => 'Probabilidad / Potencialidad',
                 'help' => 'Probabilidad para riesgos, potencialidad para oportunidades.',
                 'choice_label' => $levelLabel,
+                'help_slug' => 'riesgo-probabilidad',
             ])
             ->add('impact', EnumType::class, [
                 'class' => RiskLevel::class,
                 'label' => 'Impacto',
                 'choice_label' => $levelLabel,
+                'help_slug' => 'riesgo-impacto',
             ])
             ->add('justification', TextareaType::class, [
                 'label' => 'Motivo / Justificación',

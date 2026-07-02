@@ -21,16 +21,9 @@
     <div class="card form-card form-card--wide">
         {{ form_start(form, { 'attr': { 'novalidate': 'novalidate' } }) }}
             {{ form_errors(form) }}
-            {% for field in [form.exercise, form.probability, form.impact, form.justification] %}
-                <div class="form-row">
-                    {{ form_label(field) }}
-                    {{ form_widget(field) }}
-                    {% if field.vars.help %}<p class="help">{{ field.vars.help }}</p>{% endif %}
-                    {{ form_errors(field) }}
-                </div>
-            {% endfor %}
+            {{ f.fields([form.exercise, form.probability, form.impact, form.justification]) }}
 
-            <h2>Plan de acción</h2>
+            <h2>Plan de acción {{ help_button('riesgo-plan-accion') }}</h2>
             <p class="help">Una o más acciones para abordar {{ item.type.withDefiniteArticle }}.</p>
 
             {# Prototype for a new action row, rendered with the same per-field layout as the rows below

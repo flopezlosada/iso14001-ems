@@ -1,0 +1,18 @@
+slug: riesgo-probabilidad
+title: Probabilidad / Potencialidad
+summary: >
+    Cómo de probable es que ocurra. En un riesgo es la "probabilidad" de que pase; en una oportunidad,
+    la "potencialidad" de que se dé. Es uno de los dos factores de la valoración.
+legal:
+    - label: 'ISO 14001:2015 · apartado 6.1.1 (Acciones para abordar riesgos y oportunidades)'
+      note: >
+          Criterio de valoración definido por el centro en su procedimiento de gestión de riesgos
+          (PC.03.0) para priorizar sobre qué actuar.
+      url: 'https://www.iso.org/standard/60857.html'
+docs:
+    - PC.03.0
+body: |
+    <p>Estima la <strong>frecuencia esperada</strong> con la que el riesgo (o la oportunidad) llegaría
+    a darse. Elige el nivel de la escala; el número entre paréntesis es su peso.</p>
+    <p>Se combina con el <strong>impacto</strong> (probabilidad × impacto) para obtener la puntuación y
+    la relevancia. No calcules nada a mano: el sistema lo hace al guardar.</p>
