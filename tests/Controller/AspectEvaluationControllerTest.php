@@ -56,6 +56,9 @@ final class AspectEvaluationControllerTest extends WebTestCase
 
         self::assertResponseIsSuccessful();
         self::assertSelectorExists('select#aspect_evaluation_frequency');
+        // The per-field contextual help must actually render on the real form (it goes through the
+        // shared macro, which reads help_slug): guards against the field help becoming dead code.
+        self::assertSelectorExists('.help-field-label a.help-btn[data-help="aspecto-frecuencia"]');
     }
 
     public function testSubmittingEvaluationComputesSignificance(): void
