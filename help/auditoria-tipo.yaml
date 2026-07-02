@@ -1,0 +1,23 @@
+slug: auditoria-tipo
+title: Tipo de auditoría (interna / externa)
+summary: >
+    Interna: el propio centro se autoevalúa antes del examen de verdad. Externa: la hace un organismo
+    certificador independiente y es la que otorga o mantiene el certificado ISO 14001.
+legal:
+    - label: 'ISO 14001:2015 · apartado 9.2 (Auditoría interna)'
+      note: >
+          La norma regula la auditoría interna (a intervalos planificados). La auditoría externa de
+          certificación la realiza una entidad acreditada, fuera del alcance del 9.2.
+      url: 'https://www.iso.org/standard/60857.html'
+docs:
+    - PC.09.0
+    - F.15.0
+body: |
+    <ul>
+        <li><strong>Interna</strong>: la organiza el propio centro para comprobar que el sistema
+        funciona y cumple la norma. Sirve para <em>encontrar los fallos antes</em> que el auditor
+        externo. De ella salen no conformidades a corregir.</li>
+        <li><strong>Externa</strong>: la realiza el organismo certificador (independiente). Es la que
+        decide si se concede o se mantiene el certificado ISO 14001.</li>
+    </ul>
+    <p>La interna es preparación; la externa es el examen oficial.</p>

@@ -1,0 +1,21 @@
+slug: comunicacion-ambito
+title: Ámbito (interna / externa)
+summary: >
+    Si la comunicación es interna (dentro del centro: personal, alumnado) o externa (hacia fuera:
+    administración, familias, vecinos, proveedores). La norma pide gestionar ambas.
+legal:
+    - label: 'ISO 14001:2015 · apartado 7.4 (Comunicación)'
+      note: >
+          La norma exige determinar las comunicaciones internas y externas pertinentes, incluyendo qué,
+          cuándo, a quién y cómo se comunica.
+      url: 'https://www.iso.org/standard/60857.html'
+docs:
+    - RG-07.04.00
+body: |
+    <ul>
+        <li><strong>Interna</strong>: dentro del centro — difundir la política, avisar de un cambio,
+        recordar buenas prácticas al personal y al alumnado. Es la que mantiene vivo el sistema.</li>
+        <li><strong>Externa</strong>: hacia fuera — responder a la administración, atender una queja
+        vecinal, comunicar a proveedores, informar a las familias.</li>
+    </ul>
+    <p>Ambas cuentan y deben quedar registradas con su evidencia; el ámbito solo dice hacia dónde va.</p>
