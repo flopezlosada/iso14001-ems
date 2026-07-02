@@ -30,4 +30,19 @@ enum NonConformityStatus: string
             self::CLOSED => 'Cerrada',
         };
     }
+
+    /**
+     * CSS badge class for the shared semantic scale: an open non-conformity is the most urgent (red),
+     * one in treatment is in progress (amber), a closed one is resolved (green).
+     *
+     * @return string the badge modifier class
+     */
+    public function badgeClass(): string
+    {
+        return match ($this) {
+            self::OPEN => 'badge--danger',
+            self::IN_TREATMENT => 'badge--warning',
+            self::CLOSED => 'badge--success',
+        };
+    }
 }

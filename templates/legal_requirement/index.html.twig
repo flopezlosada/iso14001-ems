@@ -35,7 +35,7 @@
                             <td>{{ requirement.scope.label }}</td>
                             <td class="muted">{{ requirement.environmentalVector ?? '—' }}</td>
                             <td>
-                                {{ requirement.complianceStatus.label }}
+                                <span class="badge {{ requirement.complianceStatus.badgeClass }}">{{ requirement.complianceStatus.label }}</span>
                                 {%- if requirement.nonCompliant %} ·
                                     <a href="{{ path('non_conformity_new', { origin: 'internal', description: 'Incumplimiento del requisito legal ' ~ requirement.reference ~ ' (' ~ requirement.legalProvision ~ '): ' ~ requirement.specificRequirement }) }}">Abrir NC</a>
                                 {%- endif -%}

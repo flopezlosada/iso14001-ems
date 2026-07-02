@@ -35,7 +35,7 @@
                             <td>{{ nc.origin.label }}{% if nc.originDetail %} <span class="muted">· {{ nc.originDetail }}</span>{% endif %}</td>
                             <td>{{ nc.responsible ? nc.responsible.fullName : '—' }}</td>
                             <td class="muted">{{ nc.description|length > 80 ? nc.description|slice(0, 80) ~ '…' : nc.description }}</td>
-                            <td>{{ nc.status.label }}</td>
+                            <td><span class="badge {{ nc.status.badgeClass }}">{{ nc.status.label }}</span></td>
                         </tr>
                     {% endfor %}
                 </tbody>

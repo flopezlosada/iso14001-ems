@@ -66,7 +66,7 @@
                             <td class="muted">{{ objective.relatedAspect ? objective.relatedAspect.name : '—' }}</td>
                             <td class="muted">{{ objective.targetPeriod ?? '—' }}</td>
                             <td>
-                                {{ objective.status.label }}
+                                <span class="badge {{ objective.status.badgeClass }}">{{ objective.status.label }}</span>
                                 {%- if objective.notAchieved %} ·
                                     <a href="{{ path('non_conformity_new', { origin: 'internal', description: 'Objetivo no cumplido ' ~ objective.reference ~ ': ' ~ objective.description }) }}">Abrir NC</a>
                                 {%- endif -%}
