@@ -56,6 +56,8 @@ final class LegalRequirementControllerTest extends WebTestCase
 
         self::assertResponseIsSuccessful();
         self::assertSelectorExists('select#legal_requirement_scope');
+        // Per-field contextual help renders on the real form (guards against a slug typo).
+        self::assertSelectorExists('.help-field-label a.help-btn[data-help="legal-cumplimiento"]');
     }
 
     public function testSubmittingValidRequirementAutogeneratesReferenceAndRedirects(): void

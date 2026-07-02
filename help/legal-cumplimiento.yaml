@@ -1,0 +1,19 @@
+slug: legal-cumplimiento
+title: Estado de cumplimiento
+summary: >
+    Si el centro cumple o no el requisito legal en este momento (cumple, no cumple, parcial, pendiente
+    de evaluar). Hay que revisarlo periódicamente, no fijarlo una vez y olvidarlo.
+legal:
+    - label: 'ISO 14001:2015 · apartado 9.1.2 (Evaluación del cumplimiento)'
+      note: >
+          La norma exige evaluar periódicamente el cumplimiento de los requisitos legales y mantener el
+          conocimiento y la comprensión de su estado.
+      url: 'https://www.iso.org/standard/60857.html'
+docs:
+    - PC-06.03
+body: |
+    <p>No basta con listar la ley: hay que decir <strong>si se cumple</strong> y sostenerlo con
+    evidencia. Este estado refleja esa evaluación.</p>
+    <p>Se revisa según la <strong>frecuencia de evaluación</strong> fijada (habitualmente semestral).
+    Un requisito "no cumple" debería generar una acción — y, si el incumplimiento es real, una no
+    conformidad.</p>
