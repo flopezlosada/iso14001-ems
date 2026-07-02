@@ -515,6 +515,13 @@ tbody tr.is-in-force { background: var(--success-weak); }
 .table-tools__search input[type="search"]:focus { border-color: var(--accent); outline-offset: 0; }
 /* El filtro reusa .form-row (para que selectmenu.js lo "enhance"), pero aquí va en línea. */
 .table-tools__filter { margin-bottom: 0; flex: 0 1 200px; min-width: 160px; }
+/* El buscador (input nativo) y los filtros (trigger de selectmenu.js) calculan su alto de forma
+   distinta y quedaban desalineados; se les fija la MISMA altura para que casen en la barra. */
+.table-tools__search input[type="search"],
+.table-tools__filter .selectmenu__trigger {
+    height: 40px;
+    box-sizing: border-box;
+}
 
 /* Cabeceras ordenables: afordancia clicable + flecha según aria-sort. */
 thead th.is-sortable { cursor: pointer; user-select: none; }
