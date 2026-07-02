@@ -127,31 +127,33 @@
                             <td class="muted">{{ item.processArea.name }}</td>
                             <td>
                                 {%- if a is null -%}
-                                    <span class="badge badge--draft">Sin valorar</span>
+                                    {%- if can_write -%}
+                                        <a class="badge badge--draft" href="{{ path('risk_assessment_new', { id: item.id }) }}">Sin valorar</a>
+                                    {%- else -%}
+                                        <span class="badge badge--draft">Sin valorar</span>
+                                    {%- endif -%}
                                 {%- elseif a.approvedBy -%}
                                     <span class="badge badge--success">Aprobado</span>
                                 {%- else -%}
-                                    <span class="badge badge--warning">Pendiente de aprobar</span>
+                                    <a class="badge badge--warning" href="{{ path('risk_show', { id: item.id }) }}">Pendiente de aprobar</a>
                                 {%- endif -%}
                             </td>
                             <td>
                                 {%- if not relevant -%}
                                     <span class="muted">—</span>
-                                {%- elseif a.actions|length > 0 -%}
-                                    <span class="badge badge--success">Hecho</span>
                                 {%- else -%}
-                                    <span class="badge badge--warning">Falta</span>
+                                    {%- set plan_done = a.actions|length > 0 -%}
+                                    {%- if can_write -%}
+                                        <a class="badge {{ plan_done ? 'badge--success' : 'badge--warning' }}" href="{{ path('risk_assessment_edit', { id: item.id, assessmentId: a.id }) }}">{{ plan_done ? 'Hecho' : 'Falta' }}</a>
+                                    {%- else -%}
+                                        <span class="badge {{ plan_done ? 'badge--success' : 'badge--warning' }}">{{ plan_done ? 'Hecho' : 'Falta' }}</span>
+                                    {%- endif -%}
                                 {%- endif -%}
                             </td>
                             <td>
                                 {%- if a and a.category -%}
-                                    {%- set cat_badge = { 'critical': 'badge--danger', 'moderate': 'badge--warning' } -%}
-                                    {%- if a.category.value == 'trivial' -%}
-                                        <span class="muted">{{ a.category.label(item.type) }}</span>
-                                    {%- else -%}
-                                        <span class="badge {{ cat_badge[a.category.value] }}">{{ a.category.label(item.type) }}</span>
-                                    {%- endif -%}
-                                    <span class="muted"> · {{ a.score }}</span>
+                                    {%- set val_class = { 'critical': 'val--critical', 'moderate': 'val--moderate', 'trivial': 'val--trivial' } -%}
+                                    <span class="{{ val_class[a.category.value] }}">{{ a.category.label(item.type) }} · {{ a.score }}</span>
                                 {%- else -%}
                                     <span class="muted">—</span>
                                 {%- endif -%}

@@ -547,6 +547,16 @@ thead th.is-sortable:focus-visible { outline: 2px solid var(--focus); outline-of
 .badge--void    { color: var(--text-faint); text-decoration: line-through; }
 .badge--done    { background: var(--surface-sunken); color: var(--text-muted); border-color: var(--border-strong); }
 
+/* Nivel de valoración de riesgo: dato INFORMATIVO (no accionable), por eso es texto coloreado por
+   severidad, no un badge (que se reserva a estados accionables). Escala sobria: trivial apagado. */
+.val--critical { color: var(--danger-text); font-weight: 600; }
+.val--moderate { color: var(--warning-text); }
+.val--trivial  { color: var(--text-muted); }
+
+/* Un badge que además es enlace (estado accionable): sin subrayado y con afordanza al pasar. */
+a.badge { text-decoration: none; cursor: pointer; }
+a.badge:hover { border-color: currentColor; }
+
 /* ---- Formularios -------------------------------------------------------- */
 /* Tarjeta contenedora de un formulario de alta/edición: ancho de línea cómodo y único
    (antes cada plantilla llevaba un style="max-width" inline distinto). */
