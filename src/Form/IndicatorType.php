@@ -43,6 +43,7 @@ class IndicatorType extends AbstractType
                 'label' => 'Valor de referencia',
                 'required' => false,
                 'help' => 'Umbral u objetivo (p. ej. "5%", "0", "NINGUNA").',
+                'help_slug' => 'indicador-referencia',
             ])
             ->add('periodicity', EnumType::class, [
                 'class' => MeasurementPeriodicity::class,

@@ -95,6 +95,8 @@ final class WasteControllerTest extends WebTestCase
         $client = $this->clientWithWasteWrite();
         $client->request('GET', '/waste/new');
         self::assertResponseIsSuccessful();
+        // Per-field contextual help renders on the real form (guards against a slug typo).
+        self::assertSelectorExists('.help-field-label a.help-btn[data-help="residuo-ler"]');
 
         $client->submitForm('Guardar', [
             'waste_record[lerCode]' => '200121',

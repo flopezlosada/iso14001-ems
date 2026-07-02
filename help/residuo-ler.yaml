@@ -1,0 +1,22 @@
+slug: residuo-ler
+title: Código LER
+summary: >
+    El código de la Lista Europea de Residuos que identifica de qué tipo de residuo se trata. Son seis
+    cifras; si acaba en asterisco (*), el residuo es peligroso. Lo aporta el gestor o la ficha del residuo.
+legal:
+    - label: 'Ley 7/2022, de 8 de abril, de residuos y suelos contaminados'
+      note: >
+          La normativa de residuos obliga a clasificar cada residuo según la Lista Europea de Residuos
+          (LER) y a darle el tratamiento y gestor que le corresponde por su código.
+      url: 'https://www.boe.es/eli/es/l/2022/04/08/7/con'
+docs:
+    - RG-08.06
+body: |
+    <p>El código <strong>LER</strong> (Lista Europea de Residuos) es la "matrícula" del residuo: seis
+    dígitos que dicen exactamente qué es (p. ej. <span class="mono">20 01 01</span> = papel y cartón).</p>
+    <ul>
+        <li>Un <strong>asterisco</strong> al final (p. ej. <span class="mono">20 01 21*</span>,
+        fluorescentes) marca un residuo <strong>peligroso</strong>, con reglas de gestión más estrictas.</li>
+        <li>No te lo inventes: el código correcto lo indica el <strong>gestor autorizado</strong> o la
+        ficha del residuo. De él depende cómo hay que almacenarlo y entregarlo.</li>
+    </ul>

@@ -27,6 +27,7 @@ class WasteRecordType extends AbstractType
                 'label' => 'Código LER',
                 'help' => 'Código del Catálogo Europeo de Residuos (p. ej. 200121).',
                 'required' => false,
+                'help_slug' => 'residuo-ler',
             ])
             ->add('description', TextType::class, ['label' => 'Residuo'])
             ->add('quantityKg', TextType::class, [
@@ -41,7 +42,7 @@ class WasteRecordType extends AbstractType
                 'input' => 'datetime_immutable',
                 'required' => false,
             ])
-            ->add('manager', TextType::class, ['label' => 'Gestor autorizado', 'required' => false])
+            ->add('manager', TextType::class, ['label' => 'Gestor autorizado', 'required' => false, 'help_slug' => 'residuo-gestor'])
             ->add('hazardous', CheckboxType::class, ['label' => 'Residuo peligroso', 'required' => false])
             ->add('notes', TextareaType::class, ['label' => 'Observaciones', 'required' => false]);
     }

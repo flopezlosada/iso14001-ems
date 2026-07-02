@@ -37,7 +37,7 @@
         {% else %}
             <table data-list-tools>
                 <thead>
-                    <tr><th>Fecha</th><th>LER</th><th>Residuo</th><th>Cantidad</th><th data-filter>Gestor</th><th data-filter>Peligroso</th><th></th></tr>
+                    <tr><th>Fecha</th><th>LER {{ help_button('residuo-ler') }}</th><th>Residuo</th><th>Cantidad</th><th data-filter>Gestor {{ help_button('residuo-gestor') }}</th><th data-filter>Peligroso</th><th></th></tr>
                 </thead>
                 <tbody>
                     {% for record in records %}

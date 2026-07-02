@@ -17,14 +17,7 @@
     <div class="card form-card">
         {{ form_start(form, { 'attr': { 'novalidate': 'novalidate' } }) }}
             {{ form_errors(form) }}
-            {% for field in [form.lerCode, form.description, form.quantityKg, form.pickupDate, form.manager] %}
-                <div class="form-row">
-                    {{ form_label(field) }}
-                    {{ form_widget(field) }}
-                    {% if field.vars.help %}<p class="help">{{ field.vars.help }}</p>{% endif %}
-                    {{ form_errors(field) }}
-                </div>
-            {% endfor %}
+            {{ f.fields([form.lerCode, form.description, form.quantityKg, form.pickupDate, form.manager]) }}
             <div class="form-row">
                 {{ form_widget(form.hazardous) }} {{ form_label(form.hazardous) }}
             </div>
