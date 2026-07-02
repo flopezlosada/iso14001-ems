@@ -21,23 +21,23 @@
             <link rel="preconnect" href="https://fonts.googleapis.com">
             <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
             <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&family=Hanken+Grotesk:wght@400;500;600;700&family=Spline+Sans+Mono:wght@400;500&display=swap" rel="stylesheet">
-            <link rel="stylesheet" href="/css/app.css">
+            <link rel="stylesheet" href="{{ asset_ver('/css/app.css') }}">
         {% endblock %}
     </head>
     <body>
         {% block shell %}{% endblock %}
 
         {% block javascripts %}
-            <script src="/js/theme.js"></script>
-            <script src="/js/nav.js"></script>
-            <script src="/js/nav-pillars.js"></script>
-            <script src="/js/responsive-tables.js"></script>
-            <script src="/js/selectmenu.js"></script>
-            <script src="/js/table-tools.js"></script>
-            <script src="/js/quickjump.js"></script>
-            <script src="/js/confirm-dialog.js"></script>
-            <script src="/js/collection.js"></script>
-            <script src="/js/help.js"></script>
+            <script src="{{ asset_ver('/js/theme.js') }}"></script>
+            <script src="{{ asset_ver('/js/nav.js') }}"></script>
+            <script src="{{ asset_ver('/js/nav-pillars.js') }}"></script>
+            <script src="{{ asset_ver('/js/responsive-tables.js') }}"></script>
+            <script src="{{ asset_ver('/js/selectmenu.js') }}"></script>
+            <script src="{{ asset_ver('/js/table-tools.js') }}"></script>
+            <script src="{{ asset_ver('/js/quickjump.js') }}"></script>
+            <script src="{{ asset_ver('/js/confirm-dialog.js') }}"></script>
+            <script src="{{ asset_ver('/js/collection.js') }}"></script>
+            <script src="{{ asset_ver('/js/help.js') }}"></script>
         {% endblock %}
     </body>
 </html>
