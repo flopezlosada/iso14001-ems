@@ -1,0 +1,18 @@
+slug: aspecto-severidad
+title: Severidad de las consecuencias
+summary: >
+    Si el aspecto anormal o de emergencia llega a ocurrir, cómo de graves serían sus consecuencias
+    para el medio o las personas. A más severidad, más puntúa.
+legal:
+    - label: 'ISO 14001:2015 · apartado 6.1.2 (Aspectos ambientales)'
+      note: >
+          Criterio de valoración de los aspectos anormales/de emergencia, según el registro
+          RG-06.01.01.
+      url: 'https://www.iso.org/standard/60857.html'
+docs:
+    - RG-06.01.01
+body: |
+    <p>La severidad valora el <strong>daño que causaría</strong> el aspecto si se materializa: no es lo
+    mismo un pequeño derrame contenido que un vertido que alcanza un cauce.</p>
+    <p>Junto con la probabilidad y la capacidad de control, define el riesgo del aspecto anormal: alto
+    daño potencial + alta probabilidad + poco control = significativo.</p>

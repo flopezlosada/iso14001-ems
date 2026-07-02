@@ -1,0 +1,19 @@
+slug: aspecto-probabilidad
+title: Probabilidad de ocurrencia
+summary: >
+    En un aspecto anormal o de emergencia (un derrame, un incendio), mide cuán probable es que llegue
+    a ocurrir. A más probable, más puntúa.
+legal:
+    - label: 'ISO 14001:2015 · apartado 6.1.2 (Aspectos ambientales)'
+      note: >
+          Criterio de valoración de los aspectos en situaciones anormales y de emergencia, según el
+          registro RG-06.01.01.
+      url: 'https://www.iso.org/standard/60857.html'
+docs:
+    - RG-06.01.01
+body: |
+    <p>Los aspectos <strong>anormales o de emergencia</strong> no se valoran como los habituales: no
+    tiene sentido su "frecuencia" (no pasan a diario), sino cómo de <strong>probable</strong> es que
+    ocurran.</p>
+    <p>Elige el nivel de la escala que mejor refleje esa probabilidad; el número entre paréntesis es su
+    peso en el cálculo de la significancia.</p>

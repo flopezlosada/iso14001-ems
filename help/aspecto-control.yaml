@@ -1,0 +1,18 @@
+slug: aspecto-control
+title: Capacidad de control
+summary: >
+    Cuánto control tiene el centro para evitar o contener el aspecto si ocurre (extintores, protocolos,
+    contención de derrames). Ojo: a más control, MENOR es el riesgo resultante.
+legal:
+    - label: 'ISO 14001:2015 · apartado 6.1.2 (Aspectos ambientales)'
+      note: >
+          Criterio de valoración de los aspectos anormales/de emergencia (RG-06.01.01): el control
+          existente modula la significancia.
+      url: 'https://www.iso.org/standard/60857.html'
+docs:
+    - RG-06.01.01
+body: |
+    <p>La capacidad de control mide los <strong>medios que tienes para evitar o contener</strong> el
+    aspecto: protocolos de actuación, medios de contención, mantenimiento preventivo, formación.</p>
+    <p><strong>Cuanto mayor es el control, menor es el riesgo</strong> final: un buen control reduce la
+    significancia aunque la probabilidad o la severidad sean altas.</p>
