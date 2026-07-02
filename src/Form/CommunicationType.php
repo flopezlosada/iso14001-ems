@@ -39,6 +39,7 @@ class CommunicationType extends AbstractType
                 'label' => 'Ámbito',
                 'choice_label' => static fn (CommunicationScope $s): string => $s->label(),
                 'help' => 'Interna (dentro del centro) o externa (con partes de fuera).',
+                'help_slug' => 'comunicacion-ambito',
             ])
             ->add('category', EnumType::class, [
                 'class' => CommunicationCategory::class,

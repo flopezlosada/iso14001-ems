@@ -36,6 +36,7 @@ class SystemAuditType extends AbstractType
                 'class' => AuditType::class,
                 'label' => 'Tipo',
                 'choice_label' => static fn (AuditType $t): string => $t->label(),
+                'help_slug' => 'auditoria-tipo',
             ])
             ->add('conductedOn', DateType::class, [
                 'label' => 'Fecha de realización',

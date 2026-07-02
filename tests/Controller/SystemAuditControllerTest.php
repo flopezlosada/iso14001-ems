@@ -54,6 +54,8 @@ final class SystemAuditControllerTest extends WebTestCase
         $client = $this->loggedInClient();
 
         $client->request('GET', '/system-audits/new');
+        // Per-field contextual help renders on the real form (guards against a slug typo).
+        self::assertSelectorExists('.help-field-label a.help-btn[data-help="auditoria-tipo"]');
         $client->submitForm('Guardar', [
             'system_audit[year]' => '2026',
             'system_audit[type]' => AuditType::INTERNAL->value,

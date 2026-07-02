@@ -55,6 +55,7 @@ class TrainingActionType extends AbstractType
             ->add('efficacyEvaluation', TextareaType::class, [
                 'label' => 'Evaluación de la eficacia',
                 'required' => false,
+                'help_slug' => 'formacion-eficacia',
             ]);
 
         // The review fields only make sense for actions the import flagged: adding them just for

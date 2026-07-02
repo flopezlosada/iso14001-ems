@@ -1,0 +1,18 @@
+slug: formacion-eficacia
+title: Eficacia de la formación
+summary: >
+    Comprobar si la formación sirvió de verdad: ¿el personal aprendió lo que debía y lo aplica? No es
+    apuntar quién asistió, sino verificar que el mensaje caló.
+legal:
+    - label: 'ISO 14001:2015 · apartado 7.2 (Competencia)'
+      note: >
+          La norma exige asegurar la competencia y, cuando se toman acciones formativas, evaluar la
+          eficacia de las acciones tomadas.
+      url: 'https://www.iso.org/standard/60857.html'
+docs:
+    - F.03.0
+body: |
+    <p>Impartir la formación no garantiza que funcione. La eficacia valora el <strong>resultado</strong>:
+    ¿se nota el cambio?, ¿se aplican bien los procedimientos tras el curso?</p>
+    <p>Se puede comprobar con un <strong>test de evaluación</strong>, con observación en el puesto o con
+    la evolución de indicadores. Si la formación no fue eficaz, conviene repetirla o cambiar el enfoque.</p>

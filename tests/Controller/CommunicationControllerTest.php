@@ -62,6 +62,8 @@ final class CommunicationControllerTest extends WebTestCase
         self::assertResponseIsSuccessful();
         self::assertSelectorExists('form');
         self::assertSelectorExists('input#communication_subject');
+        // Per-field contextual help renders on the real form (guards against a slug typo).
+        self::assertSelectorExists('.help-field-label a.help-btn[data-help="comunicacion-ambito"]');
     }
 
     public function testSubmittingValidCommunicationPersistsItAndRedirects(): void

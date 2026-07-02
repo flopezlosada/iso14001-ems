@@ -35,7 +35,7 @@
         {% else %}
             <table data-list-tools>
                 <thead>
-                    <tr><th>Año</th><th>Tipo</th><th>Fecha</th><th>Auditor</th><th>Informe</th><th></th></tr>
+                    <tr><th>Año</th><th>Tipo {{ help_button('auditoria-tipo') }}</th><th>Fecha</th><th>Auditor</th><th>Informe</th><th></th></tr>
                 </thead>
                 <tbody>
                     {% for audit in audits %}
