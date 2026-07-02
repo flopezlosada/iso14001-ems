@@ -53,6 +53,8 @@ final class SupplierEvaluationControllerTest extends WebTestCase
 
         self::assertResponseIsSuccessful();
         self::assertSelectorExists('select#supplier_evaluation_criterion');
+        // Per-field contextual help renders on the real form (guards against a slug typo).
+        self::assertSelectorExists('.help-field-label a.help-btn[data-help="proveedor-evaluacion"]');
     }
 
     public function testSubmittingEvaluationPersistsItAndRedirectsToSupplier(): void

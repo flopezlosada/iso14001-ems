@@ -1,0 +1,18 @@
+slug: legal-vector
+title: Vector ambiental
+summary: >
+    El aspecto del medio sobre el que incide la norma: agua, residuos, atmósfera/emisiones, ruido,
+    suelo, energía… Sirve para agrupar los requisitos legales por tema y ver qué cubre cada uno.
+legal:
+    - label: 'ISO 14001:2015 · apartado 6.1.3 (Requisitos legales y otros requisitos)'
+      note: >
+          Clasificar los requisitos por vector ayuda a relacionarlos con los aspectos ambientales a
+          los que aplican, como pide la norma.
+      url: 'https://www.iso.org/standard/60857.html'
+docs:
+    - PC-06.03
+body: |
+    <p>El vector indica <strong>a qué parte del medio afecta</strong> la norma o requisito: no es lo
+    mismo una ley de vertidos (agua) que una de residuos o de ruido.</p>
+    <p>Es útil para organizar: te permite ver de un vistazo qué vectores tienes cubiertos y cuáles no,
+    y conectar cada requisito con el aspecto ambiental correspondiente.</p>

@@ -32,6 +32,7 @@ class SupplierEvaluationType extends AbstractType
                 'label' => 'Criterio',
                 'choice_label' => static fn (SupplierCriterion $c): string => sprintf('%s (%s)', $c->label(), $c->statusLabel()),
                 'help' => 'El estado (Aprobado / No aprobado) se deriva del criterio.',
+                'help_slug' => 'proveedor-evaluacion',
             ])
             ->add('notes', TextareaType::class, [
                 'label' => 'Observaciones',

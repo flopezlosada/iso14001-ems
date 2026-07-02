@@ -40,6 +40,7 @@ class LegalRequirementType extends AbstractType
                 'label' => 'Vector ambiental afectado',
                 'required' => false,
                 'help' => 'P. ej. residuos, vertidos, emisiones, ruido.',
+                'help_slug' => 'legal-vector',
             ])
             ->add('specificRequirement', TextareaType::class, [
                 'label' => 'Requisito específico',
@@ -53,6 +54,7 @@ class LegalRequirementType extends AbstractType
                 'class' => ComplianceStatus::class,
                 'label' => 'Evaluación del cumplimiento',
                 'choice_label' => static fn (ComplianceStatus $c): string => $c->label(),
+                'help_slug' => 'legal-cumplimiento',
             ])
             ->add('evaluationFrequency', EnumType::class, [
                 'class' => EvaluationFrequency::class,
