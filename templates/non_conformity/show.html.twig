@@ -11,8 +11,8 @@
 {% block body %}
     <div class="page-head">
         <div>
-            <h1 class="mono">{{ nonConformity.reference }}</h1>
-            <p class="lead">{{ nonConformity.origin.label }}{% if nonConformity.originDetail %} · {{ nonConformity.originDetail }}{% endif %} · {{ nonConformity.status.label }}</p>
+            <h1 class="mono">{{ nonConformity.reference }} <span class="badge {{ nonConformity.status.badgeClass }}">{{ nonConformity.status.label }}</span></h1>
+            <p class="lead">{{ nonConformity.origin.label }}{% if nonConformity.originDetail %} · {{ nonConformity.originDetail }}{% endif %}</p>
         </div>
         <a class="btn secondary" href="{{ path('non_conformity_edit', { id: nonConformity.id }) }}">Editar no conformidad</a>
     </div>
@@ -43,30 +43,30 @@
                 <p>Añade la primera acción del plan para eliminar la causa de la no conformidad.</p>
             </div>
         {% else %}
-            <table>
-                <thead>
-                    <tr>
-                        <th>Ref.</th><th>Descripción</th><th>Responsable</th><th>Prevista</th><th>Autorización</th><th>Eficacia</th><th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for action in nonConformity.correctiveActions %}
-                        <tr>
-                            <td class="mono">{{ action.reference }}</td>
-                            <td class="muted">{{ action.description|length > 60 ? action.description|slice(0, 60) ~ '…' : action.description }}</td>
-                            <td>{{ action.responsible ? action.responsible.fullName : '—' }}</td>
-                            <td>{{ action.plannedDate ? action.plannedDate|date('d/m/Y') : '—' }}</td>
-                            <td>
-                                {%- if action.requiresDirectionAuthorization -%}
-                                    {{ action.authorizedBy ? 'Autorizada' : 'Pendiente' }}
-                                {%- else -%}No requiere{%- endif -%}
-                            </td>
-                            <td>{{ action.efficacy ? action.efficacy.label : 'Pendiente' }}</td>
-                            <td><a href="{{ path('corrective_action_edit', { id: nonConformity.id, actionId: action.id }) }}">Editar</a></td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+            {# Las acciones tienen textos largos (descripción, evidencia): fichas, no tabla. #}
+            {% for action in nonConformity.correctiveActions %}
+                <div class="action-item">
+                    <p class="action-desc"><span class="mono muted">{{ action.reference }}</span> · {{ action.description|nl2br }}</p>
+                    <div class="action-meta">
+                        <span class="meta-item"><span class="meta-label">Responsable</span>{{ action.responsible ? action.responsible.fullName : '—' }}</span>
+                        <span class="meta-item"><span class="meta-label">Prevista</span>{{ action.plannedDate ? action.plannedDate|date('d/m/Y') : '—' }}</span>
+                        <span class="meta-item"><span class="meta-label">Autorización</span>
+                            {%- if action.requiresDirectionAuthorization -%}
+                                {% if action.authorizedBy %}<span class="badge badge--success">Autorizada</span>{% else %}<span class="badge badge--warning">Pendiente</span>{% endif %}
+                            {%- else -%}<span class="muted">No requiere</span>{%- endif -%}
+                        </span>
+                        <span class="meta-item"><span class="meta-label">Eficacia</span>
+                            {%- if action.efficacy -%}
+                                <span class="badge {{ action.efficacy.badgeClass }}">{{ action.efficacy.label }}</span>
+                            {%- else -%}<span class="badge badge--warning">Pendiente</span>{%- endif -%}
+                        </span>
+                    </div>
+                    {% if action.implementationEvidence %}
+                        <div class="action-efficacy"><span class="meta-label">Evidencia de implementación</span>{{ action.implementationEvidence|nl2br }}</div>
+                    {% endif %}
+                    <p class="action-edit"><a href="{{ path('corrective_action_edit', { id: nonConformity.id, actionId: action.id }) }}">Editar acción</a></p>
+                </div>
+            {% endfor %}
         {% endif %}
     </div>
 {% endblock %}

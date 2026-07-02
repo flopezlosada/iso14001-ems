@@ -588,6 +588,7 @@ a.badge:hover { border-color: currentColor; }
     border-radius: var(--radius);
 }
 .action-efficacy .meta-label { display: block; margin: 0 0 3px; }
+.action-edit { margin: 10px 0 0; font-size: 14px; }
 
 /* ---- Formularios -------------------------------------------------------- */
 /* Tarjeta contenedora de un formulario de alta/edición: ancho de línea cómodo y único
