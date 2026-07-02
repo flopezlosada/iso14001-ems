@@ -58,6 +58,8 @@ final class InterestedPartyControllerTest extends WebTestCase
         self::assertResponseIsSuccessful();
         self::assertSelectorExists('form');
         self::assertSelectorExists('input#interested_party_name');
+        // Per-field contextual help renders on the real form (guards against a slug typo).
+        self::assertSelectorExists('.help-field-label a.help-btn[data-help="pi-necesidades"]');
     }
 
     public function testSubmittingValidPartyPersistsItAndRedirects(): void

@@ -29,6 +29,7 @@ class InterestedPartyType extends AbstractType
             ->add('needsAndExpectations', TextareaType::class, [
                 'label' => 'Necesidades y expectativas',
                 'help' => 'Qué necesita y espera esta parte interesada del centro.',
+                'help_slug' => 'pi-necesidades',
             ])
             ->add('incidents', TextareaType::class, [
                 'label' => 'Incidencias',

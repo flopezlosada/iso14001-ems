@@ -69,6 +69,8 @@ final class ObjectiveControllerTest extends WebTestCase
 
         self::assertResponseIsSuccessful();
         self::assertSelectorExists('select#objective_status');
+        // Per-field contextual help renders on the real form (guards against a slug typo).
+        self::assertSelectorExists('.help-field-label a.help-btn[data-help="objetivo-cumplimiento"]');
     }
 
     public function testSubmittingValidObjectiveAutogeneratesReferenceAndRedirects(): void

@@ -1,0 +1,20 @@
+slug: pi-necesidades
+title: Necesidades y expectativas
+summary: >
+    Qué espera de nosotros cada parte interesada en materia ambiental. Las que el centro decide asumir
+    se convierten en requisitos que alimentan objetivos, riesgos y comunicaciones.
+legal:
+    - label: 'ISO 14001:2015 · apartado 4.2 (Necesidades y expectativas de las partes interesadas)'
+      note: >
+          La norma exige determinar las necesidades y expectativas pertinentes de las partes
+          interesadas y cuáles de ellas se convierten en requisitos legales u otros requisitos.
+      url: 'https://www.iso.org/standard/60857.html'
+docs:
+    - F.04.0
+body: |
+    <p>Anota, con concreción, qué necesita o espera esta parte interesada en lo ambiental: el
+    ayuntamiento espera correcta gestión de residuos; las familias, un entorno saludable; la
+    administración educativa, cumplir la normativa.</p>
+    <p>No todo se asume: el centro decide cuáles de esas expectativas se convierten en
+    <strong>requisitos propios</strong>. Esas son las que deben verse reflejadas luego en objetivos,
+    en el análisis de riesgos o en el plan de comunicaciones.</p>
