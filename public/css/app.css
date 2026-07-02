@@ -1030,6 +1030,50 @@ input[type="email"], input[type="text"], select, textarea {
 .dash-admin { margin-top: 8px; }
 .dash-admin-links { margin: 12px 0 4px; }
 
+/* Guía de flujo de un módulo ("qué falta este curso"): checklist con marcador de estado por paso. */
+.workflow-guide .page-head { margin-bottom: 2px; }
+.workflow-steps { list-style: none; counter-reset: step; margin: 6px 0 0; padding: 0; }
+.workflow-steps > li {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 2px;
+    border-top: 1px solid var(--border);
+}
+.workflow-steps > li:first-child { border-top: none; }
+/* Marcador circular: número por defecto, ✓ cuando está hecho, atenuado cuando está bloqueado. */
+.workflow-steps > li::before {
+    counter-increment: step;
+    content: counter(step);
+    flex: 0 0 auto;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 600;
+    background: var(--surface-sunken);
+    color: var(--text-muted);
+    border: 1px solid var(--border-strong);
+}
+.workflow-steps > li.is-pending::before {
+    content: counter(step);
+    background: var(--accent-weak);
+    color: var(--accent);
+    border-color: var(--accent);
+}
+.workflow-steps > li.is-done::before {
+    content: "\2713"; /* ✓ */
+    background: var(--success-weak);
+    color: var(--success-text);
+    border-color: var(--success);
+}
+.workflow-steps > li.is-blocked { opacity: .5; }
+.workflow-step-label { flex: 1 1 auto; min-width: 0; }
+.workflow-step-aside { flex: 0 0 auto; display: flex; align-items: center; gap: 10px; white-space: nowrap; }
+
 .activity { list-style: none; margin: 8px 0 0; padding: 0; }
 .activity li {
     display: grid;

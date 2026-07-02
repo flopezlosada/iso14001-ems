@@ -37,58 +37,67 @@
         </div>
         {% set has_items = status.totalItems > 0 %}
         <ol class="workflow-steps">
-            <li>
-                <span class="step-what">Contexto — análisis DAFO del curso <span class="muted">(F.06.0)</span></span>
-                {% if status.dafoReady %}
-                    <span class="badge badge--success">Hecho</span>
-                    <a class="muted" href="{{ path('dafo_show', { id: status.dafoId }) }}">ver el DAFO {{ currentExercise }}</a>
-                {% else %}
-                    <span class="badge badge--warning">Pendiente</span>
-                    <a class="btn secondary" href="{{ path('dafo_new') }}">Crear el DAFO {{ currentExercise }}</a>
-                {% endif %}
+            <li class="workflow-step {{ status.dafoReady ? 'is-done' : 'is-pending' }}">
+                <span class="workflow-step-label">Contexto — análisis DAFO del curso <span class="muted">(F.06.0)</span></span>
+                <span class="workflow-step-aside">
+                    {% if status.dafoReady %}
+                        <a class="muted" href="{{ path('dafo_show', { id: status.dafoId }) }}">ver el DAFO {{ currentExercise }}</a>
+                    {% else %}
+                        <a class="btn secondary" href="{{ path('dafo_new') }}">Crear el DAFO {{ currentExercise }}</a>
+                    {% endif %}
+                </span>
             </li>
-            <li>
-                <span class="step-what">Identificar riesgos y oportunidades</span>
-                <span class="badge">{{ status.totalItems }} registrado(s)</span>
-                {% if can_write %}<a class="btn secondary" href="{{ path('risk_new') }}">+ Registrar</a>{% endif %}
+            <li class="workflow-step {{ has_items ? 'is-done' : 'is-pending' }}">
+                <span class="workflow-step-label">Identificar riesgos y oportunidades <span class="muted">· {{ status.totalItems }} registrado(s)</span></span>
+                <span class="workflow-step-aside">
+                    {% if can_write %}<a class="btn secondary" href="{{ path('risk_new') }}">+ Registrar</a>{% endif %}
+                </span>
             </li>
-            <li class="{{ has_items ? '' : 'is-blocked' }}">
-                <span class="step-what">Valorar este curso (probabilidad × impacto)</span>
-                {% if not has_items %}
-                    <span class="muted">Requiere riesgos registrados</span>
-                {% elseif status.unvalued > 0 %}
-                    <a class="btn secondary" href="{{ path('risk_index') }}?filtro={{ 'estado:Sin valorar'|url_encode }}#inventario">{{ status.unvalued }} sin valorar →</a>
-                {% else %}
-                    <span class="badge badge--success">Hecho</span>
-                {% endif %}
+            <li class="workflow-step {{ not has_items ? 'is-blocked' : (status.unvalued > 0 ? 'is-pending' : 'is-done') }}">
+                <span class="workflow-step-label">Valorar este curso <span class="muted">(probabilidad × impacto)</span></span>
+                <span class="workflow-step-aside">
+                    {% if not has_items %}
+                        <span class="muted">Requiere riesgos registrados</span>
+                    {% elseif status.unvalued > 0 %}
+                        <a class="btn secondary" href="{{ path('risk_index') }}?filtro={{ 'estado:Sin valorar'|url_encode }}#inventario">{{ status.unvalued }} sin valorar →</a>
+                    {% else %}
+                        <span class="muted">Hecho</span>
+                    {% endif %}
+                </span>
             </li>
-            <li class="{{ has_items ? '' : 'is-blocked' }}">
-                <span class="step-what">Aprobar las valoraciones (Dirección)</span>
-                {% if not has_items %}
-                    <span class="muted">Requiere riesgos valorados</span>
-                {% elseif status.unapproved > 0 %}
-                    <a class="btn secondary" href="{{ path('risk_index') }}?filtro={{ 'estado:Pendiente de aprobar'|url_encode }}#inventario">{{ status.unapproved }} sin aprobar →</a>
-                {% else %}
-                    <span class="badge badge--success">Hecho</span>
-                {% endif %}
+            <li class="workflow-step {{ not has_items ? 'is-blocked' : (status.unapproved > 0 ? 'is-pending' : 'is-done') }}">
+                <span class="workflow-step-label">Aprobar las valoraciones <span class="muted">(Dirección)</span></span>
+                <span class="workflow-step-aside">
+                    {% if not has_items %}
+                        <span class="muted">Requiere riesgos valorados</span>
+                    {% elseif status.unapproved > 0 %}
+                        <a class="btn secondary" href="{{ path('risk_index') }}?filtro={{ 'estado:Pendiente de aprobar'|url_encode }}#inventario">{{ status.unapproved }} sin aprobar →</a>
+                    {% else %}
+                        <span class="muted">Hecho</span>
+                    {% endif %}
+                </span>
             </li>
-            <li class="{{ has_items ? '' : 'is-blocked' }}">
-                <span class="step-what">Plan de acción para los relevantes <span class="muted">(crítico/moderado)</span></span>
-                {% if not has_items %}
-                    <span class="muted">Requiere riesgos valorados</span>
-                {% elseif status.relevantWithoutActions > 0 %}
-                    <a class="btn secondary" href="{{ path('risk_index') }}?filtro={{ 'plan:Falta'|url_encode }}#inventario">{{ status.relevantWithoutActions }} sin acción →</a>
-                {% else %}
-                    <span class="badge badge--success">Hecho</span>
-                {% endif %}
+            <li class="workflow-step {{ not has_items ? 'is-blocked' : (status.relevantWithoutActions > 0 ? 'is-pending' : 'is-done') }}">
+                <span class="workflow-step-label">Plan de acción para los relevantes <span class="muted">(crítico/moderado)</span></span>
+                <span class="workflow-step-aside">
+                    {% if not has_items %}
+                        <span class="muted">Requiere riesgos valorados</span>
+                    {% elseif status.relevantWithoutActions > 0 %}
+                        <a class="btn secondary" href="{{ path('risk_index') }}?filtro={{ 'plan:Falta'|url_encode }}#inventario">{{ status.relevantWithoutActions }} sin acción →</a>
+                    {% else %}
+                        <span class="muted">Hecho</span>
+                    {% endif %}
+                </span>
             </li>
-            <li class="{{ status.isComplete ? '' : 'is-blocked' }}">
-                <span class="step-what">Cerrar el periodo</span>
-                {% if status.isComplete %}
-                    <a class="btn secondary" href="{{ path('obligation_index') }}">Marcar revisado en «Qué toca»</a>
-                {% else %}
-                    <span class="muted">Disponible cuando el resto esté al día</span>
-                {% endif %}
+            <li class="workflow-step {{ status.isComplete ? 'is-pending' : 'is-blocked' }}">
+                <span class="workflow-step-label">Cerrar el periodo</span>
+                <span class="workflow-step-aside">
+                    {% if status.isComplete %}
+                        <a class="btn secondary" href="{{ path('obligation_index') }}">Marcar revisado en «Qué toca»</a>
+                    {% else %}
+                        <span class="muted">Cuando el resto esté al día</span>
+                    {% endif %}
+                </span>
             </li>
         </ol>
     </div>
