@@ -1,0 +1,18 @@
+slug: indicador-referencia
+title: Valor de referencia
+summary: >
+    El límite contra el que se compara cada medición del indicador. Mientras las mediciones se
+    mantengan dentro, todo va bien; si lo superan, es la señal de que algo hay que revisar.
+legal:
+    - label: 'ISO 14001:2015 · apartado 9.1.1 (Seguimiento, medición, análisis y evaluación)'
+      note: >
+          La norma exige definir los criterios frente a los que se evalúa el desempeño ambiental. El
+          valor de referencia es ese criterio para el indicador.
+      url: 'https://www.iso.org/standard/60857.html'
+docs:
+    - F.09.0
+body: |
+    <p>Un indicador sin referencia es solo un número suelto. El <strong>valor de referencia</strong> es
+    el umbral que convierte ese número en una señal: "por debajo, bien; por encima, atención".</p>
+    <p>Elígelo con criterio (un objetivo, la media histórica, un límite legal). Cuando una medición lo
+    rebasa, conviene investigar la causa: puede ser el aviso temprano de una no conformidad.</p>

@@ -1,0 +1,18 @@
+slug: residuo-gestor
+title: Gestor autorizado
+summary: >
+    La empresa autorizada que recoge y trata el residuo. Solo se puede entregar a gestores autorizados,
+    y hay que guardar el justificante de cada retirada como prueba de la correcta gestión.
+legal:
+    - label: 'Ley 7/2022, de 8 de abril, de residuos y suelos contaminados'
+      note: >
+          La entrega de residuos a un gestor autorizado y la trazabilidad de las retiradas son
+          obligaciones legales; entregar a quien no está autorizado es una infracción.
+      url: 'https://www.boe.es/eli/es/l/2022/04/08/7/con'
+docs:
+    - RG-08.06
+body: |
+    <p>Anota <strong>quién se lleva</strong> el residuo en cada retirada. No vale cualquiera: debe ser
+    un <strong>gestor autorizado</strong> para ese tipo de residuo.</p>
+    <p>Guarda siempre el <strong>justificante de entrega</strong>: es la evidencia que demuestra, ante
+    una auditoría o inspección, que el residuo se gestionó correctamente y no acabó donde no debía.</p>
