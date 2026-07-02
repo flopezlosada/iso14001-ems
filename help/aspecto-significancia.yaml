@@ -1,0 +1,31 @@
+# Micro-tema de grano fino: {{ help_button('aspecto-significancia') }} junto a la columna Resultado.
+slug: aspecto-significancia
+title: Qué es "significativo"
+summary: >
+    Un aspecto es "significativo" cuando su puntuación supera el umbral definido por el centro. Son
+    los aspectos prioritarios: los que deben guiar objetivos y controles. El resto se vigila, pero no
+    manda.
+legal:
+    - label: 'ISO 14001:2015 · apartado 6.1.2 (Aspectos ambientales)'
+      note: >
+          La norma exige determinar los aspectos con impacto significativo mediante criterios
+          establecidos; esos aspectos significativos son la entrada para objetivos y controles.
+      url: 'https://www.iso.org/standard/60857.html'
+docs:
+    - RG-06.01.01
+body: |
+    <p>La <strong>suma</strong> es la puntuación de la evaluación. El <strong>resultado</strong>
+    (Significativo / No significativo) sale de comparar esa suma con el <strong>umbral</strong> que el
+    centro tiene fijado en su registro de criterios (RG-06.01.01).</p>
+
+    <h2>Por qué importa la distinción</h2>
+    <ul>
+        <li>Un aspecto <strong>significativo</strong> debe traducirse en algo: un objetivo de mejora, un
+        control operacional, un punto de vigilancia. No puede quedarse solo anotado.</li>
+        <li>Uno <strong>no significativo</strong> se mantiene bajo observación, pero no consume esfuerzo
+        prioritario.</li>
+    </ul>
+
+    <h2>Ojo</h2>
+    <p>La significancia no es una etiqueta fija: al reevaluar cada año puede cambiar (más consumo, una
+    incidencia, un cambio de instalación). Por eso la evaluación es anual, no de una vez.</p>

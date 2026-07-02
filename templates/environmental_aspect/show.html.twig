@@ -22,7 +22,7 @@
     </div>
 
     <div class="page-head">
-        <h2>Evaluaciones anuales</h2>
+        <h2>Evaluaciones anuales {{ help_button('aspecto-evaluacion') }}</h2>
         <a class="btn" href="{{ path('aspect_evaluation_new', { id: aspect.id }) }}">+ Añadir evaluación</a>
     </div>
 
@@ -45,7 +45,7 @@
                         {% else %}
                             <th>Frecuencia</th><th>Intensidad</th><th>Peligrosidad</th>
                         {% endif %}
-                        <th>Suma</th><th>Resultado</th><th></th>
+                        <th>Suma</th><th>Resultado {{ help_button('aspecto-significancia') }}</th><th></th>
                     </tr>
                 </thead>
                 <tbody>
