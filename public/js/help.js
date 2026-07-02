@@ -19,24 +19,10 @@
         }
         var style = document.createElement('style');
         style.id = 'help-styles';
+        // NOTE: the "?" button and field-label styles live in app.css (loaded in <head>), NOT here,
+        // so the buttons already present in the HTML are styled on first paint (no flash). This block
+        // only styles the modal/panel, which is created on demand and never in the initial HTML.
         style.textContent = [
-            // The button is just a box sized in em (scales with the text next to it); the circle and
-            // the perfectly-centred "?" are the SVG inside. Muted at rest so a page full of them does
-            // not shout; accent on hover/focus. The SVG's dominant-baseline guarantees the glyph is
-            // centred whatever the surrounding font.
-            '.help-btn{display:inline-flex;width:1.05em;height:1.05em;flex:none;vertical-align:-0.12em;',
-            'margin-inline-start:.35em;color:var(--text-muted,#5f6b7a);text-decoration:none;}',
-            '.help-btn:hover,.help-btn:focus-visible{color:var(--accent,#2563eb);}',
-            '.help-btn__icon{width:100%;height:100%;display:block;}',
-            '.help-btn__icon circle{fill:none;stroke:currentColor;stroke-width:1.4;}',
-            '.help-btn__icon text{fill:currentColor;font-size:12px;font-weight:700;',
-            'font-family:var(--font-body,system-ui),sans-serif;}',
-            // Wraps a field label + its "?" on one line; takes over the label block spacing so the
-            // nested <label> (no longer a direct child of .form-row) keeps its look.
-            '.help-field-label{display:flex;align-items:center;margin-bottom:6px;font-weight:500;color:var(--text,#1a1a1a);}',
-            // More specific than app.css's ".form-row > label, label.required" (0,1,1) so it wins by
-            // specificity, not by stylesheet order — safe even if a help_slug field is required.
-            '.form-row .help-field-label>label{margin-bottom:0;font-weight:inherit;}',
             '.help-overlay{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;',
             'justify-content:center;background:rgba(0,0,0,.45);padding:1rem;}',
             '.help-modal{background:var(--surface,#fff);color:var(--text,#1a1a1a);border-radius:8px;',
