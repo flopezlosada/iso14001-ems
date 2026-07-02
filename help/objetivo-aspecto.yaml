@@ -1,0 +1,19 @@
+slug: objetivo-aspecto
+title: Aspecto relacionado
+summary: >
+    El aspecto ambiental sobre el que actúa el objetivo. Vincularlo deja claro por qué existe el
+    objetivo: los objetivos deberían atacar los aspectos significativos, no salir de la nada.
+legal:
+    - label: 'ISO 14001:2015 · apartado 6.2 (Objetivos ambientales)'
+      note: >
+          La norma exige que los objetivos sean coherentes con la política y tengan en cuenta los
+          aspectos ambientales significativos y los requisitos del centro.
+      url: 'https://www.iso.org/standard/60857.html'
+docs:
+    - PG-06.04
+body: |
+    <p>Un buen objetivo no se inventa: responde a algo que importa. Vincularlo a un
+    <strong>aspecto ambiental</strong> (idealmente uno significativo) muestra la trazabilidad: "reduzco
+    el consumo eléctrico porque el consumo de energía es un aspecto significativo".</p>
+    <p>Si un objetivo no se puede ligar a ningún aspecto, riesgo o expectativa, conviene revisar si de
+    verdad aporta.</p>

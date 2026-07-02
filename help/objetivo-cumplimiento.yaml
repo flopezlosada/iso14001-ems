@@ -1,0 +1,20 @@
+slug: objetivo-cumplimiento
+title: Cumplimiento del objetivo
+summary: >
+    En qué punto está el objetivo respecto a su meta: sin empezar, en curso, cumplido o no cumplido.
+    Se revisa periódicamente (revisión semestral) para reconducir a tiempo.
+legal:
+    - label: 'ISO 14001:2015 · apartado 6.2 (Objetivos ambientales y planificación)'
+      note: >
+          La norma exige planificar cómo se evalúan los resultados de los objetivos, incluido su
+          seguimiento; y en el 9.1, medir el desempeño frente a lo previsto.
+      url: 'https://www.iso.org/standard/60857.html'
+docs:
+    - PG-06.04
+    - F.07.0
+body: |
+    <p>El cumplimiento refleja el <strong>avance real</strong> del objetivo frente a su meta medible.
+    No es una etiqueta que se pone al final: se actualiza en las revisiones (semestrales) para poder
+    reaccionar si algo no va según lo previsto.</p>
+    <p>Un objetivo <strong>no cumplido</strong> no es un fracaso a ocultar: es información para la
+    revisión por la dirección y, si procede, para arrastrarlo al año siguiente.</p>

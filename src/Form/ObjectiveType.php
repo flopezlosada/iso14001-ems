@@ -54,6 +54,7 @@ class ObjectiveType extends AbstractType
                     ->where('a.active = true')
                     ->orderBy('a.name', 'ASC'),
                 'help' => 'Aspecto ambiental que motiva el objetivo, si aplica.',
+                'help_slug' => 'objetivo-aspecto',
             ])
             ->add('targetPeriod', TextType::class, [
                 'label' => 'Periodo',
@@ -64,6 +65,7 @@ class ObjectiveType extends AbstractType
                 'class' => ObjectiveStatus::class,
                 'label' => 'Cumplimiento',
                 'choice_label' => static fn (ObjectiveStatus $s): string => $s->label(),
+                'help_slug' => 'objetivo-cumplimiento',
             ])
             ->add('lastReviewedOn', DateType::class, [
                 'label' => 'Fecha de la última revisión',
