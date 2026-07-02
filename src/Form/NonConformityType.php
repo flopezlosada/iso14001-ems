@@ -43,6 +43,7 @@ class NonConformityType extends AbstractType
                 'class' => NonConformityOrigin::class,
                 'label' => 'Origen',
                 'choice_label' => static fn (NonConformityOrigin $o): string => $o->label(),
+                'help_slug' => 'nc-origen',
             ])
             ->add('originDetail', TextType::class, [
                 'label' => 'Detalle del origen',
@@ -85,6 +86,7 @@ class NonConformityType extends AbstractType
                 'label' => 'Análisis de causas',
                 'required' => false,
                 'help' => 'Motivo que la origina (puede completarse durante la evaluación).',
+                'help_slug' => 'nc-causa-raiz',
             ])
             ->add('responsible', EntityType::class, [
                 'class' => User::class,
@@ -100,6 +102,7 @@ class NonConformityType extends AbstractType
                 'class' => NonConformityStatus::class,
                 'label' => 'Estado',
                 'choice_label' => static fn (NonConformityStatus $s): string => $s->label(),
+                'help_slug' => 'nc-estado',
             ]);
     }
 

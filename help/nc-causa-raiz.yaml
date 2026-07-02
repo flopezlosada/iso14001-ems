@@ -1,0 +1,21 @@
+slug: nc-causa-raiz
+title: Análisis de causas (causa raíz)
+summary: >
+    Por qué ocurrió DE VERDAD la no conformidad, no el síntoma. Es lo que hay que atacar para que no
+    se repita. Sin causa raíz bien identificada, la acción correctiva será un parche.
+legal:
+    - label: 'ISO 14001:2015 · apartado 10.2 (No conformidad y acción correctiva)'
+      note: >
+          La norma exige evaluar la necesidad de eliminar las causas de la no conformidad para que no
+          vuelva a ocurrir, incluida la revisión y el análisis de la no conformidad.
+      url: 'https://www.iso.org/standard/60857.html'
+docs:
+    - PC.10.0
+body: |
+    <p>La causa raíz es el <strong>motivo de fondo</strong>, no lo que se ve a primera vista. Ejemplo:
+    "el contenedor de residuos estaba desbordado" es el síntoma; la causa raíz puede ser "la
+    frecuencia de retirada no se ajustó al aumento de alumnado".</p>
+    <p>Una técnica útil es preguntar <strong>"¿por qué?" varias veces</strong> hasta llegar a algo que,
+    si lo corriges, evita que el problema vuelva. Si tu respuesta es un parche puntual, sigue
+    preguntando.</p>
+    <p>Puede completarse durante la evaluación de la no conformidad, no hace falta tenerla el primer día.</p>

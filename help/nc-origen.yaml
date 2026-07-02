@@ -1,0 +1,20 @@
+slug: nc-origen
+title: Origen de la no conformidad
+summary: >
+    De dónde ha salido el incumplimiento: una auditoría (interna o externa), el control operacional,
+    una queja, una incidencia con un proveedor, un requisito legal… Sirve para trazarlo hasta su fuente.
+legal:
+    - label: 'ISO 14001:2015 · apartado 10.2 (No conformidad y acción correctiva)'
+      note: >
+          Registrar el origen forma parte de documentar la naturaleza de la no conformidad, requisito
+          de la norma. El catálogo de orígenes lo define el procedimiento PC.10.0.
+      url: 'https://www.iso.org/standard/60857.html'
+docs:
+    - PC.10.0
+body: |
+    <p>El origen indica <strong>cómo se detectó</strong> la no conformidad. Es importante para la
+    trazabilidad: si viene de una auditoría, conviene vincularla a esa auditoría para que quede
+    reflejada en su informe.</p>
+    <p>Orígenes típicos: auditoría interna, auditoría externa de certificación, control operacional,
+    incidencia o queja, evaluación de proveedores, incumplimiento de un requisito legal. Usa el
+    <em>detalle del origen</em> para precisar (p. ej. "Fase I de la auditoría").</p>

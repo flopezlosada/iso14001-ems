@@ -1,0 +1,25 @@
+slug: nc-accion-correctiva
+title: Acción correctiva (y corrección)
+summary: >
+    La acción correctiva elimina la CAUSA para que la no conformidad no se repita. No la confundas con
+    la corrección, que solo arregla el efecto puntual del momento.
+legal:
+    - label: 'ISO 14001:2015 · apartado 10.2 (No conformidad y acción correctiva)'
+      note: >
+          La norma distingue entre reaccionar y corregir la no conformidad, y tomar acciones para
+          eliminar sus causas de modo que no vuelva a ocurrir. Ambas cosas deben documentarse.
+      url: 'https://www.iso.org/standard/60857.html'
+docs:
+    - PC.10.0
+    - F.10.0
+body: |
+    <p>Dos cosas distintas, y ambas hacen falta:</p>
+    <ul>
+        <li><strong>Corrección</strong>: apagar el fuego ahora (recoger el vertido, vaciar el
+        contenedor). Resuelve el efecto, no la causa.</li>
+        <li><strong>Acción correctiva</strong>: cambiar algo para que <strong>no vuelva a pasar</strong>
+        (ajustar el protocolo, la frecuencia, la formación). Ataca la causa raíz.</li>
+    </ul>
+    <p>Aquí describes la acción o acciones del plan, con su responsable, plazo y seguimiento. Si la
+    acción implica nuevos recursos o afecta a documentación en vigor, puede requerir autorización de
+    Dirección (PC.10.0).</p>
