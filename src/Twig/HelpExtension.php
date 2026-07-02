@@ -59,9 +59,12 @@ class HelpExtension extends AbstractExtension
         // The "?" is drawn as SVG (circle + centred glyph) rather than a bare text node: SVG's
         // dominant-baseline centres it perfectly whatever the surrounding font, fixing the previous
         // "sticks to the top" look.
-        $icon = '<svg class="help-btn__icon" viewBox="0 0 20 20" aria-hidden="true" focusable="false">'
-            .'<circle cx="10" cy="10" r="9"/>'
-            .'<text x="10" y="10" text-anchor="middle" dominant-baseline="central">?</text>'
+        // Presentation attributes (fill/stroke/font) live on the SVG itself, not only in CSS, so the
+        // icon renders correctly even if help.js's stylesheet has not applied yet (e.g. a cached JS).
+        // Without them an unstyled <circle> defaults to solid black and the glyph to no size.
+        $icon = '<svg class="help-btn__icon" viewBox="0 0 20 20" width="1em" height="1em" aria-hidden="true" focusable="false">'
+            .'<circle cx="10" cy="10" r="9" fill="none" stroke="currentColor" stroke-width="1.4"/>'
+            .'<text x="10" y="10" text-anchor="middle" dominant-baseline="central" fill="currentColor" font-size="13" font-weight="700" font-family="sans-serif">?</text>'
             .'</svg>';
 
         return sprintf(
