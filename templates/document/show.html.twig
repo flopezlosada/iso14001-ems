@@ -97,7 +97,7 @@
     {% endif %}
 
     <div class="page-head">
-        <div><h2>Historial de versiones</h2></div>
+        <div><h2>Historial de versiones {{ help_button('documento-ciclo-revision') }}</h2></div>
         {% if document.isActive and is_granted('DOCUMENT_ISSUE', document) and not hasOpenRevision and versions is not empty %}
             <a class="btn secondary" href="{{ path('document_revision_compose', { id: document.id }) }}">Emitir nueva revisión</a>
         {% endif %}

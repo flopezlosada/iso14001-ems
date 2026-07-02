@@ -24,6 +24,17 @@
         return cell ? cell.textContent.trim().replace(/\s+/g, ' ') : '';
     }
 
+    /* Texto de una cabecera para etiquetas (filtro/aria), excluyendo el botón de ayuda "?" que
+     * pueda llevar al lado: sin esto el filtro mostraría "Tipo ?: todos". */
+    function headerLabel(th) {
+        var clone = th.cloneNode(true);
+        var help = clone.querySelector('.help-btn');
+        if (help) {
+            help.remove();
+        }
+        return clone.textContent.trim().replace(/\s+/g, ' ');
+    }
+
     /* Valor para ORDENAR: respeta un data-sort explícito en la celda (p. ej. el número de
      * mes para una columna que muestra "Enero"); si no, usa el texto visible. */
     function sortText(row, index) {
@@ -134,10 +145,11 @@
             var wrap = document.createElement('div');
             wrap.className = 'form-row table-tools__filter';
             var select = document.createElement('select');
-            select.setAttribute('aria-label', 'Filtrar por ' + th.textContent.trim());
+            var label = headerLabel(th);
+            select.setAttribute('aria-label', 'Filtrar por ' + label);
             var all = document.createElement('option');
             all.value = '';
-            all.textContent = th.textContent.trim() + ': todos';
+            all.textContent = label + ': todos';
             select.appendChild(all);
             distinct.forEach(function (value) {
                 var opt = document.createElement('option');
@@ -183,7 +195,7 @@
 
         // ---- Ordenación por columna ----
         headers.forEach(function (th, index) {
-            if (!th.textContent.trim() || th.hasAttribute('data-nosort')) {
+            if (!headerLabel(th) || th.hasAttribute('data-nosort')) {
                 return; // columnas de acciones / explícitamente no ordenables
             }
             th.classList.add('is-sortable');
@@ -191,7 +203,11 @@
             th.tabIndex = 0;                       // sin role="button": rompería el rol implícito columnheader
             var type = columnType(rows, index);
 
-            function sort() {
+            function sort(event) {
+                // Pulsar el "?" de ayuda de la cabecera no debe ordenar la columna.
+                if (event && event.target && event.target.closest && event.target.closest('.help-btn')) {
+                    return;
+                }
                 var dir = th.getAttribute('aria-sort') === 'ascending' ? 'desc' : 'asc';
                 headers.forEach(function (other) { other.setAttribute('aria-sort', 'none'); });
                 th.setAttribute('aria-sort', dir === 'asc' ? 'ascending' : 'descending');

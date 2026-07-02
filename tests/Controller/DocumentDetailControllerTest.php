@@ -140,6 +140,10 @@ final class DocumentDetailControllerTest extends WebTestCase
         self::assertSelectorTextContains('body', 'Formato de ejemplo');
         // Three documents, three rows: the multi-version one is not duplicated by the JOIN.
         self::assertCount(3, $crawler->filter('tbody tr'));
+        // Contextual help "?" on the non-obvious column headers (guards against a slug typo leaving
+        // help_button() silently empty).
+        self::assertSelectorExists('thead a.help-btn[data-help="documento-tipos"]');
+        self::assertSelectorExists('thead a.help-btn[data-help="documento-estado"]');
     }
 
     private function persistDocument(EntityManagerInterface $em, string $code): Document

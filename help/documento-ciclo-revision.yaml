@@ -1,0 +1,28 @@
+slug: documento-ciclo-revision
+title: Ciclo de revisión de un documento
+summary: >
+    Cómo avanza una revisión hasta ponerse en vigor: se redacta (borrador), se envía a revisión, otra
+    persona la revisa y, solo entonces, se aprueba. Al aprobarla, sustituye a la anterior.
+legal:
+    - label: 'ISO 14001:2015 · apartado 7.5.2 (Creación y actualización)'
+      note: >
+          La norma exige que los documentos se revisen y aprueben en cuanto a idoneidad y adecuación
+          antes de su uso. El circuito concreto lo define el procedimiento PC.01.0.
+      url: 'https://www.iso.org/standard/60857.html'
+docs:
+    - PC.01.0
+body: |
+    <p>Cada cambio de un documento es una <strong>revisión</strong> que recorre estos pasos antes de
+    entrar en vigor:</p>
+    <ol>
+        <li><strong>Redactar / emitir</strong>: se crea la nueva revisión. Queda en
+        <em>borrador</em> y se puede editar.</li>
+        <li><strong>Enviar a revisión</strong>: cuando está lista, pasa a <em>en revisión</em>.</li>
+        <li><strong>Revisar</strong>: una persona <strong>distinta</strong> del autor la revisa. La
+        regla del procedimiento es clara: <strong>no se aprueba sin revisar antes</strong>.</li>
+        <li><strong>Aprobar</strong>: ya revisada, se aprueba y pasa a ser la versión
+        <strong>en vigor</strong>; la anterior queda obsoleta automáticamente.</li>
+        <li><strong>Firmar</strong> (opcional): se puede adjuntar la firma digital al PDF oficial.</li>
+    </ol>
+    <p>Cada paso deja rastro (quién y cuándo), que es lo que se enseña al auditor como evidencia del
+    control documental.</p>

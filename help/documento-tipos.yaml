@@ -1,0 +1,26 @@
+slug: documento-tipos
+title: Tipos de documento
+summary: >
+    Cada documento del sistema es de un tipo: política, manual, procedimiento, formato, registro o
+    evidencia externa. El tipo marca su papel y cómo se codifica y aprueba.
+legal:
+    - label: 'ISO 14001:2015 · apartado 7.5 (Información documentada)'
+      note: >
+          La taxonomía y las reglas de codificación y aprobación por tipo las define el procedimiento
+          de control documental PC.01.0.
+      url: 'https://www.iso.org/standard/60857.html'
+docs:
+    - PC.01.0
+body: |
+    <p>El tipo dice qué <strong>papel</strong> juega el documento en el sistema:</p>
+    <ul>
+        <li><strong>Política</strong>: el compromiso de la dirección (la política ambiental).</li>
+        <li><strong>Manual</strong>: el documento marco del sistema.</li>
+        <li><strong>Procedimiento</strong>: cómo se hace algo (los PC/PG).</li>
+        <li><strong>Formato</strong>: la plantilla en blanco.</li>
+        <li><strong>Registro</strong>: el formato ya <em>rellenado</em> — la evidencia de que algo se
+        hizo.</li>
+        <li><strong>Evidencia externa</strong>: documentos de terceros (OCAs, fichas de seguridad…).</li>
+    </ul>
+    <p>La distinción clave es <strong>formato → registro</strong>: la plantilla vacía es un formato;
+    en cuanto se cumplimenta, pasa a ser un registro que hay que conservar.</p>
