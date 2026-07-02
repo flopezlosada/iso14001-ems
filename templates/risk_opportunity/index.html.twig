@@ -123,7 +123,13 @@
                         {% set relevant = a and a.category and a.category.requiresActionPlan %}
                         <tr>
                             <td>{{ item.type.label }}</td>
-                            <td><a class="cell-link" href="{{ path('risk_show', { id: item.id }) }}">{{ item.description }}</a></td>
+                            <td>
+                                {%- if a -%}
+                                    <a class="cell-link" href="{{ path('risk_assessment_show', { id: item.id, assessmentId: a.id }) }}">{{ item.description }}</a>
+                                {%- else -%}
+                                    <a class="cell-link" href="{{ path('risk_show', { id: item.id }) }}">{{ item.description }}</a>
+                                {%- endif -%}
+                            </td>
                             <td class="muted">{{ item.processArea.name }}</td>
                             <td>
                                 {%- if a is null -%}
@@ -133,9 +139,9 @@
                                         <span class="badge badge--draft">Sin valorar</span>
                                     {%- endif -%}
                                 {%- elseif a.approvedBy -%}
-                                    <span class="badge badge--success">Aprobado</span>
+                                    <a class="badge badge--success" href="{{ path('risk_assessment_show', { id: item.id, assessmentId: a.id }) }}">Aprobado</a>
                                 {%- else -%}
-                                    <a class="badge badge--warning" href="{{ path('risk_show', { id: item.id }) }}">Pendiente de aprobar</a>
+                                    <a class="badge badge--warning" href="{{ path('risk_assessment_show', { id: item.id, assessmentId: a.id }) }}">Pendiente de aprobar</a>
                                 {%- endif -%}
                             </td>
                             <td>
@@ -143,11 +149,7 @@
                                     <span class="muted">—</span>
                                 {%- else -%}
                                     {%- set plan_done = a.actions|length > 0 -%}
-                                    {%- if can_write -%}
-                                        <a class="badge {{ plan_done ? 'badge--success' : 'badge--warning' }}" href="{{ path('risk_assessment_edit', { id: item.id, assessmentId: a.id }) }}">{{ plan_done ? 'Hecho' : 'Falta' }}</a>
-                                    {%- else -%}
-                                        <span class="badge {{ plan_done ? 'badge--success' : 'badge--warning' }}">{{ plan_done ? 'Hecho' : 'Falta' }}</span>
-                                    {%- endif -%}
+                                    <a class="badge {{ plan_done ? 'badge--success' : 'badge--warning' }}" href="{{ path('risk_assessment_show', { id: item.id, assessmentId: a.id }) }}#plan">{{ plan_done ? 'Hecho' : 'Falta' }}</a>
                                 {%- endif -%}
                             </td>
                             <td>
