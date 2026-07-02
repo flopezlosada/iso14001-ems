@@ -1,0 +1,34 @@
+# Micro-tema de grano fino: se invoca de forma explícita con {{ help_button('aspecto-evaluacion') }}
+# junto a la sección de evaluación, no por ruta (no declara `routes`).
+slug: aspecto-evaluacion
+title: Cómo se evalúa un aspecto
+summary: >
+    Evaluar un aspecto es puntuar cuánto impacta, una vez al año. Los criterios cambian según el tipo
+    de aspecto: no se valora igual un consumo habitual que una emergencia.
+legal:
+    - label: 'ISO 14001:2015 · apartado 6.1.2 (Aspectos ambientales)'
+      note: >
+          La norma exige valorar los aspectos con criterios establecidos para determinar cuáles son
+          significativos. Los criterios y umbrales concretos del centro están en el registro RG-06.01.01.
+      url: 'https://www.iso.org/standard/60857.html'
+docs:
+    - RG-06.01.01
+    - PG-06.01
+body: |
+    <p>La evaluación traduce "esto impacta mucho o poco" en una puntuación comparable. Se hace una vez
+    al año por aspecto. El formulario que verás depende del <strong>tipo</strong> de aspecto:</p>
+
+    <h2>Según el tipo de aspecto</h2>
+    <ul>
+        <li><strong>Directo</strong> (consumos, residuos, vertidos habituales): se valora
+        <em>frecuencia</em>, <em>intensidad</em> y <em>peligrosidad</em>.</li>
+        <li><strong>Indirecto</strong> (lo que no controlas del todo, pero puedes influir): se valora
+        el grado de <em>influencia</em> que tiene el centro sobre ese impacto.</li>
+        <li><strong>Anormal / emergencia</strong> (un derrame, un incendio): se valora
+        <em>probabilidad</em>, <em>control</em> existente y <em>severidad</em> del daño.</li>
+    </ul>
+
+    <h2>Qué hace el sistema</h2>
+    <p>Con esos criterios calcula automáticamente una <strong>suma</strong> (la puntuación) y, según el
+    umbral definido, marca el aspecto como significativo o no. Tú solo eliges los valores; el cálculo
+    y el umbral no se tocan a mano.</p>
