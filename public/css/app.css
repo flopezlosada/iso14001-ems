@@ -1058,11 +1058,13 @@ input[type="email"], input[type="text"], select, textarea {
     color: var(--text-muted);
     border: 1px solid var(--border-strong);
 }
+/* Pendiente = ámbar (atención), NO verde: el verde queda reservado a lo ya hecho, para que un
+   vistazo distinga "me toca" de "hecho" (--accent y --success son el mismo verde en el tema). */
 .workflow-steps > li.is-pending::before {
     content: counter(step);
-    background: var(--accent-weak);
-    color: var(--accent);
-    border-color: var(--accent);
+    background: var(--warning-weak);
+    color: var(--warning-text);
+    border-color: var(--warning);
 }
 .workflow-steps > li.is-done::before {
     content: "\2713"; /* ✓ */
