@@ -1,0 +1,19 @@
+slug: aspecto-peligrosidad
+title: Peligrosidad
+summary: >
+    Cómo de dañino es el aspecto para el medio o las personas. Para los vertidos la escala se limita a
+    Baja/Alta (según el procedimiento); el resto de aspectos usan la escala completa.
+legal:
+    - label: 'ISO 14001:2015 · apartado 6.1.2 (Aspectos ambientales)'
+      note: >
+          Criterio de valoración del centro. Los niveles admitidos para vertidos (Baja/Alta) los fija
+          el Anexo I del procedimiento PG-06.01.
+      url: 'https://www.iso.org/standard/60857.html'
+docs:
+    - PG-06.01
+    - RG-06.01.01
+body: |
+    <p>La peligrosidad valora el <strong>daño potencial</strong> del aspecto: no es igual el consumo de
+    papel que un vertido de un producto químico.</p>
+    <p>Para los <strong>vertidos</strong> el formulario solo ofrece <em>Baja</em> y <em>Alta</em>,
+    porque así lo define el Anexo I del PG-06.01. En el resto de aspectos verás la escala completa.</p>

@@ -22,7 +22,14 @@
 {% macro fields(list) %}
     {% for field in list %}
         <div class="form-row">
-            {{ form_label(field) }}
+            {# Si el campo declara 'help_slug' (vía HelpSlugTypeExtension), el "?" va junto a la
+               etiqueta en un contenedor propio; así el label mantiene su look y no se toca el resto
+               de campos. Sin help_slug, se renderiza exactamente igual que antes (cero regresión). #}
+            {% if field.vars.help_slug is defined and field.vars.help_slug %}
+                <span class="help-field-label">{{ form_label(field) }}{{ help_button(field.vars.help_slug) }}</span>
+            {% else %}
+                {{ form_label(field) }}
+            {% endif %}
             {{ form_widget(field) }}
             {% if field.vars.help %}<p class="help">{{ field.vars.help }}</p>{% endif %}
             {{ form_errors(field) }}

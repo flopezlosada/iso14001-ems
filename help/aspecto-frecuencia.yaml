@@ -1,0 +1,18 @@
+slug: aspecto-frecuencia
+title: Frecuencia
+summary: >
+    Con qué asiduidad se produce el aspecto: no es lo mismo un consumo diario y continuo que un
+    vertido puntual una vez al año. A más frecuencia, más puntúa.
+legal:
+    - label: 'ISO 14001:2015 · apartado 6.1.2 (Aspectos ambientales)'
+      note: >
+          Es uno de los criterios de valoración del centro (registro RG-06.01.01) para decidir la
+          significancia del aspecto.
+      url: 'https://www.iso.org/standard/60857.html'
+docs:
+    - RG-06.01.01
+body: |
+    <p>La frecuencia mide <strong>cada cuánto ocurre</strong> el aspecto durante el curso. Elige el
+    nivel de la escala que mejor lo describa; el número entre paréntesis es su peso en el cálculo.</p>
+    <p>Regla práctica: algo <em>continuo o diario</em> puntúa alto; algo <em>esporádico o anual</em>
+    puntúa bajo. Si no lo evalúas, queda "Sin evaluar" y el aspecto no computa.</p>

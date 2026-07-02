@@ -72,16 +72,19 @@ class AspectEvaluationType extends AbstractType
                 ->add('frequency', EnumType::class, [
                     'class' => ScoreLevel::class, 'label' => 'Frecuencia',
                     'required' => false, 'placeholder' => 'Sin evaluar', 'choice_label' => $scoreLabel,
+                    'help_slug' => 'aspecto-frecuencia',
                 ])
                 ->add('intensity', EnumType::class, [
                     'class' => ScoreLevel::class, 'label' => 'Intensidad',
                     'required' => false, 'placeholder' => 'Sin dato (se computa como 4)', 'choice_label' => $scoreLabel,
                     'help' => 'Déjalo vacío si no hay dato del año anterior: cuenta como 4 («Media»).',
+                    'help_slug' => 'aspecto-intensidad',
                 ])
                 ->add('hazard', EnumType::class, [
                     'class' => ScoreLevel::class, 'label' => 'Peligrosidad',
                     'required' => false, 'placeholder' => 'Sin evaluar', 'choice_label' => $scoreLabel,
                     'choices' => $hazardChoices,
+                    'help_slug' => 'aspecto-peligrosidad',
                 ]);
         }
 

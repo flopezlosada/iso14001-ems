@@ -1,0 +1,18 @@
+slug: aspecto-intensidad
+title: Intensidad
+summary: >
+    La magnitud del aspecto comparada con una referencia (normalmente el dato del año anterior): mide
+    si va a más o a menos. Si no hay dato previo, el sistema la cuenta como "Media".
+legal:
+    - label: 'ISO 14001:2015 · apartado 6.1.2 (Aspectos ambientales)'
+      note: >
+          Criterio de valoración del centro (RG-06.01.01 Rev 02), que aplica a todas las categorías de
+          aspecto directo, incluidos los vertidos.
+      url: 'https://www.iso.org/standard/60857.html'
+docs:
+    - RG-06.01.01
+body: |
+    <p>La intensidad valora <strong>cuánto</strong> impacta el aspecto respecto a un referente. Suele
+    compararse con el año anterior para ver la tendencia.</p>
+    <p><strong>Si no tienes dato del año anterior, déjala vacía</strong>: el sistema la computa como 4
+    («Media»), un valor neutro, para no penalizar ni premiar sin información.</p>

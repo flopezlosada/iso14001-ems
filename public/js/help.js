@@ -20,10 +20,20 @@
         var style = document.createElement('style');
         style.id = 'help-styles';
         style.textContent = [
-            '.help-btn{display:inline-flex;align-items:center;justify-content:center;width:1.5rem;',
-            'height:1.5rem;border-radius:50%;border:1px solid var(--accent,#2563eb);color:var(--accent,#2563eb);',
-            'background:transparent;font-weight:600;font-size:.85rem;line-height:1;text-decoration:none;flex:none;}',
-            '.help-btn:hover{background:var(--accent-weak,#e0e7ff);}',
+            // Sized in em so it scales with whatever text it sits next to (a big heading or a small
+            // column header), and muted at rest so a page full of them does not shout; the accent
+            // only shows on hover/focus.
+            '.help-btn{display:inline-flex;align-items:center;justify-content:center;width:1.15em;',
+            'height:1.15em;border-radius:50%;border:1px solid currentColor;color:var(--text-faint,#9aa0a6);',
+            'background:transparent;font-weight:600;font-size:.72em;line-height:1;text-decoration:none;',
+            'flex:none;vertical-align:middle;margin-inline-start:.4em;opacity:.85;}',
+            '.help-btn:hover,.help-btn:focus-visible{color:var(--accent,#2563eb);opacity:1;}',
+            // Wraps a field label + its "?" on one line; takes over the label block spacing so the
+            // nested <label> (no longer a direct child of .form-row) keeps its look.
+            '.help-field-label{display:flex;align-items:center;margin-bottom:6px;font-weight:500;color:var(--text,#1a1a1a);}',
+            // More specific than app.css's ".form-row > label, label.required" (0,1,1) so it wins by
+            // specificity, not by stylesheet order — safe even if a help_slug field is required.
+            '.form-row .help-field-label>label{margin-bottom:0;font-weight:inherit;}',
             '.help-overlay{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;',
             'justify-content:center;background:rgba(0,0,0,.45);padding:1rem;}',
             '.help-modal{background:var(--surface,#fff);color:var(--text,#1a1a1a);border-radius:8px;',

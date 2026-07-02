@@ -25,17 +25,16 @@
                     Revísala y ajústala si procede.
                 </p>
             {% endif %}
-            {# The criteria fields depend on the aspect type, so render them dynamically. #}
+            {# The criteria fields depend on the aspect type, so we gather them at runtime (dropping the
+               CSRF token) and hand the list to the shared macro, which renders each row AND the
+               per-field "?" when the field declares a help_slug. #}
+            {% set criteria = [] %}
             {% for child in form %}
                 {% if child.vars.name != '_token' %}
-                    <div class="form-row">
-                        {{ form_label(child) }}
-                        {{ form_widget(child) }}
-                        {% if child.vars.help %}<p class="help">{{ child.vars.help }}</p>{% endif %}
-                        {{ form_errors(child) }}
-                    </div>
+                    {% set criteria = criteria|merge([child]) %}
                 {% endif %}
             {% endfor %}
+            {{ f.fields(criteria) }}
             <p class="help">La suma y el resultado se calculan automáticamente al guardar (salvo en indirectos, sin umbral definido).</p>
             {{ f.actions(path('aspect_show', { id: aspect.id })) }}
         {{ form_end(form) }}
