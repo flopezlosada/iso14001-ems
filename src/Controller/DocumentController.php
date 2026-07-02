@@ -240,10 +240,12 @@ final class DocumentController extends AbstractController
 
             return $redirect;
         }
-        // A document with no version in force has not been approved yet: its periodic review cannot be
-        // closed, because there is nothing in force to review. What it needs is drafting/approval, not
-        // "marcar revisado". Mirrors the UI, which hides the button in this case.
-        if (null === $document->getCurrentVersion()) {
+        // A DRAFTED document (policy/manual/procedure) with no version in force has not been approved
+        // yet: its periodic review cannot be closed, because there is nothing in force to review — what
+        // it needs is drafting/approval, not "marcar revisado". A form/record is not drafted: its
+        // content lives in its module, so it is reviewed by filling it in, not by approving a text —
+        // it never requires a version in force. Mirrors the UI, which hides the button accordingly.
+        if ($document->getType()->isDrafted() && null === $document->getCurrentVersion()) {
             $this->addFlash('error', 'Este documento aún no tiene una versión en vigor: apruébala antes de marcar la revisión del periodo.');
 
             return $redirect;
