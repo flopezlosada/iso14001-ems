@@ -1,0 +1,35 @@
+slug: documentos
+title: Documentos y control documental
+routes:
+    - document_index
+summary: >
+    Aquí vive toda la documentación del sistema: procedimientos, formatos, registros y evidencias.
+    El control documental garantiza que cada documento tiene su código, su versión vigente y su ciclo
+    de aprobación, para que nunca se trabaje con una versión caducada.
+legal:
+    - label: 'ISO 14001:2015 · apartado 7.5 (Información documentada)'
+      note: >
+          La norma exige controlar la información documentada: que esté identificada, con el formato y
+          la versión adecuados, aprobada antes de su uso, disponible donde se necesita y protegida;
+          además de controlar los cambios, la conservación y la disposición.
+      url: 'https://www.iso.org/standard/60857.html'
+docs:
+    - PC.01.0
+    - F.01.0
+body: |
+    <p>Un sistema certificable se sostiene sobre documentos fiables: que se sepa cuál es la versión
+    buena, quién la aprobó y cuándo. Este módulo sustituye al viejo Excel de control (F.01) y es la
+    única fuente de la documentación vigente.</p>
+
+    <h2>El ciclo de vida de un documento</h2>
+    <ol>
+        <li><strong>Borrador</strong>: se redacta o edita la nueva revisión.</li>
+        <li><strong>En revisión</strong>: alguien distinto lo revisa (no se aprueba sin revisar).</li>
+        <li><strong>Aprobada / en vigor</strong>: pasa a ser la versión vigente; la anterior queda
+        obsoleta.</li>
+    </ol>
+
+    <h2>La taxonomía (PC.01.0)</h2>
+    <p>Cada documento es de un tipo (procedimiento, formato, registro…) y sigue un esquema de
+    codificación. Un <em>formato</em> es la plantilla en blanco; cuando se rellena, se convierte en un
+    <em>registro</em> (la evidencia). Respetar esta estructura es lo que el auditor comprueba.</p>

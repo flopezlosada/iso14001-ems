@@ -1,0 +1,33 @@
+slug: analisis-dafo
+title: Análisis DAFO
+routes:
+    - dafo_index
+summary: >
+    El DAFO es una foto del contexto del centro con enfoque ambiental: Debilidades y Fortalezas
+    (internas) y Amenazas y Oportunidades (externas). Es el punto de partida del que salen los
+    riesgos y las oportunidades a gestionar.
+legal:
+    - label: 'ISO 14001:2015 · apartado 4.1 (Comprensión de la organización y su contexto)'
+      note: >
+          La norma exige determinar las cuestiones internas y externas pertinentes que afectan a la
+          capacidad del sistema para lograr los resultados previstos. El DAFO es la herramienta con la
+          que el centro plasma ese contexto.
+      url: 'https://www.iso.org/standard/60857.html'
+docs:
+    - F.06.0
+body: |
+    <p>Antes de fijar objetivos hay que entender dónde está el centro: qué hace bien, qué le falta y
+    qué viene de fuera. El DAFO recoge eso con la mirada puesta en lo ambiental.</p>
+
+    <h2>Cómo funciona, paso a paso</h2>
+    <ol>
+        <li>Identifica <strong>Debilidades</strong> y <strong>Fortalezas</strong> (factores internos:
+        instalaciones, hábitos, recursos) y <strong>Amenazas</strong> y <strong>Oportunidades</strong>
+        (factores externos: normativa, entorno, ayudas).</li>
+        <li>Cuanto más fiel sea a la realidad del centro, más útil será. Evita frases genéricas.</li>
+        <li>Revísalo y actualízalo cuando cambie el contexto.</li>
+    </ol>
+
+    <h2>Con qué conecta</h2>
+    <p>El DAFO es la entrada directa del módulo de <em>Riesgos y oportunidades</em>: las debilidades y
+    amenazas suelen convertirse en riesgos; las fortalezas y oportunidades, en oportunidades.</p>

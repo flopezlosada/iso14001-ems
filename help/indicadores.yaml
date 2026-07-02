@@ -1,0 +1,31 @@
+slug: indicadores
+title: Indicadores
+routes:
+    - indicator_index
+summary: >
+    Los indicadores traducen el desempeño ambiental en números que se vigilan mes a mes contra un
+    valor límite de referencia, para saber a tiempo si algo se sale de lo previsto.
+legal:
+    - label: 'ISO 14001:2015 · apartado 9.1.1 (Seguimiento, medición, análisis y evaluación)'
+      note: >
+          La norma exige determinar qué necesita seguimiento y medición, los métodos, los criterios y
+          cuándo se analizan y evalúan los resultados, para valorar el desempeño y la eficacia del
+          sistema.
+      url: 'https://www.iso.org/standard/60857.html'
+docs:
+    - F.09.0
+body: |
+    <p>Si los consumos son los datos en bruto, los indicadores son la lectura que los convierte en
+    señal: "esto va bien / esto se está saliendo". Son la base de la evaluación del desempeño.</p>
+
+    <h2>Cómo funciona, paso a paso</h2>
+    <ol>
+        <li>Define cada indicador (p. ej. consumo eléctrico por alumno) con un <strong>valor límite de
+        referencia</strong>.</li>
+        <li>Introduce sus <strong>mediciones</strong> periódicas.</li>
+        <li>Cada mes, comprueba si el valor está dentro del parámetro; si se sale, investiga la causa.</li>
+    </ol>
+
+    <h2>Con qué conecta</h2>
+    <p>Los indicadores miden si los <em>objetivos</em> se van cumpliendo y alimentan la <em>revisión
+    por la dirección</em>. Un indicador fuera de límite puede ser el aviso temprano de una no conformidad.</p>

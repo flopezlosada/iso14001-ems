@@ -1,0 +1,52 @@
+{% extends 'app_shell.html.twig' %}
+
+{% block title %}{{ topic.title }} · Ayuda{% endblock %}
+
+{% block breadcrumb %}<a href="{{ path('app_homepage') }}">Inicio</a><span class="sep">/</span><a href="{{ path('help_index') }}">Ayuda</a><span class="sep">/</span>{{ topic.title }}{% endblock %}
+
+{% block body %}
+    <div class="page-head">
+        <div>
+            <h1>{{ topic.title }}</h1>
+            <p class="lead">{{ topic.summary }}</p>
+        </div>
+    </div>
+
+    {# Cuerpo redactado en el repo (contenido de confianza, no entrada de usuario): se pinta con raw. #}
+    <div class="card help-body">
+        {{ topic.bodyHtml|raw }}
+    </div>
+
+    {% if topic.legal is not empty %}
+        <div class="card">
+            <h2>Qué exige la norma</h2>
+            <ul class="help-legal">
+                {% for ref in topic.legal %}
+                    <li>
+                        <strong>{{ ref.label }}</strong>
+                        {% if ref.note %}<p>{{ ref.note }}</p>{% endif %}
+                        {% if ref.url %}<p><a href="{{ ref.url }}" target="_blank" rel="noopener noreferrer">Ver la fuente oficial ↗</a></p>{% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+
+    {% if topic.docCodes is not empty %}
+        <div class="card">
+            <h2>Documentos del SGA relacionados</h2>
+            <ul class="help-docs">
+                {% for code in topic.docCodes %}
+                    {% set doc = documentsByCode[code] ?? null %}
+                    <li>
+                        {% if doc %}
+                            <a class="cell-link" href="{{ path('document_show', { id: doc.id }) }}">{{ code }} · {{ doc.title }}</a>
+                        {% else %}
+                            <span class="muted">{{ code }}</span>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+{% endblock %}

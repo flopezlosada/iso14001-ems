@@ -1,0 +1,31 @@
+slug: simulacros
+title: Simulacros
+routes:
+    - emergency_drill_index
+summary: >
+    Registro de los simulacros de emergencia del centro (incendio, caldera…): sus pautas de
+    actuación, la fecha, el resultado y los residuos que se hayan generado.
+legal:
+    - label: 'ISO 14001:2015 · apartado 8.2 (Preparación y respuesta ante emergencias)'
+      note: >
+          La norma exige prepararse para responder a situaciones de emergencia potenciales con impacto
+          ambiental, probar periódicamente esa respuesta cuando sea factible y revisarla tras los
+          simulacros o incidentes reales.
+      url: 'https://www.iso.org/standard/60857.html'
+docs:
+    - PG-08.02
+body: |
+    <p>Una emergencia (un incendio, una fuga) tiene también consecuencias ambientales. Los simulacros
+    sirven para comprobar que la respuesta funciona antes de necesitarla de verdad.</p>
+
+    <h2>Cómo funciona, paso a paso</h2>
+    <ol>
+        <li>Realiza el simulacro según las pautas de actuación previstas.</li>
+        <li>Redacta el <strong>informe</strong>: fecha, desarrollo, resultado y gestión de los
+        residuos generados (por ejemplo, el agente de un extintor).</li>
+        <li>Anota las mejoras detectadas y actualiza fecha y nº de revisión del informe.</li>
+    </ol>
+
+    <h2>Enfoque ambiental</h2>
+    <p>Además de la evacuación, fíjate en lo ambiental: qué residuos o vertidos podría provocar la
+    emergencia y cómo se gestionarían. Ahí es donde este registro aporta al sistema.</p>

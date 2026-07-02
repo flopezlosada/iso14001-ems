@@ -1,0 +1,30 @@
+slug: consumos
+title: Consumos
+routes:
+    - consumption_index
+summary: >
+    Aquí se registran mes a mes los consumos del centro (luz, agua, gasóleo, papel, tóner). El fin es
+    ver la evolución en el tiempo y detectar si mejoramos o si algo se dispara.
+legal:
+    - label: 'ISO 14001:2015 · apartado 9.1.1 (Seguimiento, medición, análisis y evaluación)'
+      note: >
+          La norma exige hacer seguimiento y medir el desempeño ambiental. El registro periódico de
+          consumos es una de las mediciones básicas del desempeño del centro.
+      url: 'https://www.iso.org/standard/60857.html'
+docs:
+    - F-6.1.2
+body: |
+    <p>Los consumos son el pulso ambiental del centro. Registrarlos con constancia es lo que permite
+    fijar objetivos realistas y comprobar si las medidas de ahorro funcionan.</p>
+
+    <h2>Cómo funciona, paso a paso</h2>
+    <ol>
+        <li>Cada mes, introduce la lectura de cada suministro (luz, agua, gasóleo, papel, tóner).</li>
+        <li>Revisa el gráfico de evolución: compara con meses o cursos anteriores.</li>
+        <li>Si un consumo se dispara sin explicación, puede ser el origen de una no conformidad o de un
+        objetivo de mejora.</li>
+    </ol>
+
+    <h2>Clave</h2>
+    <p>El valor está en la <strong>continuidad</strong>: una serie de datos incompleta no deja ver la
+    tendencia. Es preferible un dato aproximado a tiempo que un hueco en la serie.</p>

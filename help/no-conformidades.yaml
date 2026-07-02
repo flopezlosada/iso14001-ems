@@ -1,0 +1,34 @@
+slug: no-conformidades
+title: No conformidades
+routes:
+    - non_conformity_index
+summary: >
+    Una no conformidad (NC) es algo que no cumple lo previsto: un incumplimiento legal, un fallo
+    detectado en auditoría, un ítem no conforme… Aquí se registra cada una con su causa y su acción
+    correctiva hasta cerrarla.
+legal:
+    - label: 'ISO 14001:2015 · apartado 10.2 (No conformidad y acción correctiva)'
+      note: >
+          Ante una no conformidad la norma exige reaccionar y corregirla, evaluar la necesidad de
+          eliminar su causa raíz para que no vuelva a ocurrir, implementar la acción y revisar su
+          eficacia. Todo ello debe quedar documentado.
+      url: 'https://www.iso.org/standard/60857.html'
+docs:
+    - PC.10.0
+    - F.11.0
+    - F.10.0
+body: |
+    <p>Las no conformidades son el corazón de la mejora continua: cada problema, bien tratado, deja el
+    sistema un poco mejor. No son un castigo; son la materia prima del aprendizaje del centro.</p>
+
+    <h2>Cómo funciona, paso a paso</h2>
+    <ol>
+        <li>Registra la NC: qué ha pasado, dónde se ha detectado (auditoría, checklist, incidencia).</li>
+        <li>Analiza la <strong>causa raíz</strong>: no el síntoma, sino por qué ocurrió de verdad.</li>
+        <li>Define la <strong>acción correctiva</strong> con responsable y plazo.</li>
+        <li>Al cierre, comprueba que la acción fue <strong>eficaz</strong> (que el problema no se repite).</li>
+    </ol>
+
+    <h2>Error típico</h2>
+    <p>Quedarse en el parche. Si solo corriges el síntoma sin atacar la causa, la NC volverá. La pregunta
+    clave es siempre "¿por qué pasó?", no solo "¿cómo lo arreglo ahora?".</p>

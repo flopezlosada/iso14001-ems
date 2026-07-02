@@ -1,0 +1,31 @@
+slug: que-toca
+title: Qué toca (obligaciones)
+routes:
+    - obligation_index
+summary: >
+    Es tu lista de trabajo: las obligaciones del sistema que te tocan a ti (según tu rol), ordenadas
+    por urgencia. Lo que está vencido o a punto de vencer aparece primero, para que nada se pase.
+legal:
+    - label: 'ISO 14001:2015 · apartado 9.1.1 y control operacional'
+      note: >
+          El sistema exige hacer las cosas a intervalos planificados y conservar evidencia. Esta
+          pantalla es la traducción práctica de esa cadencia: convierte las obligaciones periódicas del
+          sistema en tareas con fecha.
+      url: 'https://www.iso.org/standard/60857.html'
+docs:
+    - F.01.0
+body: |
+    <p>El sistema tiene decenas de obligaciones periódicas (revisar esto cada mes, aquello cada año).
+    "Qué toca" te evita tener que acordarte: te dice qué hacer ahora y te lleva a donde se hace.</p>
+
+    <h2>Cómo funciona, paso a paso</h2>
+    <ol>
+        <li>Ves solo <strong>tus</strong> obligaciones: las de los roles que tienes asignados.</li>
+        <li>Están ordenadas por <strong>urgencia</strong>: primero lo vencido, luego lo que vence pronto.</li>
+        <li>Cada obligación enlaza al <strong>módulo</strong> donde se completa; al terminar, se marca
+        como hecha y desaparece de tu lista.</li>
+    </ol>
+
+    <h2>Con qué se relaciona</h2>
+    <p>Es la puerta de entrada del día a día. El <em>Calendario</em> muestra lo mismo en el tiempo, y la
+    <em>Estructura del SGA</em> muestra todas las obligaciones del sistema, no solo las tuyas.</p>

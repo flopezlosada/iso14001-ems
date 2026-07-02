@@ -1,0 +1,36 @@
+slug: formacion
+title: Formación
+routes:
+    - training_index
+summary: >
+    Aquí se planifica y registra la formación del personal (medio ambiente, prevención…): las
+    acciones realizadas y las previstas para el año, y las evidencias de que se han impartido.
+legal:
+    - label: 'ISO 14001:2015 · apartado 7.2 (Competencia)'
+      note: >
+          La norma exige asegurar que las personas cuyo trabajo afecta al desempeño ambiental sean
+          competentes, determinar las necesidades de formación y conservar evidencia de ella.
+      url: 'https://www.iso.org/standard/60857.html'
+    - label: 'ISO 14001:2015 · apartado 7.3 (Toma de conciencia)'
+      note: >
+          Además, el personal debe conocer la política ambiental, los aspectos significativos de su
+          trabajo y su contribución a la eficacia del sistema.
+      url: 'https://www.iso.org/standard/60857.html'
+docs:
+    - F.03.0
+    - RG-07.02
+body: |
+    <p>Un sistema ambiental solo funciona si las personas saben qué hacer y por qué. Este módulo lleva
+    el plan de formación y la prueba de que la formación se ha impartido.</p>
+
+    <h2>Cómo funciona, paso a paso</h2>
+    <ol>
+        <li>Elabora el <strong>plan anual de formación</strong> (normalmente en junio): formaciones
+        realizadas y previstas, en medio ambiente, PRL, etc.</li>
+        <li>Registra las <strong>evidencias</strong> de cada formación impartida (asistencia, material).</li>
+        <li>Si procede, crea un test de evaluación para comprobar que la formación fue eficaz.</li>
+    </ol>
+
+    <h2>Diferencia clave</h2>
+    <p>Competencia (saber hacer el trabajo bien) y toma de conciencia (entender por qué importa) son
+    cosas distintas y ambas cuentan: no basta con formar, hay que asegurarse de que el mensaje cala.</p>

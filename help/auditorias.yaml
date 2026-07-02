@@ -1,0 +1,33 @@
+slug: auditorias
+title: Auditorías
+routes:
+    - system_audit_index
+summary: >
+    La auditoría interna es la revisión anual, con mirada crítica, de que el sistema funciona y cumple
+    la norma. De ella salen los hallazgos y las no conformidades que hay que corregir.
+legal:
+    - label: 'ISO 14001:2015 · apartado 9.2 (Auditoría interna)'
+      note: >
+          La norma exige realizar auditorías internas a intervalos planificados para comprobar que el
+          sistema es conforme con los requisitos propios y de la norma y que está implementado y
+          mantenido eficazmente.
+      url: 'https://www.iso.org/standard/60857.html'
+docs:
+    - PC.09.0
+    - F.15.0
+body: |
+    <p>La auditoría interna es el "examen" que el centro se hace a sí mismo antes del examen de verdad
+    (la auditoría externa de certificación). Sirve para encontrar los fallos antes que el auditor.</p>
+
+    <h2>Cómo funciona, paso a paso</h2>
+    <ol>
+        <li>Planifica la auditoría interna anual (alcance, fechas, auditor).</li>
+        <li>Tras la auditoría, redacta el <strong>informe</strong> con los hallazgos, las no
+        conformidades detectadas y las conclusiones.</li>
+        <li>Cada no conformidad detectada pasa al módulo de <em>No conformidades</em> con su acción
+        correctiva.</li>
+    </ol>
+
+    <h2>Dos auditorías, no confundir</h2>
+    <p>La <strong>interna</strong> la organiza el propio centro (esta pantalla). La <strong>externa</strong>
+    la hace el organismo certificador y es la que otorga o mantiene el certificado ISO 14001.</p>

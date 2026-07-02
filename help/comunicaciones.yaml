@@ -1,0 +1,30 @@
+slug: comunicaciones
+title: Comunicaciones
+routes:
+    - communication_index
+summary: >
+    Registro de las comunicaciones ambientales, internas y externas: correos, avisos, respuestas a
+    partes interesadas… con su evidencia. Sirve para demostrar que el centro comunica lo que debe.
+legal:
+    - label: 'ISO 14001:2015 · apartado 7.4 (Comunicación)'
+      note: >
+          La norma exige determinar qué se comunica, cuándo, a quién y cómo, tanto internamente como
+          hacia el exterior, y conservar evidencia de las comunicaciones pertinentes.
+      url: 'https://www.iso.org/standard/60857.html'
+docs:
+    - PC.04.0
+    - RG-07.04.00
+body: |
+    <p>Comunicar es parte del sistema: difundir la política, avisar de cambios, responder a una queja
+    vecinal o a una petición de la administración. Este módulo deja constancia de todo ello.</p>
+
+    <h2>Cómo funciona, paso a paso</h2>
+    <ol>
+        <li>Registra cada comunicación relevante: fecha, si es interna o externa, con quién y sobre qué.</li>
+        <li>Adjunta la <strong>evidencia</strong> (el correo, el aviso, el escrito).</li>
+        <li>Si la comunicación es con una parte interesada, enlázala con su ficha.</li>
+    </ol>
+
+    <h2>Interna y externa</h2>
+    <p>La comunicación <strong>interna</strong> (al personal y alumnado) suele ser la más olvidada y la
+    más importante: es la que mantiene vivo el sistema en el día a día del centro.</p>

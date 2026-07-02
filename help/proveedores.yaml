@@ -1,0 +1,33 @@
+slug: proveedores
+title: Proveedores
+routes:
+    - supplier_index
+summary: >
+    Control de los proveedores y contratas del centro con relevancia ambiental (limpieza, jardinería,
+    mantenimiento…): quiénes son, su evaluación y las comunicaciones ISO que se les envían.
+legal:
+    - label: 'ISO 14001:2015 · apartado 8.1 (Control de procesos contratados externamente)'
+      note: >
+          La norma exige asegurar que los procesos contratados externamente que afectan al desempeño
+          ambiental estén controlados, y comunicar a proveedores y contratistas los requisitos
+          ambientales pertinentes.
+      url: 'https://www.iso.org/standard/60857.html'
+docs:
+    - PC.05.0
+    - F.12.0
+body: |
+    <p>Lo que hacen las contratas dentro del centro (los productos de limpieza que usan, cómo gestionan
+    sus residuos) también es responsabilidad del sistema. Este módulo controla ese frente.</p>
+
+    <h2>Cómo funciona, paso a paso</h2>
+    <ol>
+        <li>Mantén al día el <strong>listado de proveedores</strong> con relevancia ambiental.</li>
+        <li><strong>Evalúalos</strong> según los criterios definidos (cumplimiento, incidencias,
+        certificaciones).</li>
+        <li>Cuando proceda, envíales la <strong>carta de comunicación ISO 14001</strong> y solicita
+        que la devuelvan junto con sus certificados.</li>
+    </ol>
+
+    <h2>Por qué importa</h2>
+    <p>Un proveedor que gestiona mal sus residuos o usa productos inadecuados puede generarte a ti una
+    no conformidad. Elegir y vigilar bien a las contratas es prevención pura.</p>
