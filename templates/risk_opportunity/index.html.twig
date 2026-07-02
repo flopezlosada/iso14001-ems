@@ -24,7 +24,67 @@
         </div>
     </div>
 
-    <div class="card">
+    {# Guía "qué falta este curso": diagnóstico de pendientes (no un asistente lineal), cada uno
+       enlazado a donde se resuelve. El detalle por ítem (valorar/aprobar/añadir acción) vive en la
+       ficha de cada riesgo, a la que lleva el inventario de abajo. #}
+    <div class="card workflow-guide">
+        <div class="page-head">
+            <div>
+                <h2>Trabajo de este curso ({{ currentExercise }})</h2>
+                <p class="lead muted">Qué hay que hacer aquí y qué te falta.</p>
+            </div>
+            {% if status.isComplete %}<span class="badge badge--success">Al día para {{ currentExercise }}</span>{% endif %}
+        </div>
+        <ol class="workflow-steps">
+            <li>
+                <span class="step-what">1. Contexto — análisis DAFO del curso <span class="muted">(F.06.0)</span></span>
+                {% if status.dafoReady %}
+                    <span class="badge badge--success">Hecho</span>
+                    <a class="muted" href="{{ path('dafo_index') }}">ver</a>
+                {% else %}
+                    <span class="badge badge--warning">Pendiente</span>
+                    <a class="btn secondary" href="{{ path('dafo_index') }}">Crear el DAFO</a>
+                {% endif %}
+            </li>
+            <li>
+                <span class="step-what">2. Identificar riesgos y oportunidades</span>
+                <span class="muted">{{ status.totalItems }} registrado(s)</span>
+                {% if can_write %}<a class="btn secondary" href="{{ path('risk_new') }}">+ Registrar</a>{% endif %}
+            </li>
+            {% if status.totalItems > 0 %}
+                <li>
+                    <span class="step-what">3. Valorar este curso (probabilidad × impacto)</span>
+                    {% if status.unvalued > 0 %}
+                        <a href="#inventario"><span class="badge badge--warning">{{ status.unvalued }} sin valorar</span></a>
+                    {% else %}
+                        <span class="badge badge--success">Hecho</span>
+                    {% endif %}
+                </li>
+                <li>
+                    <span class="step-what">4. Aprobar las valoraciones (Dirección)</span>
+                    {% if status.unapproved > 0 %}
+                        <a href="#inventario"><span class="badge badge--warning">{{ status.unapproved }} sin aprobar</span></a>
+                    {% else %}
+                        <span class="badge badge--success">Hecho</span>
+                    {% endif %}
+                </li>
+                <li>
+                    <span class="step-what">5. Plan de acción para los relevantes</span>
+                    {% if status.relevantWithoutActions > 0 %}
+                        <a href="#inventario"><span class="badge badge--warning">{{ status.relevantWithoutActions }} sin acción</span></a>
+                    {% else %}
+                        <span class="badge badge--success">Hecho</span>
+                    {% endif %}
+                </li>
+            {% endif %}
+            <li>
+                <span class="step-what">6. Cerrar el periodo</span>
+                <a class="btn secondary" href="{{ path('obligation_index') }}">Marcar revisado en «Qué toca»</a>
+            </li>
+        </ol>
+    </div>
+
+    <div class="card" id="inventario">
         {% if items is empty %}
             <div class="empty-state">
                 <h2>Aún no hay registros</h2>

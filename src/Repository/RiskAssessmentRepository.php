@@ -38,6 +38,27 @@ class RiskAssessmentRepository extends ServiceEntityRepository
     }
 
     /**
+     * The valuations of a single exercise with their action plan eagerly fetched, so the workflow
+     * status can count unapproved valuations and relevant valuations lacking an action plan without
+     * an N+1 (one query per valuation for its actions).
+     *
+     * @param string $exercise the school year to load, in "YYYY-YYYY" format
+     *
+     * @return RiskAssessment[] the valuations of that exercise, with their actions
+     */
+    public function findByExerciseWithActions(string $exercise): array
+    {
+        return $this->createQueryBuilder('a')
+            ->addSelect('ro', 'act')
+            ->join('a.riskOpportunity', 'ro')
+            ->leftJoin('a.actions', 'act')
+            ->where('a.exercise = :exercise')
+            ->setParameter('exercise', $exercise)
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
      * The ids of the risks/opportunities that already have a valuation for an exercise. Used to skip
      * them when cloning, so the action never overwrites or duplicates an existing valuation.
      *
