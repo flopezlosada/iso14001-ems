@@ -125,11 +125,33 @@
                             <td>{{ item.type.label }}</td>
                             <td><a class="cell-link" href="{{ path('risk_show', { id: item.id }) }}">{{ item.description }}</a></td>
                             <td class="muted">{{ item.processArea.name }}</td>
-                            <td>{{ a is null ? 'Sin valorar' : (a.approvedBy ? 'Aprobado' : 'Pendiente de aprobar') }}</td>
-                            <td>{{ relevant ? (a.actions|length > 0 ? 'Hecho' : 'Falta') : '—' }}</td>
+                            <td>
+                                {%- if a is null -%}
+                                    <span class="badge badge--draft">Sin valorar</span>
+                                {%- elseif a.approvedBy -%}
+                                    <span class="badge badge--success">Aprobado</span>
+                                {%- else -%}
+                                    <span class="badge badge--warning">Pendiente de aprobar</span>
+                                {%- endif -%}
+                            </td>
+                            <td>
+                                {%- if not relevant -%}
+                                    <span class="muted">—</span>
+                                {%- elseif a.actions|length > 0 -%}
+                                    <span class="badge badge--success">Hecho</span>
+                                {%- else -%}
+                                    <span class="badge badge--warning">Falta</span>
+                                {%- endif -%}
+                            </td>
                             <td>
                                 {%- if a and a.category -%}
-                                    {{ a.category.label(item.type) }} <span class="muted">· {{ a.score }}</span>
+                                    {%- set cat_badge = { 'critical': 'badge--danger', 'moderate': 'badge--warning' } -%}
+                                    {%- if a.category.value == 'trivial' -%}
+                                        <span class="muted">{{ a.category.label(item.type) }}</span>
+                                    {%- else -%}
+                                        <span class="badge {{ cat_badge[a.category.value] }}">{{ a.category.label(item.type) }}</span>
+                                    {%- endif -%}
+                                    <span class="muted"> · {{ a.score }}</span>
                                 {%- else -%}
                                     <span class="muted">—</span>
                                 {%- endif -%}
