@@ -29,8 +29,10 @@
                CSRF token) and hand the list to the shared macro, which renders each row AND the
                per-field "?" when the field declares a help_slug. #}
             {% set criteria = [] %}
-            {% for child in form if child.vars.name != '_token' %}
-                {% set criteria = criteria|merge([child]) %}
+            {% for child in form %}
+                {% if child.vars.name != '_token' %}
+                    {% set criteria = criteria|merge([child]) %}
+                {% endif %}
             {% endfor %}
             {{ f.fields(criteria) }}
             <p class="help">La suma y el resultado se calculan automáticamente al guardar (salvo en indirectos, sin umbral definido).</p>
