@@ -58,6 +58,8 @@ final class NonConformityControllerTest extends WebTestCase
         self::assertResponseIsSuccessful();
         self::assertSelectorExists('form');
         self::assertSelectorExists('select#non_conformity_origin');
+        // Per-field contextual help renders on the real form (guards against a slug typo).
+        self::assertSelectorExists('.help-field-label a.help-btn[data-help="nc-causa-raiz"]');
     }
 
     public function testNewFormPrefillsFromQueryParameters(): void

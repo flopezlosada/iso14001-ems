@@ -36,6 +36,7 @@ class CorrectiveActionType extends AbstractType
             ->add('description', TextareaType::class, [
                 'label' => 'Descripción de la acción correctiva',
                 'help' => 'Acción o acciones del plan, con su seguimiento y evaluación.',
+                'help_slug' => 'nc-accion-correctiva',
             ])
             ->add('responsible', EntityType::class, [
                 'class' => User::class,
@@ -90,6 +91,7 @@ class CorrectiveActionType extends AbstractType
                 'required' => false,
                 'placeholder' => 'Pendiente de evaluar',
                 'choice_label' => static fn (Efficacy $e): string => $e->label(),
+                'help_slug' => 'nc-eficacia',
             ]);
     }
 

@@ -1,0 +1,23 @@
+slug: nc-eficacia
+title: Eficacia de la acción
+summary: >
+    Comprobar, un tiempo después, si la acción correctiva realmente funcionó: ¿el problema ha dejado
+    de aparecer? Si no se verifica la eficacia, la no conformidad no está bien cerrada.
+legal:
+    - label: 'ISO 14001:2015 · apartado 10.2 (No conformidad y acción correctiva)'
+      note: >
+          La norma exige revisar la eficacia de las acciones correctivas tomadas. Es el paso que cierra
+          el ciclo de mejora.
+      url: 'https://www.iso.org/standard/60857.html'
+docs:
+    - PC.10.0
+body: |
+    <p>Implantar la acción no basta: hay que <strong>comprobar que sirvió</strong>. Pasado un tiempo
+    prudencial, revisas si el incumplimiento se ha repetido o no.</p>
+    <ul>
+        <li><strong>Eficaz</strong>: el problema no ha vuelto → se puede cerrar la no conformidad.</li>
+        <li><strong>No eficaz</strong>: ha reaparecido → la causa raíz no era la correcta o la acción
+        no fue suficiente; hay que replantearla.</li>
+    </ul>
+    <p>Cerrar una no conformidad sin verificar la eficacia es un cierre en falso: es justo lo que un
+    auditor comprueba.</p>

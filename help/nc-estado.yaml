@@ -1,0 +1,23 @@
+slug: nc-estado
+title: Estado de la no conformidad
+summary: >
+    En qué punto de su ciclo está: recién abierta, en análisis/tratamiento (con acciones en marcha) o
+    cerrada tras verificar la eficacia. Marca cuánto trabajo queda.
+legal:
+    - label: 'ISO 14001:2015 · apartado 10.2 (No conformidad y acción correctiva)'
+      note: >
+          El seguimiento del estado hasta el cierre es parte del control de las no conformidades y de
+          la evidencia de mejora continua.
+      url: 'https://www.iso.org/standard/60857.html'
+docs:
+    - PC.10.0
+    - F.11.0
+body: |
+    <p>El estado ordena el ciclo de vida de la no conformidad, a grandes rasgos:</p>
+    <ol>
+        <li><strong>Abierta</strong>: detectada y registrada; falta analizar y tratar.</li>
+        <li><strong>En tratamiento</strong>: con causa raíz y acciones correctivas en marcha.</li>
+        <li><strong>Cerrada</strong>: acciones implantadas y <strong>eficacia verificada</strong>.</li>
+    </ol>
+    <p>No cierres una no conformidad hasta haber comprobado que la acción fue eficaz (que el problema
+    no reaparece). El listado de control (F.11.0) las sigue todas hasta su cierre.</p>
