@@ -289,7 +289,7 @@ final class DocumentControllerTest extends WebTestCase
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('body', 'Obligación TEST-EVENT');
         // No "Marcar revisado" form is rendered for it.
-        self::assertCount(0, $crawler->filter('form[action$="/completar"]'));
+        self::assertCount(0, $crawler->filter('form[action*="/completar"]'));
     }
 
     public function testDraftedObligationWithoutVersionInForceOffersNoCompleteButton(): void
@@ -307,7 +307,7 @@ final class DocumentControllerTest extends WebTestCase
 
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('body', 'Obligación TEST-NOVER');
-        self::assertCount(0, $crawler->filter('form[action$="/completar"]'));
+        self::assertCount(0, $crawler->filter('form[action*="/completar"]'));
         // Instead of the button, it explains why: the document must be approved first.
         self::assertSelectorTextContains('body', 'Pendiente de aprobar');
     }
@@ -327,7 +327,7 @@ final class DocumentControllerTest extends WebTestCase
 
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('body', 'Obligación TEST-FORM-NOVER');
-        self::assertCount(1, $crawler->filter('form[action$="/completar"]'));
+        self::assertCount(1, $crawler->filter('form[action*="/completar"]'));
         self::assertSelectorTextNotContains('body', 'Pendiente de aprobar');
     }
 

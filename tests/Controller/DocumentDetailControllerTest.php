@@ -87,7 +87,9 @@ final class DocumentDetailControllerTest extends WebTestCase
     {
         $client = static::createClient();
         $em = $this->em();
-        $document = (new Document())->setCode('F.99.0')->setTitle('Formato sin emitir')->setType(DocumentType::FORM)->setStatus(ObligationStatus::PENDING);
+        // Documento REDACTABLE (procedimiento): el historial de versiones —y su empty-state— solo se
+        // muestra para política/manual/procedimiento; un formato/registro no tiene versiones redactadas.
+        $document = (new Document())->setCode('PC.99.0')->setTitle('Procedimiento sin emitir')->setType(DocumentType::PROCEDURE)->setStatus(ObligationStatus::PENDING);
         $em->persist($document);
         $reader = (new User())->setFullName('Lectora')->setEmail('lectora2@example.test')->setActive(true);
         $em->persist($reader);
