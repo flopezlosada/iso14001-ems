@@ -6,13 +6,11 @@ namespace App\Form;
 
 use App\Entity\CorrectiveAction;
 use App\Entity\User;
-use App\Enum\Efficacy;
 use App\Repository\UserRepository;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
-use Symfony\Component\Form\Extension\Core\Type\EnumType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -61,38 +59,10 @@ class CorrectiveActionType extends AbstractType
                 'label' => 'Requiere autorización de Dirección',
                 'required' => false,
                 'help' => 'Marca si implica nuevos recursos, afecta a documentación en vigor o a varios procesos (PC.10.0 §4.3.2).',
-            ])
-            ->add('authorizedBy', EntityType::class, [
-                'class' => User::class,
-                'label' => 'Autorizada por',
-                'required' => false,
-                'placeholder' => 'Sin autorizar',
-                'choice_label' => static fn (User $u): string => $u->getFullName(),
-                'query_builder' => $activeUsers,
-                'help' => 'La fecha de autorización se registra automáticamente al asignar quién autoriza.',
-            ])
-            ->add('reviewedBy', EntityType::class, [
-                'class' => User::class,
-                'label' => 'Responsable de la revisión',
-                'required' => false,
-                'placeholder' => 'Sin revisar',
-                'choice_label' => static fn (User $u): string => $u->getFullName(),
-                'query_builder' => $activeUsers,
-            ])
-            ->add('reviewedAt', DateType::class, [
-                'label' => 'Fecha de la revisión',
-                'widget' => 'single_text',
-                'required' => false,
-                'input' => 'datetime_immutable',
-            ])
-            ->add('efficacy', EnumType::class, [
-                'class' => Efficacy::class,
-                'label' => 'Eficacia',
-                'required' => false,
-                'placeholder' => 'Pendiente de evaluar',
-                'choice_label' => static fn (Efficacy $e): string => $e->label(),
-                'help_slug' => 'nc-eficacia',
             ]);
+        // La autorización y la eficacia (y quién/cuándo las registró) NO se editan aquí: se gobiernan
+        // por los CTAs de la ficha (Autorizar / Eficaz-No eficaz), donde vive la regla de negocio
+        // (una acción se cierra solo si es eficaz). Este formulario solo PLANIFICA la acción.
     }
 
     public function configureOptions(OptionsResolver $resolver): void

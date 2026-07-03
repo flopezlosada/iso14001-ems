@@ -39,4 +39,16 @@ enum RiskCategory: string
 
         return $noun.' '.$adjective;
     }
+
+    /**
+     * Whether an item in this category requires a documented action plan (PC.03.0 §5.3): the ones of
+     * moderate or critical relevance do; trivial ones do not. Single, central definition of the
+     * "relevance" threshold so it can be revisited in one place.
+     *
+     * @return bool true for moderate and critical, false for trivial
+     */
+    public function requiresActionPlan(): bool
+    {
+        return self::MODERATE === $this || self::CRITICAL === $this;
+    }
 }

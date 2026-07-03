@@ -353,15 +353,29 @@ class NonConformity
             return;
         }
 
+        if (!$this->canBeClosed()) {
+            $context->buildViolation('No se puede cerrar la no conformidad mientras alguna acción correctiva no esté verificada como eficaz (OK). Revisa o reabre las acciones pendientes o no eficaces.')
+                ->atPath('status')
+                ->addViolation();
+        }
+    }
+
+    /**
+     * Whether this non-conformity may be closed (PC.10.0 §4.3.4): every corrective action must have
+     * been reviewed effective (efficacy OK). One with no corrective actions (resolved by an immediate
+     * correction) may also be closed. Shared by {@see validateClosure} and the close CTA.
+     *
+     * @return bool true when closure is allowed
+     */
+    public function canBeClosed(): bool
+    {
         foreach ($this->correctiveActions as $action) {
             if (Efficacy::OK !== $action->getEfficacy()) {
-                $context->buildViolation('No se puede cerrar la no conformidad mientras alguna acción correctiva no esté verificada como eficaz (OK). Revisa o reabre las acciones pendientes o no eficaces.')
-                    ->atPath('status')
-                    ->addViolation();
-
-                return;
+                return false;
             }
         }
+
+        return true;
     }
 
     public function getOpenedAt(): \DateTimeImmutable

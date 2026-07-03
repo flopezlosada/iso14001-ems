@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Controller;
 
 use App\Entity\Document;
+use App\Entity\DocumentVersion;
 use App\Entity\Role;
 use App\Entity\ScheduledAlert;
 use App\Entity\User;
@@ -12,6 +13,7 @@ use App\Enum\AlertFrequency;
 use App\Enum\DocumentType;
 use App\Enum\IsoChapter;
 use App\Enum\ObligationStatus;
+use App\Enum\VersionStatus;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
@@ -22,12 +24,12 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
  */
 final class DocumentControllerTest extends WebTestCase
 {
-    private function persistObligation(EntityManagerInterface $em, string $code, IsoChapter $chapter, AlertFrequency $frequency, string $nextDue, ?Role $role = null): Document
+    private function persistObligation(EntityManagerInterface $em, string $code, IsoChapter $chapter, AlertFrequency $frequency, string $nextDue, ?Role $role = null, bool $inForce = false, DocumentType $type = DocumentType::FORM): Document
     {
         $document = new Document();
         $document->setCode($code)
             ->setTitle('Obligación '.$code)
-            ->setType(DocumentType::FORM)
+            ->setType($type)
             ->setIsoChapter($chapter)
             ->setStatus(ObligationStatus::PENDING)
             ->setResponsibleRole($role);
@@ -35,6 +37,18 @@ final class DocumentControllerTest extends WebTestCase
         $alert = new ScheduledAlert();
         $alert->setFrequency($frequency)->setNextDueDate(new \DateTimeImmutable($nextDue));
         $document->addAlert($alert);
+
+        // An approved revision makes the document "in force": only then can its periodic review be
+        // marked as done (see DocumentController::complete and the cockpit macro).
+        if ($inForce) {
+            $version = (new DocumentVersion())
+                ->setRevisionNumber(0)
+                ->setStatus(VersionStatus::APPROVED)
+                ->setAuthor('Aprobador de prueba')
+                ->setChangeSummary('Edición inicial.');
+            $document->addVersion($version);
+            $em->persist($version);
+        }
 
         if ($role !== null) {
             $em->persist($role);
@@ -192,7 +206,7 @@ final class DocumentControllerTest extends WebTestCase
         $em = static::getContainer()->get(EntityManagerInterface::class);
         $mine = (new Role())->setCode('mant')->setName('Mantenimiento');
         // An overdue annual obligation owned by the user: completing it must push the date a year on.
-        $document = $this->persistObligation($em, 'TEST-CLOSE', IsoChapter::PLANNING, AlertFrequency::ANNUAL, '2026-01-01', $mine);
+        $document = $this->persistObligation($em, 'TEST-CLOSE', IsoChapter::PLANNING, AlertFrequency::ANNUAL, '2026-01-01', $mine, inForce: true);
         $em->flush();
         $id = $document->getId();
         $this->loginUserWithRole($client, $mine);
@@ -236,7 +250,7 @@ final class DocumentControllerTest extends WebTestCase
         $client = static::createClient();
         $em = static::getContainer()->get(EntityManagerInterface::class);
         $mine = (new Role())->setCode('mant')->setName('Mantenimiento');
-        $document = $this->persistObligation($em, 'TEST-ARCHIVED', IsoChapter::PLANNING, AlertFrequency::ANNUAL, '2026-01-01', $mine);
+        $document = $this->persistObligation($em, 'TEST-ARCHIVED', IsoChapter::PLANNING, AlertFrequency::ANNUAL, '2026-01-01', $mine, inForce: true);
         $em->flush();
         $id = $document->getId();
         $this->loginUserWithRole($client, $mine);
@@ -275,6 +289,76 @@ final class DocumentControllerTest extends WebTestCase
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('body', 'Obligación TEST-EVENT');
         // No "Marcar revisado" form is rendered for it.
-        self::assertCount(0, $crawler->filter('form[action$="/completar"]'));
+        self::assertCount(0, $crawler->filter('form[action*="/completar"]'));
+    }
+
+    public function testDraftedObligationWithoutVersionInForceOffersNoCompleteButton(): void
+    {
+        $client = static::createClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $mine = (new Role())->setCode('mant')->setName('Mantenimiento');
+        // A DRAFTED obligation (a procedure) whose document has no approved version: you cannot have
+        // reviewed a document that is not yet in force, so the cockpit must not offer "Marcar revisado".
+        $this->persistObligation($em, 'TEST-NOVER', IsoChapter::PLANNING, AlertFrequency::ANNUAL, '2026-01-01', $mine, inForce: false, type: DocumentType::PROCEDURE);
+        $em->flush();
+        $this->loginUserWithRole($client, $mine);
+
+        $crawler = $client->request('GET', '/obligaciones');
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('body', 'Obligación TEST-NOVER');
+        self::assertCount(0, $crawler->filter('form[action*="/completar"]'));
+        // Instead of the button, it explains why: the document must be approved first.
+        self::assertSelectorTextContains('body', 'Pendiente de aprobar');
+    }
+
+    public function testFormWithoutVersionInForceStillOffersCompleteButton(): void
+    {
+        $client = static::createClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $mine = (new Role())->setCode('mant')->setName('Mantenimiento');
+        // A form/record is not drafted: it is reviewed by filling in its module, not by approving a
+        // text, so "Marcar revisado" must be offered even without a version in force.
+        $this->persistObligation($em, 'TEST-FORM-NOVER', IsoChapter::PLANNING, AlertFrequency::ANNUAL, '2026-01-01', $mine, inForce: false, type: DocumentType::FORM);
+        $em->flush();
+        $this->loginUserWithRole($client, $mine);
+
+        $crawler = $client->request('GET', '/obligaciones');
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('body', 'Obligación TEST-FORM-NOVER');
+        self::assertCount(1, $crawler->filter('form[action*="/completar"]'));
+        self::assertSelectorTextNotContains('body', 'Pendiente de aprobar');
+    }
+
+    public function testCannotCompleteDraftedDocumentWithNoVersionInForce(): void
+    {
+        $client = static::createClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $mine = (new Role())->setCode('mant')->setName('Mantenimiento');
+        // A drafted document, in force so the valid form (with CSRF token) can be captured...
+        $document = $this->persistObligation($em, 'TEST-DROP-INFORCE', IsoChapter::PLANNING, AlertFrequency::ANNUAL, '2026-01-01', $mine, inForce: true, type: DocumentType::PROCEDURE);
+        $em->flush();
+        $id = $document->getId();
+        $this->loginUserWithRole($client, $mine);
+
+        $crawler = $client->request('GET', '/obligaciones');
+        $form = $crawler->filter('form[action*="/'.$id.'/completar"]')->form();
+        // ...then drop the version out of force and submit: the backend guard must reject, not roll.
+        $version = $document->getVersions()->first();
+        self::assertNotFalse($version);
+        $version->setStatus(VersionStatus::DRAFT);
+        $em->flush();
+        $client->submit($form);
+
+        $client->followRedirect();
+        self::assertSelectorTextContains('.flash', 'versión en vigor');
+        $em->clear();
+        $reloaded = $em->find(Document::class, $id);
+        self::assertNotNull($reloaded);
+        self::assertNull($reloaded->getLastCompletedOn());
+        $alert = $reloaded->getAlerts()->first();
+        self::assertNotFalse($alert);
+        self::assertEquals(new \DateTimeImmutable('2026-01-01'), $alert->getNextDueDate());
     }
 }

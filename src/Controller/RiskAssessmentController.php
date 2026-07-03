@@ -94,6 +94,29 @@ class RiskAssessmentController extends AbstractController
     }
 
     /**
+     * Detail of a single valuation (a risk/opportunity for one course): its factors, computed score
+     * and category, justification and action plan, with the approval state. This is the page the
+     * cockpit and inventory link to when you go to review or approve the current course — the yearly
+     * history of the item is a secondary view, reached from here via "ver el histórico".
+     */
+    #[Route('/{assessmentId}', name: 'risk_assessment_show', requirements: ['assessmentId' => '\d+'], methods: ['GET'])]
+    public function show(
+        #[MapEntity(id: 'id')] RiskOpportunity $item,
+        #[MapEntity(id: 'assessmentId')] RiskAssessment $assessment,
+    ): Response {
+        $this->denyAccessUnlessGranted(AreaVoter::READ, Area::RISK_OPPORTUNITY);
+
+        if ($assessment->getRiskOpportunity()->getId() !== $item->getId()) {
+            throw $this->createNotFoundException('The assessment does not belong to the given item.');
+        }
+
+        return $this->render('risk_assessment/show.html.twig', [
+            'item' => $item,
+            'assessment' => $assessment,
+        ]);
+    }
+
+    /**
      * Approves a valuation revision: records who signed it off and when (PC.03.0 §5.2). Restricted to
      * Dirección / the RSGMA. Idempotent guard: an already-approved revision is not re-stamped.
      */

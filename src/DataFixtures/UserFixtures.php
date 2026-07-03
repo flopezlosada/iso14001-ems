@@ -16,6 +16,12 @@ use Doctrine\Persistence\ObjectManager;
  * @example.test addresses make it obvious nothing leaves local. The admin user lets the
  * magic-link login and the admin-only views (e.g. the activity trail) be exercised locally —
  * request a link for its address and open it from Mailpit.
+ *
+ * On top of the synthetic backbone, an OPTIONAL local admin is seeded from the
+ * LOCAL_SSO_ADMIN_EMAIL env var (set in .env.local, gitignored): it lets a real developer sign in
+ * with Google SSO in local (the {@see \App\Security\GoogleAuthenticator} never creates users, so
+ * the account must exist beforehand) without committing a real e-mail to the repo. The var is unset
+ * in production, so this user is never seeded there — real people are provisioned separately.
  */
 final class UserFixtures extends AbstractGoldenFixture implements DependentFixtureInterface
 {
@@ -45,6 +51,17 @@ final class UserFixtures extends AbstractGoldenFixture implements DependentFixtu
             }
             $manager->persist($user);
             $this->addReference(self::ref($key), $user);
+        }
+
+        // Local-only real developer, seeded only when LOCAL_SSO_ADMIN_EMAIL is set (see class docblock).
+        $localAdminEmail = trim((string) ($_ENV['LOCAL_SSO_ADMIN_EMAIL'] ?? ''));
+        if ('' !== $localAdminEmail) {
+            $localAdmin = (new User())
+                ->setFullName('Administrador (local)')
+                ->setEmail($localAdminEmail)
+                ->setActive(true);
+            $localAdmin->addAssignedRole($this->getReference(RoleFixtures::ref('admin'), Role::class));
+            $manager->persist($localAdmin);
         }
 
         $manager->flush();

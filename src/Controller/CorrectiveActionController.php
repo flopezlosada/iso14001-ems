@@ -6,7 +6,9 @@ namespace App\Controller;
 
 use App\Entity\CorrectiveAction;
 use App\Entity\NonConformity;
+use App\Entity\User;
 use App\Enum\Area;
+use App\Enum\Efficacy;
 use App\Form\CorrectiveActionType;
 use App\Repository\CorrectiveActionRepository;
 use App\Security\Voter\AreaVoter;
@@ -63,6 +65,106 @@ class CorrectiveActionController extends AbstractController
         }
 
         return $this->handleForm($action, $nonConformity, $request, $em, $repository);
+    }
+
+    /**
+     * Authorises the corrective action as a one-click CTA: stamps the current user as authoriser
+     * and records the date, without opening the edit form. Same permission as editing (WRITE on the
+     * area) — this does not change who can authorise, only makes it a direct action. Idempotent and
+     * only valid for actions that actually require Direction's authorisation. CSRF-protected POST.
+     */
+    #[Route('/{actionId}/authorize', name: 'corrective_action_authorize', requirements: ['actionId' => '\d+'], methods: ['POST'])]
+    public function authorize(
+        #[MapEntity(id: 'id')] NonConformity $nonConformity,
+        #[MapEntity(id: 'actionId')] CorrectiveAction $action,
+        Request $request,
+        EntityManagerInterface $em,
+    ): Response {
+        $this->denyAccessUnlessGranted(AreaVoter::WRITE, Area::NONCONFORMITY);
+
+        if ($action->getNonConformity()->getId() !== $nonConformity->getId()) {
+            throw $this->createNotFoundException('The corrective action does not belong to the given non-conformity.');
+        }
+        if (!$this->isCsrfTokenValid('corrective_action_authorize'.(string) $action->getId(), (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Token CSRF inválido.');
+        }
+
+        $redirect = $this->redirectToRoute('non_conformity_show', ['id' => $nonConformity->getId()]);
+        if (!$action->requiresDirectionAuthorization()) {
+            $this->addFlash('error', 'Esta acción no requiere autorización.');
+
+            return $redirect;
+        }
+        if (null !== $action->getAuthorizedBy()) {
+            $this->addFlash('error', 'Esta acción ya está autorizada.');
+
+            return $redirect;
+        }
+
+        $user = $this->getUser();
+        if (!$user instanceof User) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $action->setAuthorizedBy($user)->setAuthorizedAt(new \DateTimeImmutable());
+        $em->flush();
+        // Audit AFTER the business flush, per the project convention.
+        $this->auditLogger->log(
+            'correctiveaction.authorized',
+            'CorrectiveAction',
+            (string) $action->getId(),
+            sprintf('%s / %s', $nonConformity->getReference(), $action->getReference()),
+        );
+        $this->addFlash('success', sprintf('Acción correctiva %s autorizada.', $action->getReference()));
+
+        return $redirect;
+    }
+
+    /**
+     * Records the effectiveness review of the corrective action as a one-click CTA (PC.10.0 §4.3.4):
+     * stamps the OK/No OK result plus who reviewed it and when, without opening the edit form (where
+     * a longer note/evidence can still be added). Same permission as editing. CSRF-protected POST.
+     */
+    #[Route('/{actionId}/evaluate', name: 'corrective_action_evaluate', requirements: ['actionId' => '\d+'], methods: ['POST'])]
+    public function evaluate(
+        #[MapEntity(id: 'id')] NonConformity $nonConformity,
+        #[MapEntity(id: 'actionId')] CorrectiveAction $action,
+        Request $request,
+        EntityManagerInterface $em,
+    ): Response {
+        $this->denyAccessUnlessGranted(AreaVoter::WRITE, Area::NONCONFORMITY);
+
+        if ($action->getNonConformity()->getId() !== $nonConformity->getId()) {
+            throw $this->createNotFoundException('The corrective action does not belong to the given non-conformity.');
+        }
+        if (!$this->isCsrfTokenValid('corrective_action_evaluate'.(string) $action->getId(), (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Token CSRF inválido.');
+        }
+
+        $redirect = $this->redirectToRoute('non_conformity_show', ['id' => $nonConformity->getId()]);
+        $efficacy = Efficacy::tryFrom((string) $request->request->get('result'));
+        if (null === $efficacy) {
+            $this->addFlash('error', 'Resultado de eficacia no válido.');
+
+            return $redirect;
+        }
+        $user = $this->getUser();
+        if (!$user instanceof User) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $action->setEfficacy($efficacy)->setReviewedBy($user)->setReviewedAt(new \DateTimeImmutable());
+        $em->flush();
+        // Audit AFTER the business flush, per the project convention.
+        $this->auditLogger->log(
+            'correctiveaction.efficacy_evaluated',
+            'CorrectiveAction',
+            (string) $action->getId(),
+            sprintf('%s / %s · %s', $nonConformity->getReference(), $action->getReference(), $efficacy->label()),
+        );
+        $this->addFlash('success', sprintf('Eficacia de la acción %s registrada: %s.', $action->getReference(), $efficacy->label()));
+
+        return $redirect;
     }
 
     /**

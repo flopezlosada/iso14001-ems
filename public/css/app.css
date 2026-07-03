@@ -498,6 +498,9 @@ tbody tr.is-in-force { background: var(--success-weak); }
    de inodos) para que se reconozca como campo de búsqueda de un vistazo. */
 .table-tools__search input[type="search"] {
     width: 100%;
+    box-sizing: border-box;
+    appearance: none;
+    -webkit-appearance: none;
     padding: 10px 12px 10px 38px;
     border: 1px solid var(--border-strong);
     border-radius: var(--radius);
@@ -512,6 +515,13 @@ tbody tr.is-in-force { background: var(--success-weak); }
 .table-tools__search input[type="search"]:focus { border-color: var(--accent); outline-offset: 0; }
 /* El filtro reusa .form-row (para que selectmenu.js lo "enhance"), pero aquí va en línea. */
 .table-tools__filter { margin-bottom: 0; flex: 0 1 200px; min-width: 160px; }
+/* El buscador (input nativo) y los filtros (trigger de selectmenu.js) calculan su alto de forma
+   distinta y quedaban desalineados; se les fija la MISMA altura para que casen en la barra. */
+.table-tools__search input[type="search"],
+.table-tools__filter .selectmenu__trigger {
+    height: 40px;
+    box-sizing: border-box;
+}
 
 /* Cabeceras ordenables: afordancia clicable + flecha según aria-sort. */
 thead th.is-sortable { cursor: pointer; user-select: none; }
@@ -546,6 +556,47 @@ thead th.is-sortable:focus-visible { outline: 2px solid var(--focus); outline-of
 .badge--danger  { background: var(--danger-weak);  color: var(--danger-text);  border-color: var(--danger); }
 .badge--void    { color: var(--text-faint); text-decoration: line-through; }
 .badge--done    { background: var(--surface-sunken); color: var(--text-muted); border-color: var(--border-strong); }
+
+/* Nivel de valoración de riesgo: dato INFORMATIVO (no accionable), por eso es texto coloreado por
+   severidad, no un badge (que se reserva a estados accionables). Escala sobria: trivial apagado. */
+.val--critical { color: var(--danger-text); font-weight: 600; }
+.val--moderate { color: var(--warning-text); }
+.val--trivial  { color: var(--text-muted); }
+
+/* Un badge que además es enlace (estado accionable): sin subrayado y con afordanza al pasar. */
+a.badge { text-decoration: none; cursor: pointer; }
+a.badge:hover { border-color: currentColor; }
+
+/* Ficha de una acción del plan (PC.03.0 §5.3): descripción y eficacia son texto libre y pueden ser
+   largos, así que se muestran en bloques apilados, NO en una tabla que los recortaría. */
+.action-item {
+    padding: 14px 16px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    margin-bottom: 10px;
+}
+.action-item:last-child { margin-bottom: 0; }
+.action-desc { margin: 0 0 10px; font-weight: 600; }
+/* Un campo por línea (columna): más legible que la fila, y un valor vacío ("—") nunca se lee
+   pegado a la etiqueta del campo siguiente. */
+.action-meta { display: flex; flex-direction: column; gap: 4px; margin: 0; }
+.action-meta .meta-item { font-size: 14px; color: var(--text); }
+/* Grupo del CTA de eficacia: etiqueta + dos botones, para distinguirlo del botón de Autorizar. */
+.action-eval { display: inline-flex; align-items: center; gap: 8px; }
+.meta-label { color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: .02em; margin-right: 6px; }
+.action-efficacy {
+    margin: 12px 0 0;
+    padding: 10px 12px;
+    background: var(--surface-sunken);
+    border-radius: var(--radius);
+}
+.action-efficacy .meta-label { display: block; margin: 0 0 3px; }
+.action-edit { margin: 10px 0 0; font-size: 14px; }
+/* Pie de acciones de una ficha: botones/enlaces (autorizar, editar…) en fila, separados de la meta. */
+.action-actions { display: flex; align-items: center; gap: 14px; margin: 12px 0 0; font-size: 14px; }
+/* Fila de acciones de una cabecera (transiciones de estado + editar). */
+.page-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 
 /* ---- Formularios -------------------------------------------------------- */
 /* Tarjeta contenedora de un formulario de alta/edición: ancho de línea cómodo y único
@@ -611,7 +662,15 @@ input[type="email"], input[type="text"], select, textarea {
     background: var(--surface);
     color: var(--text);
 }
-.form-row textarea { min-height: 84px; resize: vertical; }
+/* Textareas más holgados y que crecen con el contenido: field-sizing:content los auto-ajusta en
+   navegadores modernos (degradación limpia al resize manual en los que no lo soporten). */
+.form-row textarea {
+    min-height: 120px;
+    line-height: 1.5;
+    resize: vertical;
+    field-sizing: content;
+    max-height: 60vh;
+}
 /* Select cerrado: chevron propio (como csa-vega). OJO: la lista DESPLEGADA es nativa del
    SO; en macOS con el SO en oscuro se pinta oscura y el CSS no la fuerza. Para control
    total habría que un dropdown propio en JS (componente, como csa-dropdown de csa-vega). */
@@ -1029,6 +1088,52 @@ input[type="email"], input[type="text"], select, textarea {
 .worklist-links { display: flex; gap: 20px; flex-wrap: wrap; margin: 4px 0 28px; font-size: 14px; }
 .dash-admin { margin-top: 8px; }
 .dash-admin-links { margin: 12px 0 4px; }
+
+/* Guía de flujo de un módulo ("qué falta este curso"): checklist con marcador de estado por paso. */
+.workflow-guide .page-head { margin-bottom: 2px; }
+.workflow-steps { list-style: none; counter-reset: step; margin: 6px 0 0; padding: 0; }
+.workflow-steps > li {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 2px;
+    border-top: 1px solid var(--border);
+}
+.workflow-steps > li:first-child { border-top: none; }
+/* Marcador circular: número por defecto, ✓ cuando está hecho, atenuado cuando está bloqueado. */
+.workflow-steps > li::before {
+    counter-increment: step;
+    content: counter(step);
+    flex: 0 0 auto;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 600;
+    background: var(--surface-sunken);
+    color: var(--text-muted);
+    border: 1px solid var(--border-strong);
+}
+/* Pendiente = ámbar (atención), NO verde: el verde queda reservado a lo ya hecho, para que un
+   vistazo distinga "me toca" de "hecho" (--accent y --success son el mismo verde en el tema). */
+.workflow-steps > li.is-pending::before {
+    content: counter(step);
+    background: var(--warning-weak);
+    color: var(--warning-text);
+    border-color: var(--warning);
+}
+.workflow-steps > li.is-done::before {
+    content: "\2713"; /* ✓ */
+    background: var(--success-weak);
+    color: var(--success-text);
+    border-color: var(--success);
+}
+.workflow-steps > li.is-blocked { opacity: .5; }
+.workflow-step-label { flex: 1 1 auto; min-width: 0; }
+.workflow-step-aside { flex: 0 0 auto; display: flex; align-items: center; gap: 10px; white-space: nowrap; }
 
 .activity { list-style: none; margin: 8px 0 0; padding: 0; }
 .activity li {

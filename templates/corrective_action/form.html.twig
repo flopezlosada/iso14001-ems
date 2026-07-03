@@ -19,8 +19,8 @@
         {{ form_start(form, { 'attr': { 'novalidate': 'novalidate' } }) }}
             {{ form_errors(form) }}
             {{ f.section('Acción', [form.description, form.responsible, form.plannedDate, form.implementationEvidence]) }}
-            {{ f.section('Autorización', [form.requiresDirectionAuthorization, form.authorizedBy]) }}
-            {{ f.section('Revisión y eficacia', [form.reviewedBy, form.reviewedAt, form.efficacy]) }}
+            {{ f.section('Autorización', [form.requiresDirectionAuthorization]) }}
+            {# La autorización y la eficacia se registran con los CTAs de la ficha, no aquí. #}
             {{ f.actions(path('non_conformity_show', { id: nonConformity.id })) }}
         {{ form_end(form) }}
     </div>

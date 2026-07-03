@@ -127,6 +127,9 @@ final class DocumentController extends AbstractController
             'done' => $done,
             'notApplicable' => $notApplicable,
             'moduleRoutes' => self::moduleRoutes(),
+            // Documents with a version in force: only these can be "marcado como revisado" (see the
+            // guard in complete()). One query, no N+1 over the obligation rows.
+            'inForceIds' => $documents->findIdsWithVersionInForce(),
             // Aspects (consumption or waste) already trending worse than the threshold: surfaced
             // proactively so a likely-significant aspect is seen now, not only at the yearly evaluation.
             'aspectsToWatch' => $intensityEstimator->watchList($aspects->findLinkedForIntensity(), $today),
@@ -234,6 +237,16 @@ final class DocumentController extends AbstractController
         // than silently no-op (which would read as "done" while the dates never moved).
         if (!$document->hasFixedCadence()) {
             $this->addFlash('error', 'Esta obligación no tiene revisión periódica que cerrar.');
+
+            return $redirect;
+        }
+        // A DRAFTED document (policy/manual/procedure) with no version in force has not been approved
+        // yet: its periodic review cannot be closed, because there is nothing in force to review — what
+        // it needs is drafting/approval, not "marcar revisado". A form/record is not drafted: its
+        // content lives in its module, so it is reviewed by filling it in, not by approving a text —
+        // it never requires a version in force. Mirrors the UI, which hides the button accordingly.
+        if ($document->getType()->isDrafted() && null === $document->getCurrentVersion()) {
+            $this->addFlash('error', 'Este documento aún no tiene una versión en vigor: apruébala antes de marcar la revisión del periodo.');
 
             return $redirect;
         }

@@ -30,4 +30,20 @@ enum ObjectiveStatus: string
             self::NOT_APPLICABLE => 'No aplica',
         };
     }
+
+    /**
+     * CSS badge class for the shared semantic scale (green=ok, amber=in progress, red=failed,
+     * grey=neutral), so the objective status reads at a glance in the register.
+     *
+     * @return string the badge modifier class
+     */
+    public function badgeClass(): string
+    {
+        return match ($this) {
+            self::ACHIEVED => 'badge--success',
+            self::IN_PROGRESS => 'badge--warning',
+            self::NOT_ACHIEVED => 'badge--danger',
+            self::NOT_APPLICABLE => 'badge--draft',
+        };
+    }
 }

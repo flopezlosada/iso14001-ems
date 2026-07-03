@@ -13,6 +13,7 @@ use App\Repository\RiskOpportunityRepository;
 use App\Security\Voter\AreaVoter;
 use App\Service\AuditLogger;
 use App\Service\RiskScoreCalculator;
+use App\Service\RiskWorkflowStatusProvider;
 use App\Util\SchoolYear;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -39,7 +40,7 @@ class RiskOpportunityController extends AbstractController
      * so the template can offer cloning the previous course's valuations into the current one.
      */
     #[Route('', name: 'risk_index', methods: ['GET'])]
-    public function index(RiskOpportunityRepository $repository, RiskAssessmentRepository $assessments): Response
+    public function index(RiskOpportunityRepository $repository, RiskAssessmentRepository $assessments, RiskWorkflowStatusProvider $workflow): Response
     {
         $this->denyAccessUnlessGranted(AreaVoter::READ, Area::RISK_OPPORTUNITY);
 
@@ -52,6 +53,8 @@ class RiskOpportunityController extends AbstractController
             'previousExercise' => $previousExercise,
             // Only offer cloning when the previous course actually has something to bring over.
             'previousExerciseCount' => \count($assessments->findValuedRiskOpportunityIds($previousExercise)),
+            // Guía "qué falta este curso": pendientes calculados, cada uno enlazado a su acción.
+            'status' => $workflow->for($currentExercise),
         ]);
     }
 

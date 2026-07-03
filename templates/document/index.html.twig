@@ -47,7 +47,7 @@
                     <span class="muted">{{ items|length }} · {{ meta.desc }}</span>
                 </div>
                 <div class="card">
-                    {{ m.obligation_table(items, moduleRoutes, true, scope) }}
+                    {{ m.obligation_table(items, moduleRoutes, true, scope, inForceIds) }}
                 </div>
             </section>
         {% endif %}

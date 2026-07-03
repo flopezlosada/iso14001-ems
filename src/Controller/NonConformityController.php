@@ -96,6 +96,48 @@ class NonConformityController extends AbstractController
     }
 
     /**
+     * Changes the lifecycle state of the non-conformity as a one-click CTA (abierta → en tratamiento
+     * → cerrada, and reopening). Closing is gated by the domain rule {@see NonConformity::canBeClosed}
+     * (every corrective action verified effective), so the state stays tied to its PACs. The closing
+     * date is kept in sync. CSRF-protected POST; same WRITE permission as editing.
+     */
+    #[Route('/{id}/status', name: 'non_conformity_change_status', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function changeStatus(NonConformity $nonConformity, Request $request, EntityManagerInterface $em): Response
+    {
+        $this->denyAccessUnlessGranted(AreaVoter::WRITE, Area::NONCONFORMITY);
+        if (!$this->isCsrfTokenValid('non_conformity_status'.(string) $nonConformity->getId(), (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Token CSRF inválido.');
+        }
+
+        $redirect = $this->redirectToRoute('non_conformity_show', ['id' => $nonConformity->getId()]);
+        $target = NonConformityStatus::tryFrom((string) $request->request->get('status'));
+        if (null === $target) {
+            $this->addFlash('error', 'Estado no válido.');
+
+            return $redirect;
+        }
+        if (NonConformityStatus::CLOSED === $target && !$nonConformity->canBeClosed()) {
+            $this->addFlash('error', 'No se puede cerrar: alguna acción correctiva no está verificada como eficaz (OK). Revisa o reabre las acciones pendientes.');
+
+            return $redirect;
+        }
+
+        $nonConformity->setStatus($target);
+        $this->syncClosedAt($nonConformity);
+        $em->flush();
+        // Audit AFTER the business flush, per the project convention.
+        $this->auditLogger->log(
+            'nonconformity.status_changed',
+            'NonConformity',
+            (string) $nonConformity->getId(),
+            sprintf('%s → %s', $nonConformity->getReference(), $target->label()),
+        );
+        $this->addFlash('success', sprintf('No conformidad %s: %s.', $nonConformity->getReference(), $target->label()));
+
+        return $redirect;
+    }
+
+    /**
      * Seeds a new non-conformity from optional query parameters when another module deep-links
      * here. Unknown/blank values are ignored.
      */

@@ -6,6 +6,7 @@ namespace App\Repository;
 
 use App\Entity\Document;
 use App\Enum\DocumentLifecycle;
+use App\Enum\VersionStatus;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -93,5 +94,27 @@ class DocumentRepository extends ServiceEntityRepository
         }
 
         return $byCode;
+    }
+
+    /**
+     * The ids of the documents that have a version in force (an approved revision). Returned as a
+     * flat id list so a caller can tell, in a single query and without an N+1, whether an obligation
+     * is backed by a live document — used to gate "marcar revisado" on the cockpit, which only makes
+     * sense once the document is actually approved and in force (you cannot have reviewed a document
+     * that does not yet exist).
+     *
+     * @return int[] the ids of documents with at least one approved version
+     */
+    public function findIdsWithVersionInForce(): array
+    {
+        $rows = $this->createQueryBuilder('d')
+            ->select('DISTINCT d.id')
+            ->innerJoin('d.versions', 'v')
+            ->where('v.status = :approved')
+            ->setParameter('approved', VersionStatus::APPROVED->value)
+            ->getQuery()
+            ->getScalarResult();
+
+        return array_map(static fn (array $row): int => (int) $row['id'], $rows);
     }
 }

@@ -8,7 +8,6 @@ use App\Entity\NonConformity;
 use App\Entity\SystemAudit;
 use App\Entity\User;
 use App\Enum\NonConformityOrigin;
-use App\Enum\NonConformityStatus;
 use App\Enum\ProcessType;
 use App\Repository\SystemAuditRepository;
 use App\Repository\UserRepository;
@@ -97,13 +96,10 @@ class NonConformityType extends AbstractType
                 'query_builder' => static fn (UserRepository $r) => $r->createQueryBuilder('u')
                     ->where('u.active = true')
                     ->orderBy('u.fullName', 'ASC'),
-            ])
-            ->add('status', EnumType::class, [
-                'class' => NonConformityStatus::class,
-                'label' => 'Estado',
-                'choice_label' => static fn (NonConformityStatus $s): string => $s->label(),
-                'help_slug' => 'nc-estado',
             ]);
+        // El ESTADO no es un campo editable: se gobierna por las transiciones con CTAs
+        // (non_conformity_change_status), donde vive la regla de cierre (canBeClosed). Editarlo aquí
+        // sería una puerta trasera que se saltaría esa regla.
     }
 
     public function configureOptions(OptionsResolver $resolver): void

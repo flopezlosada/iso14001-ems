@@ -6,7 +6,7 @@
    only offers "Control documental", since there is nothing to fill in. Every obligation always has a
    control sheet, so the "Control documental" action is shown on every row. #}
 
-{% macro obligation_row(obl, moduleRoutes, canComplete = false, scope = null) %}
+{% macro obligation_row(obl, moduleRoutes, canComplete = false, scope = null, inForceIds = []) %}
     {% set area = obl.linkedArea %}
     {% set hasModule = area and moduleRoutes[area.value] is defined %}
     <tr>
@@ -34,17 +34,25 @@
             {# Toda obligación tiene ficha de control documental, tenga módulo de cumplimentación o no. #}
             <a class="btn secondary" href="{{ path('document_show', { id: obl.id }) }}">Control documental</a>
             {% if canComplete and obl.hasFixedCadence and is_granted('DOCUMENT_COMPLETE', obl) %}
-                <form method="post" action="{{ path('obligation_complete', { id: obl.id, scope: scope }) }}" class="inline-form">
-                    <input type="hidden" name="_token" value="{{ csrf_token('obligation_complete' ~ obl.id) }}">
-                    <button type="submit" class="btn">Marcar revisado</button>
-                </form>
+                {# Un documento redactado (política/manual/procedimiento) solo se marca revisado si está
+                   en vigor: no puedes haber revisado algo que aún no existe. Un formato/registro se revisa
+                   cumplimentando su módulo, así que no depende de tener una versión aprobada. #}
+                {% if not obl.type.isDrafted or obl.id in inForceIds %}
+                    <form method="post" action="{{ path('obligation_complete', { id: obl.id, scope: scope }) }}" class="inline-form"
+                          data-confirm="¿Marcar como revisada esta obligación? Se registrará la revisión con la fecha de hoy y el aviso volverá a activarse en el siguiente periodo.">
+                        <input type="hidden" name="_token" value="{{ csrf_token('obligation_complete' ~ obl.id) }}">
+                        <button type="submit" class="btn">Marcar revisado</button>
+                    </form>
+                {% else %}
+                    <span class="muted" title="Aprueba una versión del documento en su ficha de control documental antes de poder marcar su revisión.">Pendiente de aprobar</span>
+                {% endif %}
             {% endif %}
         </td>
     </tr>
 {% endmacro %}
 
 {# Table wrapper around a list of obligation rows, with a shared header. #}
-{% macro obligation_table(obligations, moduleRoutes, canComplete = false, scope = null) %}
+{% macro obligation_table(obligations, moduleRoutes, canComplete = false, scope = null, inForceIds = []) %}
     {% import _self as m %}
     <table>
         <thead>
@@ -54,7 +62,7 @@
         </thead>
         <tbody>
             {% for obl in obligations %}
-                {{ m.obligation_row(obl, moduleRoutes, canComplete, scope) }}
+                {{ m.obligation_row(obl, moduleRoutes, canComplete, scope, inForceIds) }}
             {% endfor %}
         </tbody>
     </table>

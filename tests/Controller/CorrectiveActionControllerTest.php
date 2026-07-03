@@ -112,36 +112,48 @@ final class CorrectiveActionControllerTest extends WebTestCase
         self::assertSame(['AC.01', 'AC.02'], $references);
     }
 
-    public function testAuthorizationStampsDateWhenAuthoriserIsSet(): void
+    public function testAuthorizeActionViaCta(): void
     {
-        [$client, $ncId, $userId] = $this->scenario();
+        [$client, $ncId] = $this->scenario();
+        // La autorización ya no se edita en el formulario: se registra con el CTA 'Autorizar' de la
+        // ficha, que estampa al usuario actual y la fecha.
         $client->request('GET', '/non-conformities/'.$ncId.'/actions/new');
         $client->submitForm('Guardar', [
             'corrective_action[description]' => 'Acción que requiere autorización de Dirección.',
             'corrective_action[requiresDirectionAuthorization]' => '1',
-            'corrective_action[authorizedBy]' => (string) $userId,
         ]);
 
+        $client->request('GET', '/non-conformities/'.$ncId);
+        $client->submitForm('Autorizar');
+
+        static::getContainer()->get(EntityManagerInterface::class)->clear();
         $action = static::getContainer()->get(CorrectiveActionRepository::class)->findOneBy([]);
         self::assertNotNull($action);
-        self::assertTrue($action->requiresDirectionAuthorization());
         self::assertNotNull($action->getAuthorizedBy());
         self::assertNotNull($action->getAuthorizedAt());
+        self::assertNotNull(
+            static::getContainer()->get(AuditLogRepository::class)->findOneBy(['action' => 'correctiveaction.authorized'])
+        );
     }
 
-    public function testRecordingEfficacyIsPersisted(): void
+    public function testEvaluateEfficacyViaCta(): void
     {
         [$client, $ncId] = $this->scenario();
+        // La eficacia ya no se edita en el formulario: se registra con el CTA 'Eficaz' / 'No eficaz'.
         $client->request('GET', '/non-conformities/'.$ncId.'/actions/new');
-        $client->submitForm('Guardar', [
-            'corrective_action[description]' => 'Acción ya revisada.',
-            'corrective_action[efficacy]' => 'ok',
-        ]);
+        $client->submitForm('Guardar', ['corrective_action[description]' => 'Acción a evaluar.']);
 
+        $client->request('GET', '/non-conformities/'.$ncId);
+        $client->submitForm('Eficaz');
+
+        static::getContainer()->get(EntityManagerInterface::class)->clear();
         $action = static::getContainer()->get(CorrectiveActionRepository::class)->findOneBy([]);
         self::assertNotNull($action);
         self::assertSame(Efficacy::OK, $action->getEfficacy());
         self::assertTrue($action->isReviewed());
+        self::assertNotNull(
+            static::getContainer()->get(AuditLogRepository::class)->findOneBy(['action' => 'correctiveaction.efficacy_evaluated'])
+        );
     }
 
     public function testSubmittingWithoutDescriptionRedisplaysFormWithErrors(): void
