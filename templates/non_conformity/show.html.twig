@@ -29,10 +29,10 @@
                         <form method="post" action="{{ path('non_conformity_change_status', { id: nonConformity.id }) }}" class="inline-form" data-confirm="¿Cerrar esta no conformidad? Todas sus acciones están verificadas como eficaces.">
                             <input type="hidden" name="_token" value="{{ csrf_token('non_conformity_status' ~ nonConformity.id) }}">
                             <input type="hidden" name="status" value="closed">
-                            <button class="btn secondary" type="submit">Cerrar</button>
+                            <button class="btn secondary" type="submit">Resolver y cerrar</button>
                         </form>
                     {% else %}
-                        <button class="btn secondary" type="button" disabled title="Verifica la eficacia (OK) de todas las acciones correctivas antes de cerrar.">Cerrar</button>
+                        <button class="btn secondary" type="button" disabled title="Verifica la eficacia (OK) de todas las acciones correctivas antes de cerrar.">Resolver y cerrar</button>
                     {% endif %}
                 {% elseif st == 'closed' %}
                     <form method="post" action="{{ path('non_conformity_change_status', { id: nonConformity.id }) }}" class="inline-form" data-confirm="¿Reabrir esta no conformidad? Volverá a estado 'En tratamiento'.">
