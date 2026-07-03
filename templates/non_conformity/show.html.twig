@@ -9,6 +9,7 @@
 {% endblock %}
 
 {% block body %}
+    {% set can_write = is_granted('AREA_WRITE', constant('App\\Enum\\Area::NONCONFORMITY')) %}
     <div class="page-head">
         <div>
             <h1 class="mono">{{ nonConformity.reference }} <span class="badge {{ nonConformity.status.badgeClass }}">{{ nonConformity.status.label }}</span></h1>
@@ -52,7 +53,17 @@
                         <span class="meta-item"><span class="meta-label">Prevista</span>{{ action.plannedDate ? action.plannedDate|date('d/m/Y') : '—' }}</span>
                         <span class="meta-item"><span class="meta-label">Autorización</span>
                             {%- if action.requiresDirectionAuthorization -%}
-                                {% if action.authorizedBy %}<span class="badge badge--success">Autorizada</span>{% else %}<span class="badge badge--warning">Pendiente</span>{% endif %}
+                                {% if action.authorizedBy %}
+                                    <span class="badge badge--success">Autorizada</span>
+                                {% else %}
+                                    <span class="badge badge--warning">Pendiente</span>
+                                    {% if can_write %}
+                                        <form method="post" action="{{ path('corrective_action_authorize', { id: nonConformity.id, actionId: action.id }) }}" class="inline-form" data-confirm="¿Autorizar esta acción correctiva? Quedará autorizada por ti con la fecha de hoy.">
+                                            <input type="hidden" name="_token" value="{{ csrf_token('corrective_action_authorize' ~ action.id) }}">
+                                            <button class="btn secondary" type="submit">Autorizar</button>
+                                        </form>
+                                    {% endif %}
+                                {% endif %}
                             {%- else -%}<span class="muted">No requiere</span>{%- endif -%}
                         </span>
                         <span class="meta-item"><span class="meta-label">Eficacia</span>
