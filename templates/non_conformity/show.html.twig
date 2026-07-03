@@ -57,12 +57,6 @@
                                     <span class="badge badge--success">Autorizada</span>
                                 {% else %}
                                     <span class="badge badge--warning">Pendiente</span>
-                                    {% if can_write %}
-                                        <form method="post" action="{{ path('corrective_action_authorize', { id: nonConformity.id, actionId: action.id }) }}" class="inline-form" data-confirm="¿Autorizar esta acción correctiva? Quedará autorizada por ti con la fecha de hoy.">
-                                            <input type="hidden" name="_token" value="{{ csrf_token('corrective_action_authorize' ~ action.id) }}">
-                                            <button class="btn secondary" type="submit">Autorizar</button>
-                                        </form>
-                                    {% endif %}
                                 {% endif %}
                             {%- else -%}<span class="muted">No requiere</span>{%- endif -%}
                         </span>
@@ -75,7 +69,15 @@
                     {% if action.implementationEvidence %}
                         <div class="action-efficacy"><span class="meta-label">Evidencia de implementación</span>{{ action.implementationEvidence|nl2br }}</div>
                     {% endif %}
-                    <p class="action-edit"><a href="{{ path('corrective_action_edit', { id: nonConformity.id, actionId: action.id }) }}">Editar acción</a></p>
+                    <div class="action-actions">
+                        {% if action.requiresDirectionAuthorization and not action.authorizedBy and can_write %}
+                            <form method="post" action="{{ path('corrective_action_authorize', { id: nonConformity.id, actionId: action.id }) }}" class="inline-form" data-confirm="¿Autorizar esta acción correctiva? Quedará autorizada por ti con la fecha de hoy.">
+                                <input type="hidden" name="_token" value="{{ csrf_token('corrective_action_authorize' ~ action.id) }}">
+                                <button class="btn secondary" type="submit">Autorizar</button>
+                            </form>
+                        {% endif %}
+                        <a href="{{ path('corrective_action_edit', { id: nonConformity.id, actionId: action.id }) }}">Editar acción</a>
+                    </div>
                 </div>
             {% endfor %}
         {% endif %}

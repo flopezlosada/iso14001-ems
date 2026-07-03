@@ -589,6 +589,8 @@ a.badge:hover { border-color: currentColor; }
 }
 .action-efficacy .meta-label { display: block; margin: 0 0 3px; }
 .action-edit { margin: 10px 0 0; font-size: 14px; }
+/* Pie de acciones de una ficha: botones/enlaces (autorizar, editar…) en fila, separados de la meta. */
+.action-actions { display: flex; align-items: center; gap: 14px; margin: 12px 0 0; font-size: 14px; }
 
 /* ---- Formularios -------------------------------------------------------- */
 /* Tarjeta contenedora de un formulario de alta/edición: ancho de línea cómodo y único
