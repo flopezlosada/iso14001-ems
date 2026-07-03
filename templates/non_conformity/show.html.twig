@@ -15,8 +15,35 @@
             <h1 class="mono">{{ nonConformity.reference }} <span class="badge {{ nonConformity.status.badgeClass }}">{{ nonConformity.status.label }}</span></h1>
             <p class="lead">{{ nonConformity.origin.label }}{% if nonConformity.originDetail %} · {{ nonConformity.originDetail }}{% endif %}</p>
         </div>
-        <a class="btn secondary" href="{{ path('non_conformity_edit', { id: nonConformity.id }) }}">Editar no conformidad</a>
-    </div>
+        <div class="page-actions">
+            {% if can_write %}
+                {% set st = nonConformity.status.value %}
+                {% if st == 'open' %}
+                    <form method="post" action="{{ path('non_conformity_change_status', { id: nonConformity.id }) }}" class="inline-form" data-confirm="¿Iniciar el tratamiento de esta no conformidad?">
+                        <input type="hidden" name="_token" value="{{ csrf_token('non_conformity_status' ~ nonConformity.id) }}">
+                        <input type="hidden" name="status" value="in_treatment">
+                        <button class="btn secondary" type="submit">Iniciar tratamiento</button>
+                    </form>
+                {% elseif st == 'in_treatment' %}
+                    {% if nonConformity.canBeClosed %}
+                        <form method="post" action="{{ path('non_conformity_change_status', { id: nonConformity.id }) }}" class="inline-form" data-confirm="¿Cerrar esta no conformidad? Todas sus acciones están verificadas como eficaces.">
+                            <input type="hidden" name="_token" value="{{ csrf_token('non_conformity_status' ~ nonConformity.id) }}">
+                            <input type="hidden" name="status" value="closed">
+                            <button class="btn secondary" type="submit">Cerrar</button>
+                        </form>
+                    {% else %}
+                        <button class="btn secondary" type="button" disabled title="Verifica la eficacia (OK) de todas las acciones correctivas antes de cerrar.">Cerrar</button>
+                    {% endif %}
+                {% elseif st == 'closed' %}
+                    <form method="post" action="{{ path('non_conformity_change_status', { id: nonConformity.id }) }}" class="inline-form" data-confirm="¿Reabrir esta no conformidad? Volverá a estado 'En tratamiento'.">
+                        <input type="hidden" name="_token" value="{{ csrf_token('non_conformity_status' ~ nonConformity.id) }}">
+                        <input type="hidden" name="status" value="in_treatment">
+                        <button class="btn secondary" type="submit">Reabrir</button>
+                    </form>
+                {% endif %}
+            {% endif %}
+            <a class="btn secondary" href="{{ path('non_conformity_edit', { id: nonConformity.id }) }}">Editar no conformidad</a>
+        </div>
 
     <div class="card">
         <dl class="detail-grid">

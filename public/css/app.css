@@ -578,11 +578,10 @@ a.badge:hover { border-color: currentColor; }
 }
 .action-item:last-child { margin-bottom: 0; }
 .action-desc { margin: 0 0 10px; font-weight: 600; }
-.action-meta { display: flex; flex-wrap: wrap; gap: 6px 0; margin: 0; }
-/* Separador vertical entre campos: evita que un valor vacío ("—") se lea pegado a la etiqueta del
-   campo siguiente (p. ej. "— PREVISTA"). */
-.action-meta .meta-item { font-size: 14px; color: var(--text); padding: 0 16px; border-left: 1px solid var(--border); }
-.action-meta .meta-item:first-child { padding-left: 0; border-left: none; }
+/* Un campo por línea (columna): más legible que la fila, y un valor vacío ("—") nunca se lee
+   pegado a la etiqueta del campo siguiente. */
+.action-meta { display: flex; flex-direction: column; gap: 4px; margin: 0; }
+.action-meta .meta-item { font-size: 14px; color: var(--text); }
 /* Grupo del CTA de eficacia: etiqueta + dos botones, para distinguirlo del botón de Autorizar. */
 .action-eval { display: inline-flex; align-items: center; gap: 8px; }
 .meta-label { color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: .02em; margin-right: 6px; }
@@ -596,6 +595,8 @@ a.badge:hover { border-color: currentColor; }
 .action-edit { margin: 10px 0 0; font-size: 14px; }
 /* Pie de acciones de una ficha: botones/enlaces (autorizar, editar…) en fila, separados de la meta. */
 .action-actions { display: flex; align-items: center; gap: 14px; margin: 12px 0 0; font-size: 14px; }
+/* Fila de acciones de una cabecera (transiciones de estado + editar). */
+.page-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 
 /* ---- Formularios -------------------------------------------------------- */
 /* Tarjeta contenedora de un formulario de alta/edición: ancho de línea cómodo y único
