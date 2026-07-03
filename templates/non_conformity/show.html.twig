@@ -76,6 +76,21 @@
                                 <button class="btn secondary" type="submit">Autorizar</button>
                             </form>
                         {% endif %}
+                        {% if action.efficacy is null and can_write %}
+                            <span class="action-eval">
+                                <span class="meta-label">Eficacia</span>
+                                <form method="post" action="{{ path('corrective_action_evaluate', { id: nonConformity.id, actionId: action.id }) }}" class="inline-form" data-confirm="¿Marcar esta acción como EFICAZ? Se registrará con tu nombre y la fecha de hoy.">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('corrective_action_evaluate' ~ action.id) }}">
+                                    <input type="hidden" name="result" value="ok">
+                                    <button class="btn secondary" type="submit">Eficaz</button>
+                                </form>
+                                <form method="post" action="{{ path('corrective_action_evaluate', { id: nonConformity.id, actionId: action.id }) }}" class="inline-form" data-confirm="¿Marcar esta acción como NO eficaz? Se registrará con tu nombre y la fecha de hoy.">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('corrective_action_evaluate' ~ action.id) }}">
+                                    <input type="hidden" name="result" value="not_ok">
+                                    <button class="btn secondary" type="submit">No eficaz</button>
+                                </form>
+                            </span>
+                        {% endif %}
                         <a href="{{ path('corrective_action_edit', { id: nonConformity.id, actionId: action.id }) }}">Editar acción</a>
                     </div>
                 </div>
