@@ -19,7 +19,7 @@
             {{ form_errors(form) }}
             {{ f.section('Identificación', [form.openedAt, form.origin, form.originDetail, form.affectedProcess, form.isoClause]) }}
             {{ f.section('Descripción y causa', [form.description, form.rootCause]) }}
-            {{ f.section('Gestión', [form.responsible, form.status]) }}
+            {{ f.section('Gestión', [form.responsible]) }}
             {{ f.actions(path('non_conformity_index')) }}
         {{ form_end(form) }}
     </div>

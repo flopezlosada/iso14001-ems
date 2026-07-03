@@ -86,7 +86,6 @@ final class NonConformityControllerTest extends WebTestCase
             'non_conformity[openedAt]' => '2026-03-15',
             'non_conformity[origin]' => 'external_audit',
             'non_conformity[description]' => 'No hay evidencia de la comunicación previa de residuos peligrosos.',
-            'non_conformity[status]' => 'open',
         ]);
 
         self::assertResponseRedirects('/non-conformities');
@@ -116,8 +115,7 @@ final class NonConformityControllerTest extends WebTestCase
                 'non_conformity[openedAt]' => '2026-05-01',
                 'non_conformity[origin]' => 'external_audit',
                 'non_conformity[description]' => $description,
-                'non_conformity[status]' => 'open',
-            ]);
+                ]);
         }
 
         $references = array_map(
@@ -129,21 +127,33 @@ final class NonConformityControllerTest extends WebTestCase
         self::assertContains('NC.AE.2026.02', $references);
     }
 
-    public function testClosingStampsClosingDate(): void
+    public function testClosingViaStatusCtaStampsClosingDate(): void
     {
         $client = $this->loggedInClient();
+        // El estado ya no se edita en el formulario: se cambia por el CTA de transición. Se crea la NC
+        // (queda OPEN por defecto) y se cierra desde su ficha; sin acciones correctivas, canBeClosed().
         $client->request('GET', '/non-conformities/new');
         $client->submitForm('Guardar', [
             'non_conformity[openedAt]' => '2026-01-10',
             'non_conformity[origin]' => 'internal',
             'non_conformity[description]' => 'Incumplimiento interno detectado.',
-            'non_conformity[status]' => 'closed',
         ]);
 
         $nc = static::getContainer()->get(NonConformityRepository::class)->findOneBy([]);
         self::assertNotNull($nc);
-        self::assertSame(NonConformityStatus::CLOSED, $nc->getStatus());
-        self::assertNotNull($nc->getClosedAt());
+        self::assertSame(NonConformityStatus::OPEN, $nc->getStatus());
+
+        // Reutiliza el form del CTA de estado de la ficha (token CSRF válido) forzando el destino a "cerrada".
+        $crawler = $client->request('GET', '/non-conformities/'.$nc->getId());
+        $form = $crawler->filter('form[action$="/status"]')->form();
+        $form['status'] = 'closed';
+        $client->submit($form);
+
+        static::getContainer()->get(EntityManagerInterface::class)->clear();
+        $reloaded = static::getContainer()->get(NonConformityRepository::class)->find($nc->getId());
+        self::assertNotNull($reloaded);
+        self::assertSame(NonConformityStatus::CLOSED, $reloaded->getStatus());
+        self::assertNotNull($reloaded->getClosedAt());
     }
 
     public function testSubmittingWithoutDescriptionRedisplaysFormWithErrors(): void
@@ -154,7 +164,6 @@ final class NonConformityControllerTest extends WebTestCase
             'non_conformity[openedAt]' => '2026-03-15',
             'non_conformity[origin]' => 'internal',
             'non_conformity[description]' => '',
-            'non_conformity[status]' => 'open',
         ]);
 
         self::assertFalse($client->getResponse()->isRedirect());
