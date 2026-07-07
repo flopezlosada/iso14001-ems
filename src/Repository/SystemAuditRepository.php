@@ -47,13 +47,15 @@ class SystemAuditRepository extends ServiceEntityRepository
     }
 
     /**
-     * Whether an internal audit (ISO 14001 §9.2) has already been registered for the given year.
-     * Drives the yearly reminder to run the internal audit.
+     * The internal audit (ISO 14001 §9.2) registered for the given year, or null if none. Drives the
+     * audit workflow guide, which tracks the recurring internal-audit obligation.
      *
      * @param int $year the audit year
+     *
+     * @return SystemAudit|null the year's internal audit, or null
      */
-    public function hasInternalForYear(int $year): bool
+    public function findInternalForYear(int $year): ?SystemAudit
     {
-        return null !== $this->findOneBy(['year' => $year, 'type' => AuditType::INTERNAL]);
+        return $this->findOneBy(['year' => $year, 'type' => AuditType::INTERNAL]);
     }
 }

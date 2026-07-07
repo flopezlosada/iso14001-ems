@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Entity;
 
+use App\Enum\AuditStatus;
 use App\Enum\AuditType;
 use App\Repository\SystemAuditRepository;
 use Doctrine\DBAL\Types\Types;
@@ -120,6 +121,24 @@ class SystemAudit
     public function hasReport(): bool
     {
         return null !== $this->reportPath;
+    }
+
+    /**
+     * The audit's lifecycle state, derived from its own data: planned while it has no conduction
+     * date, conducted once it does, and closed once its conclusions are written. Drives the
+     * semantic-coloured status badge (there is no stored status column, see {@see AuditStatus}).
+     *
+     * @return AuditStatus the current state
+     */
+    public function status(): AuditStatus
+    {
+        if (null === $this->conductedOn) {
+            return AuditStatus::PLANNED;
+        }
+
+        return null !== $this->conclusions && '' !== trim($this->conclusions)
+            ? AuditStatus::CLOSED
+            : AuditStatus::CONDUCTED;
     }
 
     public function getId(): ?int

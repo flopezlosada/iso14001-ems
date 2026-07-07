@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Entity;
 
+use App\Enum\ManagementReviewStatus;
 use App\Enum\ReviewSectionKey;
 use App\Repository\ManagementReviewRepository;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -247,6 +248,22 @@ class ManagementReview
     public function isDigitallySigned(): bool
     {
         return null !== $this->signedPdfPath;
+    }
+
+    /**
+     * The review's lifecycle state, derived from its own data: a draft until approved, then approved
+     * and finally signed once a level-1a PDF is attached. Drives the semantic-coloured status badge
+     * (there is no stored status column, see {@see ManagementReviewStatus}).
+     *
+     * @return ManagementReviewStatus the current state
+     */
+    public function status(): ManagementReviewStatus
+    {
+        if (!$this->isApproved()) {
+            return ManagementReviewStatus::DRAFT;
+        }
+
+        return $this->isDigitallySigned() ? ManagementReviewStatus::SIGNED : ManagementReviewStatus::APPROVED;
     }
 
     /**

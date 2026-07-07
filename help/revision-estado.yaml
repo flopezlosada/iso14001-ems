@@ -1,0 +1,26 @@
+slug: revision-estado
+title: Estado de la revisión por la dirección
+summary: >
+    Borrador: el acta se está preparando y se puede editar. Aprobada: la dirección la ha firmado y
+    queda cerrada (ya no se edita). Firmada: además lleva adjunto el PDF firmado digitalmente.
+legal:
+    - label: 'ISO 14001:2015 · apartado 9.3 (Revisión por la dirección)'
+      note: >
+          La revisión debe quedar documentada como información documentada; una vez aprobada, el acta
+          es el registro RG-09.03.01 y no debe modificarse.
+      url: 'https://www.iso.org/standard/60857.html'
+docs:
+    - PG-09.03.00
+    - RG-09.03.01
+body: |
+    <p>El estado sale de los propios datos del acta, no se elige a mano:</p>
+    <ul>
+        <li><strong>Borrador</strong>: el acta está en preparación. Se pueden completar las entradas,
+        registrar las decisiones y editar la reunión. Es el único estado en el que se puede modificar.</li>
+        <li><strong>Aprobada</strong>: la dirección la ha aprobado (firmado). En ese momento se
+        <em>sella el PDF oficial</em> y el acta <strong>queda bloqueada</strong>: es el registro
+        oficial y no puede volver a editarse.</li>
+        <li><strong>Firmada</strong>: sobre un acta ya aprobada, se ha adjuntado además el PDF
+        <em>firmado digitalmente</em> por la dirección (firma de nivel 1a). Es un extra sobre la
+        aprobación, no un requisito.</li>
+    </ul>

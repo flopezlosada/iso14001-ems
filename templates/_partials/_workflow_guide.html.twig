@@ -1,0 +1,54 @@
+{#
+    Guía "qué falta" reutilizable (Patrón B): pinta una lista de pasos ya calculados como
+    .workflow-steps (estilos en app.css). NO es una máquina de estados ni un asistente lineal:
+    cada paso es un diagnóstico independiente (hecho / pendiente / bloqueado) con su acción a la
+    derecha. La lógica de cálculo vive en un servicio XWorkflowStatus; aquí solo se presenta.
+
+    Parámetros (mapa `guide`):
+      - title           string   título de la tarjeta
+      - subtitle        string   texto lead bajo el título (opcional)
+      - complete        bool     si todo está al día (pinta el badge de éxito)
+      - complete_label  string   texto del badge cuando `complete` (opcional)
+      - steps           lista de pasos; cada paso es un mapa:
+          - state   'is-done' | 'is-pending' | 'is-blocked'
+          - label   string   descripción del paso
+          - hint    string   matiz entre paréntesis, atenuado (opcional)
+          - note    string   sufijo atenuado tras "·" (opcional, p. ej. un recuento)
+          - action  mapa de la acción/estado a la derecha (opcional):
+              - { type: 'link',  url, text, style: 'btn'|'plain' }
+              - { type: 'muted', text }
+#}
+<div class="card workflow-guide">
+    <div class="page-head">
+        <div>
+            <h2>{{ guide.title }}</h2>
+            {% if guide.subtitle is defined and guide.subtitle %}
+                <p class="lead muted">{{ guide.subtitle }}</p>
+            {% endif %}
+        </div>
+        {% if guide.complete %}
+            <span class="badge badge--success">{{ guide.complete_label|default('Al día') }}</span>
+        {% endif %}
+    </div>
+    <ol class="workflow-steps">
+        {% for step in guide.steps %}
+            <li class="workflow-step {{ step.state }}">
+                <span class="workflow-step-label">
+                    {{- step.label -}}
+                    {%- if step.hint is defined and step.hint %} <span class="muted">{{ step.hint }}</span>{% endif -%}
+                    {%- if step.note is defined and step.note %} <span class="muted">· {{ step.note }}</span>{% endif -%}
+                </span>
+                {% if step.action is defined and step.action %}
+                    {% set a = step.action %}
+                    <span class="workflow-step-aside">
+                        {% if a.type == 'link' %}
+                            <a class="{{ a.style|default('btn') == 'plain' ? 'muted' : 'btn secondary' }}" href="{{ a.url }}">{{ a.text }}</a>
+                        {% elseif a.type == 'muted' %}
+                            <span class="muted">{{ a.text }}</span>
+                        {% endif %}
+                    </span>
+                {% endif %}
+            </li>
+        {% endfor %}
+    </ol>
+</div>
