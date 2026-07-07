@@ -193,6 +193,42 @@ final class ObjectiveControllerTest extends WebTestCase
         self::assertCount(1, static::getContainer()->get(ObjectiveRepository::class)->findForSchoolYear('2025-2026'));
     }
 
+    public function testShowRendersObjectiveDetail(): void
+    {
+        $client = $this->loggedInClient();
+        $objective = $this->persistObjective('OBJ-01', 1, '2025-2026', 'Reducir el consumo de agua un 5%', ObjectiveStatus::IN_PROGRESS);
+
+        $client->request('GET', sprintf('/objectives/2025-2026/%d', $objective->getId()));
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('h1', 'OBJ-01');
+        self::assertSelectorTextContains('.card', 'Reducir el consumo de agua un 5%');
+        // Contextual help is wired on the detail (guards against a slug typo).
+        self::assertSelectorExists('a.help-btn[data-help="objetivo-cumplimiento"]');
+    }
+
+    public function testShowOfANotAchievedObjectiveOffersOpeningANonConformity(): void
+    {
+        $client = $this->loggedInClient();
+        $objective = $this->persistObjective('OBJ-01', 1, '2025-2026', 'Reducir el consumo energético', ObjectiveStatus::NOT_ACHIEVED);
+
+        $client->request('GET', sprintf('/objectives/2025-2026/%d', $objective->getId()));
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('a[href*="/non-conformities/new"]');
+    }
+
+    public function testShowingObjectiveOfAnotherCourseIsNotFound(): void
+    {
+        $client = $this->loggedInClient();
+        $objective = $this->persistObjective('OBJ-01', 1, '2025-2026', 'Reducir el consumo de agua', ObjectiveStatus::IN_PROGRESS);
+
+        // The objective belongs to 2025-2026; requesting it under 2024-2025 must 404.
+        $client->request('GET', sprintf('/objectives/2024-2025/%d', $objective->getId()));
+
+        self::assertResponseStatusCodeSame(404);
+    }
+
     /**
      * Persists an objective for arranging the per-course and copy scenarios.
      */
