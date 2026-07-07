@@ -14,6 +14,8 @@ use App\Service\AuditLogger;
 use App\Service\FileUploader;
 use App\Service\ManagementReview\ManagementReviewPdfGenerator;
 use App\Service\ManagementReview\ManagementReviewPrefiller;
+use App\Service\ManagementReview\ManagementReviewWorkflowStatusProvider;
+use App\Util\SchoolYear;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
@@ -44,12 +46,18 @@ class ManagementReviewController extends AbstractController
      * Lists every management review, most recent course first.
      */
     #[Route('', name: 'management_review_index', methods: ['GET'])]
-    public function index(ManagementReviewRepository $repository): Response
+    public function index(ManagementReviewRepository $repository, ManagementReviewWorkflowStatusProvider $workflow): Response
     {
         $this->denyAccessUnlessGranted(AreaVoter::READ, Area::MANAGEMENT_REVIEW);
 
+        $currentExercise = SchoolYear::current(new \DateTimeImmutable());
+
         return $this->render('management_review/index.html.twig', [
             'reviews' => $repository->findAllOrdered(),
+            'currentExercise' => $currentExercise,
+            // Guía "qué falta este curso": pendientes del acta de la dirección, cada uno enlazado a
+            // su acción.
+            'status' => $workflow->for($currentExercise),
         ]);
     }
 

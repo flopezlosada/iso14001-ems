@@ -12,6 +12,7 @@ use App\Enum\PermissionLevel;
 use App\Enum\ReviewSectionKey;
 use App\Repository\ManagementReviewRepository;
 use App\Service\FileUploader;
+use App\Util\SchoolYear;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
@@ -46,6 +47,27 @@ final class ManagementReviewControllerTest extends WebTestCase
     private function reviews(): ManagementReviewRepository
     {
         return static::getContainer()->get(ManagementReviewRepository::class);
+    }
+
+    public function testWorkflowGuideOffersCreatingTheActaUntilThisCoursesReviewExists(): void
+    {
+        $client = $this->loggedInClient();
+        $exercise = SchoolYear::current(new \DateTimeImmutable());
+
+        // No review for the current course yet -> the guide's first step is pending and offers to
+        // create the acta. This also renders the shared _workflow_guide partial end to end.
+        $client->request('GET', '/management-review');
+        self::assertResponseIsSuccessful();
+        self::assertStringContainsString('Crear el acta del curso '.$exercise, (string) $client->getResponse()->getContent());
+
+        // Once this course's review exists, that step is done and the CTA is gone.
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $em->persist((new ManagementReview())->setExercise($exercise));
+        $em->flush();
+
+        $client->request('GET', '/management-review');
+        self::assertResponseIsSuccessful();
+        self::assertStringNotContainsString('Crear el acta del curso '.$exercise, (string) $client->getResponse()->getContent());
     }
 
     public function testCreatingReviewGeneratesEverySection(): void

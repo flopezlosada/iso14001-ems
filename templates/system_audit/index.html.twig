@@ -17,15 +17,73 @@
         {% endif %}
     </div>
 
-    {% if needsInternalAudit and can_write %}
-        <div class="card">
-            <h2>Auditoría interna de {{ currentYear }} pendiente</h2>
-            <p>Aún no se ha registrado la auditoría interna de {{ currentYear }} (ISO 14001 §9.2). Cuando hayas revisado que la documentación del sistema está al día, crea el registro para dejarla planificada.</p>
-            <a class="btn" href="{{ path('system_audit_new', { type: 'internal' }) }}">Crear auditoría interna {{ currentYear }}</a>
-        </div>
-    {% endif %}
+    {# Guía "qué falta este curso": pendientes de la auditoría interna del año (planificar →
+       realizar → registrar hallazgos/NC → cerrar), cada paso enlazado a donde se resuelve. Los
+       pasos se calculan en AuditWorkflowStatusProvider; aquí solo se traducen a la estructura del
+       partial común. #}
+    {% set steps = [] %}
 
-    <div class="card">
+    {# 1 · Planificar #}
+    {% set steps = steps|merge([{
+        state: status.planned ? 'is-done' : 'is-pending',
+        label: 'Planificar la auditoría interna ' ~ status.year,
+        hint: '§9.2',
+        action: status.planned
+            ? { type: 'link', style: 'plain', url: path('system_audit_show', { id: status.internalAuditId }), text: 'ver la auditoría' }
+            : (can_write
+                ? { type: 'link', url: path('system_audit_new', { type: 'internal' }), text: 'Crear auditoría interna ' ~ status.year }
+                : { type: 'muted', text: 'Pendiente' })
+    }]) %}
+
+    {# 2 · Realizarla #}
+    {% set steps = steps|merge([{
+        state: not status.planned ? 'is-blocked' : (status.conducted ? 'is-done' : 'is-pending'),
+        label: 'Realizarla',
+        hint: 'fecha, auditor, informe',
+        action: not status.planned
+            ? { type: 'muted', text: 'Requiere planificar' }
+            : (status.conducted
+                ? { type: 'muted', text: 'Hecho' }
+                : (can_write
+                    ? { type: 'link', url: path('system_audit_edit', { id: status.internalAuditId }), text: 'Registrar realización' }
+                    : { type: 'muted', text: 'Pendiente' }))
+    }]) %}
+
+    {# 3 · Registrar hallazgos y no conformidades #}
+    {% set steps = steps|merge([{
+        state: not status.conducted ? 'is-blocked' : (status.openFindings > 0 ? 'is-pending' : 'is-done'),
+        label: 'Registrar hallazgos y no conformidades',
+        note: status.conducted ? (status.findingsCount > 0 ? status.findingsCount ~ ' registrada(s)' : 'Sin no conformidades') : null,
+        action: not status.conducted
+            ? { type: 'muted', text: 'Requiere realizarla' }
+            : (status.openFindings > 0
+                ? { type: 'link', url: path('system_audit_show', { id: status.internalAuditId }) ~ '#hallazgos', text: status.openFindings ~ ' sin cerrar →' }
+                : { type: 'link', style: 'plain', url: path('system_audit_show', { id: status.internalAuditId }) ~ '#hallazgos', text: 'revisar / registrar' })
+    }]) %}
+
+    {# 4 · Cerrar #}
+    {% set steps = steps|merge([{
+        state: not status.conducted ? 'is-blocked' : (status.closed ? 'is-done' : 'is-pending'),
+        label: 'Cerrar la auditoría',
+        hint: 'redactar conclusiones',
+        action: not status.conducted
+            ? { type: 'muted', text: 'Requiere realizarla' }
+            : (status.closed
+                ? { type: 'muted', text: 'Hecho' }
+                : (can_write
+                    ? { type: 'link', url: path('system_audit_edit', { id: status.internalAuditId }), text: 'Redactar conclusiones' }
+                    : { type: 'muted', text: 'Pendiente' }))
+    }]) %}
+
+    {% include '_partials/_workflow_guide.html.twig' with { guide: {
+        title: 'Auditoría interna de ' ~ status.year,
+        subtitle: 'Qué hay que hacer aquí y qué te falta.',
+        complete: status.isComplete,
+        complete_label: 'Al día para ' ~ status.year,
+        steps: steps,
+    } } only %}
+
+    <div class="card" id="listado">
         {% if audits is empty %}
             <div class="empty-state">
                 <h2>Aún no hay auditorías registradas</h2>
@@ -35,13 +93,14 @@
         {% else %}
             <table data-list-tools>
                 <thead>
-                    <tr><th>Año</th><th>Tipo {{ help_button('auditoria-tipo') }}</th><th>Fecha</th><th>Auditor</th><th>Informe</th><th></th></tr>
+                    <tr><th data-filter="anio">Año</th><th data-filter="tipo">Tipo {{ help_button('auditoria-tipo') }}</th><th data-filter="estado">Estado {{ help_button('auditoria-estado') }}</th><th>Fecha</th><th>Auditor</th><th>Informe</th><th></th></tr>
                 </thead>
                 <tbody>
                     {% for audit in audits %}
                         <tr>
                             <td>{{ audit.year }}</td>
                             <td><a href="{{ path('system_audit_show', { id: audit.id }) }}">Auditoría {{ audit.type.label|lower }}</a></td>
+                            <td><span class="badge {{ audit.status.badgeClass }}">{{ audit.status.label }}</span></td>
                             <td class="muted">{{ audit.conductedOn ? audit.conductedOn|date('d/m/Y') : '—' }}</td>
                             <td>{{ audit.auditor }}</td>
                             <td>

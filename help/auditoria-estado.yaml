@@ -1,0 +1,28 @@
+slug: auditoria-estado
+title: Estado de una auditoría
+summary: >
+    El estado resume en qué punto está la auditoría: Planificada (aún no se ha hecho), Realizada (ya
+    se hizo pero falta cerrarla) y Cerrada (con sus conclusiones escritas). Se calcula solo, según
+    las fechas y las conclusiones.
+legal:
+    - label: 'ISO 14001:2015 · apartado 9.2 (Auditoría interna)'
+      note: >
+          La norma pide planificar las auditorías a intervalos, ejecutarlas, informar de sus
+          resultados y actuar sobre los hallazgos. El estado sigue ese recorrido.
+      url: 'https://www.iso.org/standard/60857.html'
+docs:
+    - PC.09.0
+body: |
+    <p>El estado no se elige a mano: sale de los datos de la propia auditoría, así que no puede
+    quedar desactualizado.</p>
+    <ul>
+        <li><strong>Planificada</strong>: está registrada pero todavía <em>no tiene fecha de
+        realización</em>. Es el hueco reservado en el calendario.</li>
+        <li><strong>Realizada</strong>: ya tiene fecha de realización, pero <em>aún no se han
+        escrito las conclusiones</em>. Es el momento de registrar los hallazgos y las no
+        conformidades detectadas.</li>
+        <li><strong>Cerrada</strong>: tiene <em>conclusiones escritas</em>. La auditoría queda
+        documentada; las no conformidades que salieron siguen su propio ciclo hasta cerrarse.</li>
+    </ul>
+    <p>Para pasar de un estado a otro basta con editar la auditoría y rellenar el dato que falta
+    (la fecha para "Realizada", las conclusiones para "Cerrada").</p>

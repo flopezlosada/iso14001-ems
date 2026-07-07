@@ -149,22 +149,23 @@ final class SystemAuditControllerTest extends WebTestCase
         self::assertResponseStatusCodeSame(404);
     }
 
-    public function testInternalAuditReminderShowsUntilThisYearsInternalAuditExists(): void
+    public function testWorkflowGuideOffersPlanningUntilThisYearsInternalAuditExists(): void
     {
         $client = $this->loggedInClient();
         $year = (int) date('Y');
 
-        // No internal audit for the current year yet -> the reminder is shown.
+        // No internal audit for the current year yet -> the guide's first step is pending and offers
+        // to plan it.
         $client->request('GET', '/system-audits');
-        self::assertStringContainsString('Auditoría interna de '.$year.' pendiente', (string) $client->getResponse()->getContent());
+        self::assertStringContainsString('Crear auditoría interna '.$year, (string) $client->getResponse()->getContent());
 
-        // Once this year's internal audit exists, the reminder is gone.
+        // Once this year's internal audit exists, that plan step is done and the CTA is gone.
         $em = static::getContainer()->get(EntityManagerInterface::class);
         $em->persist((new SystemAudit())->setYear($year)->setType(AuditType::INTERNAL)->setAuditor('Auditora interna'));
         $em->flush();
 
         $client->request('GET', '/system-audits');
-        self::assertStringNotContainsString('Auditoría interna de '.$year.' pendiente', (string) $client->getResponse()->getContent());
+        self::assertStringNotContainsString('Crear auditoría interna '.$year, (string) $client->getResponse()->getContent());
     }
 
     public function testGenerateActionPlanSeedsADraftActionPerFindingAndIsIdempotent(): void

@@ -15,7 +15,7 @@
 {% block body %}
     <div class="page-head">
         <div>
-            <h1>Auditoría {{ audit.type.label|lower }} {{ audit.year }}</h1>
+            <h1>Auditoría {{ audit.type.label|lower }} {{ audit.year }} <span class="badge {{ audit.status.badgeClass }}">{{ audit.status.label }}</span> {{ help_button('auditoria-estado') }}</h1>
             <p class="lead">{{ audit.auditor }}{% if audit.conductedOn %} · {{ audit.conductedOn|date('d/m/Y') }}{% endif %}</p>
         </div>
         {% if can_write %}
@@ -36,9 +36,9 @@
         </dl>
     </div>
 
-    <div class="card">
+    <div class="card" id="hallazgos">
         <div class="page-head">
-            <h2>No conformidades de esta auditoría</h2>
+            <h2>No conformidades de esta auditoría {{ help_button('no-conformidades') }}</h2>
             {% if can_write_nc %}
                 <div>
                     <a class="btn secondary" href="{{ path('non_conformity_new', { audit: audit.id }) }}">+ Registrar no conformidad</a>
@@ -67,7 +67,7 @@
                                 {% endif %}
                             </td>
                             <td>{{ nc.description }}</td>
-                            <td>{{ nc.status.label }}</td>
+                            <td><span class="badge {{ nc.status.badgeClass }}">{{ nc.status.label }}</span></td>
                             <td>
                                 {%- set actionCount = nc.correctiveActions|length -%}
                                 {{ actionCount > 0 ? actionCount ~ ' acción(es)' : 'Sin acciones' }}

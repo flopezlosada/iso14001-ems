@@ -13,6 +13,7 @@ use App\Repository\NonConformityRepository;
 use App\Repository\SystemAuditRepository;
 use App\Security\Voter\AreaVoter;
 use App\Service\AuditLogger;
+use App\Service\AuditWorkflowStatusProvider;
 use App\Service\FileUploader;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -41,7 +42,7 @@ class SystemAuditController extends AbstractController
      * Lists every audit (most recent first).
      */
     #[Route('', name: 'system_audit_index', methods: ['GET'])]
-    public function index(SystemAuditRepository $audits): Response
+    public function index(SystemAuditRepository $audits, AuditWorkflowStatusProvider $workflow): Response
     {
         $this->denyAccessUnlessGranted(AreaVoter::READ, Area::SYSTEM_AUDIT);
 
@@ -50,7 +51,9 @@ class SystemAuditController extends AbstractController
         return $this->render('system_audit/index.html.twig', [
             'audits' => $audits->findAllOrdered(),
             'currentYear' => $currentYear,
-            'needsInternalAudit' => !$audits->hasInternalForYear($currentYear),
+            // Guía "qué falta este curso": pendientes de la auditoría interna del año, cada uno
+            // enlazado a su acción. Sustituye al antiguo aviso puntual de "auditoría pendiente".
+            'status' => $workflow->for($currentYear),
         ]);
     }
 
