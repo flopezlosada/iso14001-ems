@@ -98,7 +98,8 @@ class NonConformityController extends AbstractController
     /**
      * Changes the lifecycle state of the non-conformity as a one-click CTA (abierta → en tratamiento
      * → cerrada, and reopening). Closing is gated by the domain rule {@see NonConformity::canBeClosed}
-     * (every corrective action verified effective), so the state stays tied to its PACs. The closing
+     * (no corrective action left pending review and at least one reviewed effective), so the state
+     * stays tied to its PACs. The closing
      * date is kept in sync. CSRF-protected POST; same WRITE permission as editing.
      */
     #[Route('/{id}/status', name: 'non_conformity_change_status', requirements: ['id' => '\d+'], methods: ['POST'])]
@@ -117,7 +118,7 @@ class NonConformityController extends AbstractController
             return $redirect;
         }
         if (NonConformityStatus::CLOSED === $target && !$nonConformity->canBeClosed()) {
-            $this->addFlash('error', 'No se puede cerrar: alguna acción correctiva no está verificada como eficaz (OK). Revisa o reabre las acciones pendientes.');
+            $this->addFlash('error', 'No se puede cerrar: alguna acción correctiva está pendiente de verificar, o ninguna ha resultado eficaz (OK). Deja al menos una acción eficaz y ninguna a medias.');
 
             return $redirect;
         }

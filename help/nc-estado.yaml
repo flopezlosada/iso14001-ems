@@ -21,3 +21,16 @@ body: |
     </ol>
     <p>No cierres una no conformidad hasta haber comprobado que la acción fue eficaz (que el problema
     no reaparece). El listado de control (F.11.0) las sigue todas hasta su cierre.</p>
+    <p><strong>Cuándo puedes cerrarla.</strong> El sistema solo deja cerrar cuando se cumplen las dos
+    condiciones a la vez:</p>
+    <ul>
+        <li>no queda <strong>ninguna acción a medias</strong> (todas están verificadas, con resultado
+        Eficaz o No eficaz), y</li>
+        <li>al menos una acción ha resultado <strong>eficaz</strong> (OK).</li>
+    </ul>
+    <p>Una acción <strong>No eficaz no impide cerrar</strong>: se queda como registro histórico de un
+    intento que no funcionó. Lo correcto es dejarla tal cual (no la reescribas ni la borres),
+    <strong>añadir una acción nueva</strong> que ataque de verdad la causa y, cuando esa resulte
+    eficaz, cerrar la no conformidad. No hace falta enlazar la acción nueva con la fallida: cada una es
+    independiente y el cierre se juzga sobre el conjunto. Una no conformidad resuelta con una simple
+    corrección inmediata (sin acciones correctivas) también se puede cerrar.</p>
