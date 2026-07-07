@@ -10,6 +10,7 @@ use App\Enum\AspectType;
 use App\Form\EnvironmentalAspectType;
 use App\Repository\EnvironmentalAspectRepository;
 use App\Security\Voter\AreaVoter;
+use App\Service\AspectWorkflowStatusProvider;
 use App\Service\AuditLogger;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -31,15 +32,21 @@ class EnvironmentalAspectController extends AbstractController
     }
 
     /**
-     * Lists every aspect with its current (latest) significance.
+     * Lists every aspect with its status for the current year, above a "qué falta este curso" guide
+     * of the pending work. Evaluations are eager-loaded to read each aspect's status without an N+1.
      */
     #[Route('', name: 'aspect_index', methods: ['GET'])]
-    public function index(EnvironmentalAspectRepository $repository): Response
+    public function index(EnvironmentalAspectRepository $repository, AspectWorkflowStatusProvider $workflow): Response
     {
         $this->denyAccessUnlessGranted(AreaVoter::READ, Area::ASPECT);
 
+        $currentYear = (int) date('Y');
+
         return $this->render('environmental_aspect/index.html.twig', [
-            'aspects' => $repository->findAllOrdered(),
+            'aspects' => $repository->findAllWithEvaluations(),
+            'currentYear' => $currentYear,
+            // Guía "qué falta este curso": pendientes calculados, cada uno enlazado a su acción.
+            'status' => $workflow->for($currentYear),
         ]);
     }
 

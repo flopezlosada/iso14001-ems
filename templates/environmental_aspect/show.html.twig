@@ -65,7 +65,7 @@
                                 <td>{{ evaluation.hazard ? evaluation.hazard.value : '—' }}</td>
                             {% endif %}
                             <td class="mono">{{ evaluation.significanceScore }}</td>
-                            <td>{{ evaluation.significant ? 'Significativo' : 'No significativo' }}</td>
+                            <td>{% set result = evaluation.significanceStatus %}<span class="badge {{ result.badgeClass }}">{{ result.label }}</span></td>
                             <td><a href="{{ path('aspect_evaluation_edit', { id: aspect.id, evaluationId: evaluation.id }) }}">Editar</a></td>
                         </tr>
                     {% endfor %}

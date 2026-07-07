@@ -1,0 +1,38 @@
+{#
+    Checklist reutilizable de "qué falta este curso": pinta una lista de pasos con estado y color
+    semántico (hecho / pendiente / bloqueado). Es un diagnóstico de pendientes, NO un asistente
+    lineal; el detalle por ítem vive en la ficha de cada registro. Envuélvelo en tu propia
+    <div class="card workflow-guide"> con la cabecera del módulo.
+
+    Estilos en app.css (.workflow-steps). Compartido entre módulos (Riesgos, Aspectos…): si cambias
+    el contrato de `steps`, avisa a las demás sesiones de guía.
+
+    @param steps  lista de pasos; cada paso es un map:
+        - state  'done' | 'pending' | 'blocked'   (obligatorio) — color/marca del paso
+        - label  texto del paso                    (obligatorio)
+        - hint   texto aclaratorio entre paréntesis (opcional, se pinta muted)
+        - aside  acción/nota a la derecha           (opcional) map:
+            - type  'cta' | 'link' | 'note'
+            - label texto
+            - href  destino (cta/link)
+            - class clase del enlace (solo cta; por defecto 'btn secondary')
+#}
+<ol class="workflow-steps">
+    {% for step in steps %}
+        <li class="workflow-step is-{{ step.state }}">
+            <span class="workflow-step-label">{{ step.label }}{% if step.hint is defined and step.hint %} <span class="muted">({{ step.hint }})</span>{% endif %}</span>
+            <span class="workflow-step-aside">
+                {% set aside = step.aside|default(null) %}
+                {% if aside %}
+                    {% if aside.type == 'cta' %}
+                        <a class="{{ aside.class|default('btn secondary') }}" href="{{ aside.href }}">{{ aside.label }}</a>
+                    {% elseif aside.type == 'link' %}
+                        <a class="muted" href="{{ aside.href }}">{{ aside.label }}</a>
+                    {% else %}
+                        <span class="muted">{{ aside.label }}</span>
+                    {% endif %}
+                {% endif %}
+            </span>
+        </li>
+    {% endfor %}
+</ol>

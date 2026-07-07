@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Entity;
 
+use App\Enum\AspectSignificanceStatus;
 use App\Enum\InfluenceLevel;
 use App\Enum\ScoreLevel;
 use App\Repository\AspectEvaluationRepository;
@@ -229,6 +230,17 @@ class AspectEvaluation
     public function isSignificant(): bool
     {
         return $this->significant;
+    }
+
+    /**
+     * The significance status of this evaluation (significant / non-significant) on the shared
+     * semantic scale, so its result reads with the same colour everywhere it is shown.
+     *
+     * @return AspectSignificanceStatus the status of this evaluation (never UNEVALUATED)
+     */
+    public function getSignificanceStatus(): AspectSignificanceStatus
+    {
+        return AspectSignificanceStatus::forEvaluation($this);
     }
 
     public function setSignificant(bool $significant): static

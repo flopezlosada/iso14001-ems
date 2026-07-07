@@ -48,6 +48,18 @@ final class EnvironmentalAspectControllerTest extends WebTestCase
         self::assertSelectorTextContains('h1', 'Aspectos ambientales');
     }
 
+    public function testIndexShowsWorkflowGuide(): void
+    {
+        $client = $this->loggedInClient();
+        $crawler = $client->request('GET', '/aspects');
+
+        self::assertResponseIsSuccessful();
+        // The "qué falta este curso" guide renders its checklist of pending work.
+        self::assertSelectorExists('.workflow-guide .workflow-steps');
+        self::assertSelectorTextContains('.workflow-steps', 'Identificar los aspectos');
+        self::assertSelectorTextContains('.workflow-steps', 'Evaluar este año');
+    }
+
     public function testNewFormRenders(): void
     {
         $client = $this->loggedInClient();

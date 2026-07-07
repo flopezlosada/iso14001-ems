@@ -5,26 +5,79 @@
 {% block breadcrumb %}<a href="{{ path('app_homepage') }}">Inicio</a><span class="sep">/</span>Aspectos ambientales{% endblock %}
 
 {% block body %}
+    {% set can_write = is_granted('AREA_WRITE', constant('App\\Enum\\Area::ASPECT')) %}
     <div class="page-head">
         <div>
             <h1>Aspectos ambientales</h1>
             <p class="lead">Identificación y evaluación de aspectos ambientales directos (PG-06.01 / RG-06.01.01).</p>
         </div>
-        <a class="btn" href="{{ path('aspect_new') }}">+ Registrar aspecto</a>
+        {% if can_write %}<a class="btn" href="{{ path('aspect_new') }}">+ Registrar aspecto</a>{% endif %}
     </div>
 
-    <div class="card">
+    {# Guía "qué falta este curso": diagnóstico de pendientes (no un asistente lineal), cada uno
+       enlazado a donde se resuelve. El detalle por aspecto (evaluar el año) vive en su ficha, a la
+       que lleva el inventario de abajo. #}
+    {% set has_items = status.totalActive > 0 %}
+    {% set unevaluated_link = path('aspect_index') ~ '?filtro=' ~ ('estado:Sin evaluar'|url_encode) ~ '#inventario' %}
+    {% set significant_link = path('aspect_index') ~ '?filtro=' ~ ('estado:Significativo'|url_encode) ~ '#inventario' %}
+
+    {% set evaluate_aside = null %}
+    {% if not has_items %}
+        {% set evaluate_aside = { type: 'note', label: 'Requiere aspectos registrados' } %}
+    {% elseif status.unevaluated > 0 %}
+        {# El enlace solo navega a la tabla filtrada (seguro en solo-lectura): sin gating, como en Riesgos. #}
+        {% set evaluate_aside = { type: 'cta', href: unevaluated_link, label: status.unevaluated ~ ' sin evaluar →' } %}
+    {% elseif status.significant > 0 %}
+        {% set evaluate_aside = { type: 'link', href: significant_link, label: 'Hecho · ' ~ status.significant ~ ' significativo(s) →' } %}
+    {% else %}
+        {% set evaluate_aside = { type: 'note', label: 'Hecho · ninguno significativo' } %}
+    {% endif %}
+
+    {% set steps = [
+        {
+            state: has_items ? 'done' : 'pending',
+            label: 'Identificar los aspectos',
+            hint: status.totalActive ~ ' activo(s)',
+            aside: can_write ? { type: 'cta', href: path('aspect_new'), label: '+ Registrar' } : null
+        },
+        {
+            state: not has_items ? 'blocked' : (status.unevaluated > 0 ? 'pending' : 'done'),
+            label: 'Evaluar este año (' ~ currentYear ~ ')',
+            hint: 'frecuencia · intensidad · peligrosidad',
+            aside: evaluate_aside
+        },
+        {
+            state: status.isComplete ? 'pending' : 'blocked',
+            label: 'Cerrar el periodo',
+            aside: status.isComplete
+                ? { type: 'cta', href: path('obligation_index'), label: 'Marcar revisado en «Qué toca»' }
+                : { type: 'note', label: 'Cuando el resto esté al día' }
+        }
+    ] %}
+
+    <div class="card workflow-guide">
+        <div class="page-head">
+            <div>
+                <h2>Trabajo de este curso ({{ currentYear }}) {{ help_button('aspectos-ambientales') }}</h2>
+                <p class="lead muted">Qué hay que hacer aquí y qué te falta.</p>
+            </div>
+            {% if status.isComplete %}<span class="badge badge--success">Al día para {{ currentYear }}</span>{% endif %}
+        </div>
+        {{ include('partials/_workflow_guide.html.twig', { steps: steps }) }}
+    </div>
+
+    <div class="card" id="inventario">
         {% if aspects is empty %}
             <div class="empty-state">
                 <h2>Aún no hay aspectos</h2>
                 <p>Registra el primer aspecto ambiental del centro.</p>
-                <a class="btn" href="{{ path('aspect_new') }}">Registrar el primero</a>
+                {% if can_write %}<a class="btn" href="{{ path('aspect_new') }}">Registrar el primero</a>{% endif %}
             </div>
         {% else %}
             <table data-list-tools>
                 <thead>
                     <tr>
-                        <th>Aspecto</th><th data-filter>Categoría</th><th>Unidad</th><th>Significancia actual</th>
+                        <th>Aspecto</th><th data-filter>Categoría</th><th>Unidad</th><th data-filter="estado">Estado ({{ currentYear }})</th><th>Significancia {{ help_button('aspecto-significancia') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -35,12 +88,19 @@
                             <td>{{ aspect.category ? aspect.category.label : aspect.type.label }}</td>
                             <td class="muted">{{ aspect.unit ?? '—' }}</td>
                             <td>
-                                {%- if latest -%}
-                                    {% if latest.significant %}<span class="badge badge--warning">Significativo</span>{% else %}<span class="muted">No significativo</span>{% endif %}
-                                    <span class="muted">· {{ latest.significanceScore }} ({{ latest.year }})</span>
+                                {#- Estado RESPECTO AL AÑO ACTUAL (no la última evaluación, que puede ser de otro año).
+                                   Solo para aspectos activos: los inactivos están fuera del trabajo del curso, así que su
+                                   estado va "—" (evita, además, descuadre entre el contador de la guía —solo activos— y
+                                   las filas que devuelve el filtro). -#}
+                                {%- if aspect.active -%}
+                                    {% set status_year = aspect.significanceStatusFor(currentYear) %}
+                                    <span class="badge {{ status_year.badgeClass }}">{{ status_year.label }}</span>
                                 {%- else -%}
-                                    <span class="muted">Sin evaluar</span>
+                                    <span class="muted">—</span>
                                 {%- endif -%}
+                            </td>
+                            <td class="muted">
+                                {%- if latest -%}{{ latest.significanceScore }} ({{ latest.year }}){%- else -%}—{%- endif -%}
                             </td>
                         </tr>
                     {% endfor %}
