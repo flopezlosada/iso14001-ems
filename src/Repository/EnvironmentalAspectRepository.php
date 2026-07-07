@@ -30,7 +30,8 @@ class EnvironmentalAspectRepository extends ServiceEntityRepository
 
     /**
      * All aspects with their evaluations eagerly fetched, to summarise significance per year without
-     * an N+1 over each aspect's evaluations.
+     * an N+1 over each aspect's evaluations. Evaluations are ordered most-recent first so
+     * {@see EnvironmentalAspect::getLatestEvaluation()} stays correct with the fetch-join.
      *
      * @return EnvironmentalAspect[] all aspects, evaluations preloaded
      */
@@ -41,8 +42,20 @@ class EnvironmentalAspectRepository extends ServiceEntityRepository
             ->leftJoin('a.evaluations', 'e')
             ->orderBy('a.category', 'ASC')
             ->addOrderBy('a.name', 'ASC')
+            ->addOrderBy('e.year', 'DESC')
             ->getQuery()
             ->getResult();
+    }
+
+    /**
+     * Number of active aspects registered: the catalogue size that drives the yearly evaluation work
+     * surfaced by the module's "qué falta" guide.
+     *
+     * @return int the count of active aspects
+     */
+    public function countActive(): int
+    {
+        return $this->count(['active' => true]);
     }
 
     /**

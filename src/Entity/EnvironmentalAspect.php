@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Entity;
 
+use App\Enum\AspectSignificanceStatus;
 use App\Enum\AspectType;
 use App\Enum\ConsumptionType;
 use App\Enum\DirectAspectCategory;
@@ -117,6 +118,39 @@ class EnvironmentalAspect
     public function getLatestEvaluation(): ?AspectEvaluation
     {
         return $this->evaluations->first() ?: null;
+    }
+
+    /**
+     * This aspect's evaluation for a specific year, or null when it has not been evaluated that year.
+     * Walks the (eager-loaded) evaluations in memory, so it adds no query when the collection is
+     * already hydrated; the unique (aspect, year) constraint guarantees at most one match.
+     *
+     * @param int $year the evaluation year
+     *
+     * @return AspectEvaluation|null the matching evaluation, or null if none
+     */
+    public function evaluationFor(int $year): ?AspectEvaluation
+    {
+        foreach ($this->evaluations as $evaluation) {
+            if ($evaluation->getYear() === $year) {
+                return $evaluation;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * The aspect's significance status for a given year (unevaluated / non-significant / significant),
+     * for a coherent at-a-glance colour in the catalogue.
+     *
+     * @param int $year the year to read the status for
+     *
+     * @return AspectSignificanceStatus the status for that year
+     */
+    public function significanceStatusFor(int $year): AspectSignificanceStatus
+    {
+        return AspectSignificanceStatus::forEvaluation($this->evaluationFor($year));
     }
 
     public function getId(): ?int
