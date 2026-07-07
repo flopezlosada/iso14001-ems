@@ -90,6 +90,65 @@ enum Area: string
     }
 
     /**
+     * The curated order in which areas are presented across the application (menu, global overview):
+     * context first in Plan, the operational records first in Do, etc. Any area missing here still
+     * appears — appended at the end — so a newly added module is never silently absent.
+     *
+     * Single source of truth for the ordering, consumed by {@see self::groupedByPhase()} and hence by
+     * the sidebar menu and the system overview alike.
+     *
+     * @return list<Area> every area, in display order
+     */
+    public static function inDisplayOrder(): array
+    {
+        $order = [
+            // Plan
+            self::INTERESTED_PARTY, self::DAFO, self::ASPECT, self::RISK_OPPORTUNITY, self::OBJECTIVE, self::LEGAL_REQUIREMENT,
+            // Do
+            self::CONSUMPTION, self::WASTE, self::OPERATIONAL_CONTROL, self::EMERGENCY, self::TRAINING, self::COMMUNICATION, self::SUPPLIER,
+            // Check
+            self::INDICATOR, self::SYSTEM_AUDIT, self::MANAGEMENT_REVIEW,
+            // Act
+            self::NONCONFORMITY,
+        ];
+
+        foreach (self::cases() as $area) {
+            if (!\in_array($area, $order, true)) {
+                $order[] = $area;
+            }
+        }
+
+        return $order;
+    }
+
+    /**
+     * Every area grouped by its {@see PdcaPhase}, phases in cycle order (Plan → Do → Check → Act) and
+     * areas within each phase in {@see self::inDisplayOrder()}. Phases with no area are omitted.
+     *
+     * The one grouping algorithm shared by the sidebar menu ({@see \App\Twig\NavExtension}) and the
+     * system overview, so both always present the modules in the same shape and order.
+     *
+     * @return list<array{phase: PdcaPhase, areas: list<Area>}> phases in cycle order with their areas
+     */
+    public static function groupedByPhase(): array
+    {
+        $byPhase = [];
+        foreach (self::inDisplayOrder() as $area) {
+            $byPhase[$area->phase()->value][] = $area;
+        }
+
+        $groups = [];
+        foreach (PdcaPhase::cases() as $phase) {
+            $areas = $byPhase[$phase->value] ?? [];
+            if ([] !== $areas) {
+                $groups[] = ['phase' => $phase, 'areas' => $areas];
+            }
+        }
+
+        return $groups;
+    }
+
+    /**
      * The PDCA phase this area belongs to, the dimension by which the navigation menu groups the
      * modules. Kept consistent with {@see IsoChapter::phase()} (context/leadership/planning → Plan;
      * support/operation → Do; performance evaluation → Check; improvement → Act), so an area and the

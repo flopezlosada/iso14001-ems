@@ -556,6 +556,7 @@ thead th.is-sortable:focus-visible { outline: 2px solid var(--focus); outline-of
 .badge--danger  { background: var(--danger-weak);  color: var(--danger-text);  border-color: var(--danger); }
 .badge--void    { color: var(--text-faint); text-decoration: line-through; }
 .badge--done    { background: var(--surface-sunken); color: var(--text-muted); border-color: var(--border-strong); }
+.badge--muted   { background: var(--surface-sunken); color: var(--text-faint); border-color: var(--border); }
 
 /* Nivel de valoración de riesgo: dato INFORMATIVO (no accionable), por eso es texto coloreado por
    severidad, no un badge (que se reserva a estados accionables). Escala sobria: trivial apagado. */
@@ -1088,6 +1089,48 @@ input[type="email"], input[type="text"], select, textarea {
 .worklist-links { display: flex; gap: 20px; flex-wrap: wrap; margin: 4px 0 28px; font-size: 14px; }
 .dash-admin { margin-top: 8px; }
 .dash-admin-links { margin: 12px 0 4px; }
+
+/* ---- Estado del sistema (mapa global por bloques PDCA) --------------------
+   Complementa al worklist personal: mientras aquél dice "lo que TE toca", este da
+   el mapa completo del SGA por fases (Plan/Do/Check/Act) con el estado de cada
+   módulo de un vistazo. El color del badge (misma escala semántica del resto de
+   la app) señala lo grave/pendiente; lo que está al día queda sobrio para que
+   resalte lo que pide acción. Solo aparecen los módulos que el rol puede leer. */
+.system-overview { margin: 8px 0 28px; }
+.system-phase { margin-bottom: 22px; }
+.system-phase-title {
+    font-family: var(--font-body);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin: 0 0 10px;
+}
+.module-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 12px;
+}
+.module-card {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 16px 18px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    text-decoration: none;
+    color: var(--text);
+    transition: border-color .12s ease, background .12s ease;
+}
+.module-card:hover { border-color: var(--border-strong); }
+.module-card-name { font-family: var(--font-display); font-size: 16px; }
+.module-card .badge { align-self: flex-start; }
+/* Lo grave y lo que pide atención reciben tinte de estado (segunda vía visual además
+   del texto del badge, WCAG 1.4.1); lo que está al día o neutro queda sobrio. */
+.module-card--grave { border-color: var(--danger); background: var(--danger-weak); }
+.module-card--attention { border-color: var(--warning); }
 
 /* Guía de flujo de un módulo ("qué falta este curso"): checklist con marcador de estado por paso. */
 .workflow-guide .page-head { margin-bottom: 2px; }
