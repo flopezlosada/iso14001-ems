@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Entity;
 
+use App\Enum\TrainingActionStatus;
 use App\Enum\TrainingType;
 use App\Repository\TrainingActionRepository;
 use Doctrine\DBAL\Types\Types;
@@ -132,6 +133,28 @@ class TrainingAction
     public function touch(): void
     {
         $this->updatedAt = new \DateTimeImmutable();
+    }
+
+    /**
+     * Progress state of the action, derived from its own fields (not stored): a row pending review
+     * comes first, then the planned → executed → evaluated lifecycle. Drives the semantic colour in
+     * the listing and the detail page from a single rule.
+     */
+    public function status(): TrainingActionStatus
+    {
+        if ($this->needsReview) {
+            return TrainingActionStatus::NEEDS_REVIEW;
+        }
+
+        if (null !== $this->efficacyEvaluation && '' !== trim($this->efficacyEvaluation)) {
+            return TrainingActionStatus::EVALUATED;
+        }
+
+        if (null !== $this->actualDate) {
+            return TrainingActionStatus::EXECUTED;
+        }
+
+        return TrainingActionStatus::PLANNED;
     }
 
     public function getId(): ?int

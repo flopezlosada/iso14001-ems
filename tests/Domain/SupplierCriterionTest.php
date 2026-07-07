@@ -33,4 +33,12 @@ final class SupplierCriterionTest extends TestCase
         self::assertSame('A prueba', SupplierCriterion::ON_TRIAL->label());
         self::assertSame('No capacitado', SupplierCriterion::NOT_CAPABLE->label());
     }
+
+    public function testBadgeClassFollowsTheSemanticScale(): void
+    {
+        // Approved is green, on-trial is amber (caution), rejected is red.
+        self::assertSame('badge--success', SupplierCriterion::CAPABLE->badgeClass());
+        self::assertSame('badge--warning', SupplierCriterion::ON_TRIAL->badgeClass());
+        self::assertSame('badge--danger', SupplierCriterion::NOT_CAPABLE->badgeClass());
+    }
 }

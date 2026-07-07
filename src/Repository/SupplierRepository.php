@@ -19,12 +19,19 @@ class SupplierRepository extends ServiceEntityRepository
     }
 
     /**
-     * All suppliers ordered by name, ready to render the control list (F.12.0).
+     * All suppliers with their yearly evaluations eagerly fetched, so the control list can show each
+     * supplier's standing for the current year without an N+1 over each one's evaluations.
      *
-     * @return Supplier[] all suppliers
+     * @return Supplier[] all suppliers ordered by name, evaluations preloaded (most recent first)
      */
-    public function findAllOrdered(): array
+    public function findAllWithEvaluations(): array
     {
-        return $this->findBy([], ['name' => 'ASC']);
+        return $this->createQueryBuilder('s')
+            ->addSelect('e')
+            ->leftJoin('s.evaluations', 'e')
+            ->orderBy('s.name', 'ASC')
+            ->addOrderBy('e.year', 'DESC')
+            ->getQuery()
+            ->getResult();
     }
 }

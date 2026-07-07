@@ -38,7 +38,9 @@ class SupplierController extends AbstractController
         $this->denyAccessUnlessGranted(AreaVoter::READ, Area::SUPPLIER);
 
         return $this->render('supplier/index.html.twig', [
-            'suppliers' => $repository->findAllOrdered(),
+            // Eager-fetch evaluations so evaluationFor() does not trigger an N+1 across the list.
+            'suppliers' => $repository->findAllWithEvaluations(),
+            'currentYear' => (int) date('Y'),
         ]);
     }
 
@@ -52,6 +54,7 @@ class SupplierController extends AbstractController
 
         return $this->render('supplier/show.html.twig', [
             'supplier' => $supplier,
+            'currentYear' => (int) date('Y'),
         ]);
     }
 

@@ -1,0 +1,26 @@
+slug: indicador-estado
+title: Estado del indicador
+summary: >
+    Si el indicador va bien o mal en el periodo: en objetivo cuando ninguna medición transgrede su
+    valor de referencia, con desviación cuando alguna lo hace, o sin medir si aún no hay datos del año.
+legal:
+    - label: 'ISO 14001:2015 · apartado 9.1 (Seguimiento, medición, análisis y evaluación)'
+      note: >
+          La norma exige evaluar el desempeño ambiental frente a los criterios definidos; comparar la
+          medición con su valor de referencia es esa evaluación.
+      url: 'https://www.iso.org/standard/60857.html'
+docs:
+    - F.09.0
+body: |
+    <p>Cada medición se marca a mano como que <strong>transgrede</strong> el valor de referencia o no,
+    porque la referencia es texto libre y la dirección "buena" cambia según el indicador (a veces menos
+    es mejor, a veces más).</p>
+    <p>A partir de ahí, el estado del año resume:</p>
+    <ol>
+        <li><strong>En objetivo</strong>: hay mediciones y ninguna transgrede la referencia.</li>
+        <li><strong>Con desviación</strong>: al menos una medición del año transgrede la referencia; es
+        candidata a abrir una no conformidad.</li>
+        <li><strong>Sin medir</strong>: todavía no hay ninguna medición registrada para el año.</li>
+    </ol>
+    <p>Cuando una medición transgrede, desde ella puedes abrir directamente la no conformidad con los
+    datos ya rellenados.</p>

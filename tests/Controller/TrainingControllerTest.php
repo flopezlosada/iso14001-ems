@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace App\Tests\Controller;
 
 use App\Entity\Role;
+use App\Entity\TrainingAction;
 use App\Entity\User;
 use App\Enum\Area;
 use App\Enum\PermissionLevel;
+use App\Enum\TrainingType;
 use App\Repository\AuditLogRepository;
 use App\Repository\TrainingActionRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -47,6 +49,51 @@ final class TrainingControllerTest extends WebTestCase
 
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('h1', 'Plan de formación 2026');
+    }
+
+    public function testShowRendersActionDetailWithStatusBadge(): void
+    {
+        $client = $this->loggedInClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+
+        // A delivered-but-not-yet-evaluated action: its derived status must be "Pendiente de evaluar".
+        $action = (new TrainingAction())
+            ->setPlanYear(2026)
+            ->setDescription('Curso de gestión de residuos')
+            ->setType(TrainingType::INTERNAL)
+            ->setTargetAudience('Personal de limpieza')
+            ->setObjectives('Segregar correctamente los residuos peligrosos.')
+            ->setMethodology('Sesión presencial con demostración.')
+            ->setPlannedDate(new \DateTimeImmutable('2026-10-30'))
+            ->setActualDate(new \DateTimeImmutable('2026-11-05'));
+        $em->persist($action);
+        $em->flush();
+
+        $client->request('GET', '/training/2026/'.$action->getId());
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('h1', 'Curso de gestión de residuos');
+        self::assertSelectorTextContains('.badge', 'Pendiente de evaluar');
+    }
+
+    public function testShowRejectsActionFromAnotherYear(): void
+    {
+        $client = $this->loggedInClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+
+        $action = (new TrainingAction())
+            ->setPlanYear(2025)
+            ->setDescription('Curso previo')
+            ->setTargetAudience('Profesorado')
+            ->setObjectives('Objetivos')
+            ->setMethodology('Metodología')
+            ->setPlannedDate(new \DateTimeImmutable('2025-05-01'));
+        $em->persist($action);
+        $em->flush();
+
+        // The year in the URL must match the action's plan year.
+        $client->request('GET', '/training/2026/'.$action->getId());
+        self::assertResponseStatusCodeSame(404);
     }
 
     public function testNewActionFormRenders(): void

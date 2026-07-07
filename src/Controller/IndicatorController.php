@@ -38,7 +38,9 @@ class IndicatorController extends AbstractController
         $this->denyAccessUnlessGranted(AreaVoter::READ, Area::INDICATOR);
 
         return $this->render('indicator/index.html.twig', [
-            'indicators' => $repository->findAllOrdered(),
+            // Eager-fetch measurements so statusForYear() does not trigger an N+1 across the list.
+            'indicators' => $repository->findAllWithMeasurements(),
+            'currentYear' => (int) date('Y'),
         ]);
     }
 
@@ -52,6 +54,7 @@ class IndicatorController extends AbstractController
 
         return $this->render('indicator/show.html.twig', [
             'indicator' => $indicator,
+            'currentYear' => (int) date('Y'),
         ]);
     }
 
