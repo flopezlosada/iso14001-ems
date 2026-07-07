@@ -20,29 +20,11 @@ use Twig\TwigFunction;
  *    who bypass the matrix, see all);
  *  - a phase with no visible area is dropped entirely, so e.g. Secretaría does not see empty folders.
  *
- * Labels and routes come from {@see Area} itself (single source of truth), so this extension only
- * owns the *ordering* of the menu, never the wording or the links.
+ * Labels, routes and the display order all come from {@see Area} itself (single source of truth),
+ * so this extension only owns the permission filtering, never the wording, links or ordering.
  */
 class NavExtension extends AbstractExtension
 {
-    /**
-     * The curated order in which areas appear within their phase (context first in Plan, the
-     * operational records first in Do, etc.). Areas missing here still render — at the end of their
-     * phase — so a newly added module is never silently absent from the menu.
-     *
-     * @var list<Area>
-     */
-    private const ORDER = [
-        // Plan
-        Area::INTERESTED_PARTY, Area::DAFO, Area::ASPECT, Area::RISK_OPPORTUNITY, Area::OBJECTIVE, Area::LEGAL_REQUIREMENT,
-        // Do
-        Area::CONSUMPTION, Area::WASTE, Area::OPERATIONAL_CONTROL, Area::EMERGENCY, Area::TRAINING, Area::COMMUNICATION, Area::SUPPLIER,
-        // Check
-        Area::INDICATOR, Area::SYSTEM_AUDIT, Area::MANAGEMENT_REVIEW,
-        // Act
-        Area::NONCONFORMITY,
-    ];
-
     public function __construct(private readonly AuthorizationCheckerInterface $authChecker)
     {
     }
@@ -64,20 +46,7 @@ class NavExtension extends AbstractExtension
      */
     public function areaPillars(): array
     {
-        $byPhase = [];
-        foreach ($this->orderedAreas() as $area) {
-            $byPhase[$area->phase()->value][] = $area;
-        }
-
-        $pillars = [];
-        foreach (PdcaPhase::cases() as $phase) {
-            $areas = $byPhase[$phase->value] ?? [];
-            if ([] !== $areas) {
-                $pillars[] = ['phase' => $phase, 'areas' => $areas];
-            }
-        }
-
-        return $pillars;
+        return Area::groupedByPhase();
     }
 
     /**
@@ -88,47 +57,27 @@ class NavExtension extends AbstractExtension
      */
     public function navPillars(): array
     {
-        $byPhase = [];
-        foreach ($this->orderedAreas() as $area) {
-            if (!$this->authChecker->isGranted(AreaVoter::READ, $area)) {
-                continue;
-            }
-            $route = $area->indexRoute();
-            $byPhase[$area->phase()->value][] = [
-                'label' => $area->label(),
-                'route' => $route,
-                // Route-name prefix for the "is-active" highlight: 'consumption_index' → 'consumption',
-                // which all of that module's routes share (consumption_new, consumption_year, …).
-                'prefix' => str_replace('_index', '', $route),
-            ];
-        }
-
         $pillars = [];
-        foreach (PdcaPhase::cases() as $phase) {
-            $items = $byPhase[$phase->value] ?? [];
+        foreach (Area::groupedByPhase() as $group) {
+            $items = [];
+            foreach ($group['areas'] as $area) {
+                if (!$this->authChecker->isGranted(AreaVoter::READ, $area)) {
+                    continue;
+                }
+                $route = $area->indexRoute();
+                $items[] = [
+                    'label' => $area->label(),
+                    'route' => $route,
+                    // Route-name prefix for the "is-active" highlight: 'consumption_index' → 'consumption',
+                    // which all of that module's routes share (consumption_new, consumption_year, …).
+                    'prefix' => str_replace('_index', '', $route),
+                ];
+            }
             if ([] !== $items) {
-                $pillars[] = ['label' => $phase->label(), 'items' => $items];
+                $pillars[] = ['label' => $group['phase']->label(), 'items' => $items];
             }
         }
 
         return $pillars;
-    }
-
-    /**
-     * {@see self::ORDER} followed by any area not listed there (defensive against drift), so every
-     * existing area is guaranteed a slot.
-     *
-     * @return list<Area>
-     */
-    private function orderedAreas(): array
-    {
-        $ordered = self::ORDER;
-        foreach (Area::cases() as $area) {
-            if (!\in_array($area, $ordered, true)) {
-                $ordered[] = $area;
-            }
-        }
-
-        return $ordered;
     }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Entity\Document;
 use App\Entity\User;
 use App\Enum\ObligationStatus;
 use App\Enum\ObligationUrgency;
@@ -13,6 +14,8 @@ use App\Repository\EnvironmentalAspectRepository;
 use App\Repository\RoleRepository;
 use App\Repository\UserRepository;
 use App\Service\AspectIntensityEstimator;
+use App\Service\Overview\SystemOverviewBuilder;
+use App\Util\SchoolYear;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -39,6 +42,7 @@ class HomeController extends AbstractController
      * @param RoleRepository               $roles              repository used to count defined roles (admins)
      * @param EnvironmentalAspectRepository $aspects           aspects with a linked data source, for the watch-list
      * @param AspectIntensityEstimator     $intensityEstimator computes the proactive aspects-to-watch list
+     * @param SystemOverviewBuilder        $systemOverview     builds the per-module health map (the global view)
      *
      * @return Response the rendered dashboard
      */
@@ -50,6 +54,7 @@ class HomeController extends AbstractController
         RoleRepository $roles,
         EnvironmentalAspectRepository $aspects,
         AspectIntensityEstimator $intensityEstimator,
+        SystemOverviewBuilder $systemOverview,
     ): Response {
         $today = new \DateTimeImmutable('today');
         $now = new \DateTimeImmutable();
@@ -57,7 +62,10 @@ class HomeController extends AbstractController
         $isAdmin = $this->isGranted('ROLE_ADMIN');
         $user = $this->getUser();
 
-        $worklist = $this->buildWorklist($documents, $user, $today);
+        // Load the register once and share it: both the personal worklist and the system overview
+        // read the same obligations, so the landing page never fetches them twice.
+        $obligations = $documents->findObligations();
+        $worklist = $this->buildWorklist($obligations, $user, $today);
 
         // Platform snapshot for admins: recent activity and headline counts.
         $admin = null;
@@ -85,6 +93,9 @@ class HomeController extends AbstractController
             'aspectsToWatch' => $intensityEstimator->watchList($aspects->findLinkedForIntensity(), $today),
             // Nothing of one's own AND no admin tools: a genuinely empty landing.
             'hasNothing' => 0 === $worklist['total'] && !$isAdmin,
+            // The global map: every module the user may read, grouped by PDCA phase, with its health.
+            'systemGroups' => $systemOverview->build($obligations, $today),
+            'schoolYear' => SchoolYear::current($today),
         ]);
     }
 
@@ -96,23 +107,23 @@ class HomeController extends AbstractController
      * Event-driven obligations (no fixed cadence) are excluded: they are reactive, not "due".
      * Not-applicable ones are skipped entirely.
      *
-     * @param DocumentRepository $documents the obligation register
-     * @param object|null        $user      the authenticated user, if any
-     * @param \DateTimeImmutable $today     the reference date for urgency
+     * @param Document[]         $obligations the register's obligations, already loaded by the caller
+     * @param object|null        $user        the authenticated user, if any
+     * @param \DateTimeImmutable $today       the reference date for urgency
      *
      * @return array{counts: array{overdue: int, due_soon: int, on_track: int}, actionable: list<array{id: ?int, title: string, code: ?string, urgency: ObligationUrgency, dueDate: ?\DateTimeImmutable, daysUntil: ?int, route: ?string}>, total: int}
      */
-    private function buildWorklist(DocumentRepository $documents, ?object $user, \DateTimeImmutable $today): array
+    private function buildWorklist(array $obligations, ?object $user, \DateTimeImmutable $today): array
     {
         $counts = ['overdue' => 0, 'due_soon' => 0, 'on_track' => 0];
         $actionable = [];
 
-        // No roles → nothing is the user's responsibility; skip the query and the loop entirely.
+        // No roles → nothing is the user's responsibility; skip the loop entirely.
         if (!$user instanceof User || $user->getAssignedRoles()->isEmpty()) {
             return ['counts' => $counts, 'actionable' => $actionable, 'total' => 0];
         }
 
-        foreach ($documents->findObligations() as $obligation) {
+        foreach ($obligations as $obligation) {
             // The home is the pending worklist: obligations already done or marked not-applicable
             // are off the user's plate (the "Qué toca" cockpit still lists them). Skip both here.
             $status = $obligation->getStatus();

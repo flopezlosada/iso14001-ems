@@ -88,6 +88,26 @@
         </p>
     {% endif %}
 
+    {# --- Estado del sistema: el mapa global por bloques PDCA (lo que ve cada rol según permisos) --- #}
+    {% if systemGroups is not empty %}
+        <section class="system-overview">
+            <p class="eyebrow dash-section-label">El sistema · curso {{ schoolYear }}</p>
+            {% for group in systemGroups %}
+                <div class="system-phase">
+                    <h2 class="system-phase-title">{{ group.phase.label }}</h2>
+                    <div class="module-grid">
+                        {% for module in group.modules %}
+                            <a class="module-card module-card--{{ module.health.value }}" href="{{ path(module.area.indexRoute) }}">
+                                <span class="module-card-name">{{ module.area.label }}</span>
+                                <span class="badge {{ module.health.badgeClass }}">{{ module.summary }}</span>
+                            </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endfor %}
+        </section>
+    {% endif %}
+
     {# --- Aspectos a vigilar: aviso proactivo (mismo que en "Qué toca"); no en el estado vacío --- #}
     {% if not hasNothing %}{{ include('partials/_aspects_to_watch.html.twig') }}{% endif %}
 
