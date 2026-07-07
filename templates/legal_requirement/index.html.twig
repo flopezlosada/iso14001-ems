@@ -1,4 +1,5 @@
 {% extends 'app_shell.html.twig' %}
+{% import 'legal_requirement/_macros.html.twig' as legal %}
 
 {% block title %}Requisitos legales{% endblock %}
 
@@ -30,7 +31,7 @@
                 <tbody>
                     {% for requirement in requirements %}
                         <tr>
-                            <td class="mono">{{ requirement.reference }}</td>
+                            <td class="mono"><a class="cell-link" href="{{ path('legal_requirement_show', { id: requirement.id }) }}">{{ requirement.reference }}</a></td>
                             <td>{{ requirement.legalProvision|length > 70 ? requirement.legalProvision|slice(0, 70) ~ '…' : requirement.legalProvision }}</td>
                             <td>{{ requirement.scope.label }}</td>
                             <td class="muted">{{ requirement.environmentalVector ?? '—' }}</td>
@@ -40,14 +41,12 @@
                                     <a href="{{ path('non_conformity_new', { origin: 'internal', description: 'Incumplimiento del requisito legal ' ~ requirement.reference ~ ' (' ~ requirement.legalProvision ~ '): ' ~ requirement.specificRequirement }) }}">Abrir NC</a>
                                 {%- endif -%}
                             </td>
+                            <td>{{ legal.next_review(requirement, today) }}</td>
                             <td>
-                                {%- if requirement.nextReviewOn -%}
-                                    {{ requirement.nextReviewOn|date('d/m/Y') }}
-                                    {%- if requirement.isReviewOverdueOn(today) %} <span class="badge badge--danger">Vencida</span>
-                                    {%- elseif requirement.isReviewDueSoonOn(today) %} <span class="badge badge--warning">Próxima</span>{% endif -%}
-                                {%- else -%}—{%- endif -%}
+                                <a href="{{ path('legal_requirement_show', { id: requirement.id }) }}">Ver</a>
+                                <span class="muted"> · </span>
+                                <a href="{{ path('legal_requirement_edit', { id: requirement.id }) }}">Editar</a>
                             </td>
-                            <td><a href="{{ path('legal_requirement_edit', { id: requirement.id }) }}">Editar</a></td>
                         </tr>
                     {% endfor %}
                 </tbody>

@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace App\Tests\Controller;
 
+use App\Entity\LegalRequirement;
 use App\Entity\Role;
 use App\Entity\User;
 use App\Enum\Area;
+use App\Enum\ComplianceStatus;
+use App\Enum\LegalScope;
 use App\Enum\PermissionLevel;
 use App\Repository\AuditLogRepository;
 use App\Repository\LegalRequirementRepository;
@@ -38,6 +41,27 @@ final class LegalRequirementControllerTest extends WebTestCase
         $client->loginUser($user);
 
         return $client;
+    }
+
+    /**
+     * Persists a legal requirement directly, mimicking the reference the controller would assign, so
+     * the show/index tests do not have to go through the form flow.
+     */
+    private function persistRequirement(ComplianceStatus $status = ComplianceStatus::COMPLIANT): LegalRequirement
+    {
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+
+        $requirement = (new LegalRequirement())
+            ->setSequence(1)
+            ->setReference('RL-01')
+            ->setLegalProvision('Ley 7/2022 de residuos y suelos contaminados')
+            ->setScope(LegalScope::NATIONAL)
+            ->setSpecificRequirement('Comunicación previa de producción de residuos peligrosos.')
+            ->setComplianceStatus($status);
+        $em->persist($requirement);
+        $em->flush();
+
+        return $requirement;
     }
 
     public function testIndexRenders(): void
@@ -118,6 +142,52 @@ final class LegalRequirementControllerTest extends WebTestCase
 
         self::assertResponseIsSuccessful();
         self::assertSelectorExists('a[href*="/non-conformities/new"]');
+    }
+
+    public function testShowRendersRequirementDetail(): void
+    {
+        $client = $this->loggedInClient();
+        $requirement = $this->persistRequirement();
+
+        $client->request('GET', '/legal-requirements/'.$requirement->getId());
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('h1', 'RL-01');
+        self::assertSelectorTextContains('.lead', 'Ley 7/2022 de residuos');
+        // Contextual help is wired on the show sections (guards against a slug typo).
+        self::assertSelectorExists('a.help-btn[data-help="legal-cumplimiento"]');
+        self::assertSelectorExists('a.help-btn[data-help="legal-vector"]');
+        self::assertSelectorExists('a.help-btn[data-help="legal-revision"]');
+    }
+
+    public function testShowOfNonCompliantRequirementOffersOpenNonConformity(): void
+    {
+        $client = $this->loggedInClient();
+        $requirement = $this->persistRequirement(ComplianceStatus::NON_COMPLIANT);
+
+        $client->request('GET', '/legal-requirements/'.$requirement->getId());
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('a[href*="/non-conformities/new"]');
+    }
+
+    public function testIndexRowLinksToShow(): void
+    {
+        $client = $this->loggedInClient();
+        $requirement = $this->persistRequirement();
+
+        $client->request('GET', '/legal-requirements');
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('a[href="/legal-requirements/'.$requirement->getId().'"]');
+    }
+
+    public function testShowReturns404ForUnknownRequirement(): void
+    {
+        $client = $this->loggedInClient();
+        $client->request('GET', '/legal-requirements/999999');
+
+        self::assertResponseStatusCodeSame(404);
     }
 
     public function testSubmittingWithoutProvisionRedisplaysFormWithErrors(): void

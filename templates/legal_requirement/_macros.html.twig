@@ -1,0 +1,15 @@
+{#
+    Renderiza la fecha de próxima revisión de un requisito legal con su insignia de estado
+    (Vencida / Próxima), o un guion si no hay fecha. Compartido por el índice y la ficha para que
+    el umbral y los textos vivan en un único sitio.
+
+    @param requirement  el requisito legal (App\Entity\LegalRequirement)
+    @param today        la fecha de referencia (hoy) para evaluar el vencimiento
+#}
+{% macro next_review(requirement, today) %}
+    {%- if requirement.nextReviewOn -%}
+        {{ requirement.nextReviewOn|date('d/m/Y') }}
+        {%- if requirement.isReviewOverdueOn(today) %} <span class="badge badge--danger">Vencida</span>
+        {%- elseif requirement.isReviewDueSoonOn(today) %} <span class="badge badge--warning">Próxima</span>{% endif -%}
+    {%- else -%}—{%- endif -%}
+{% endmacro %}
