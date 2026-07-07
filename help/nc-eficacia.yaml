@@ -19,5 +19,10 @@ body: |
         <li><strong>No eficaz</strong>: ha reaparecido → la causa raíz no era la correcta o la acción
         no fue suficiente; hay que replantearla.</li>
     </ul>
+    <p>Cuando una acción sale <strong>No eficaz</strong>, no la reescribas ni la borres: déjala como
+    está, porque es la evidencia de que se intentó y no funcionó (justo lo que un auditor valora).
+    Lo que procede es <strong>añadir una acción nueva</strong> que ataque de verdad la causa y
+    verificar su eficacia. La no conformidad podrá cerrarse cuando esa nueva acción resulte eficaz;
+    la anterior queda en el histórico. (Ver «Estado de la no conformidad» para la regla de cierre.)</p>
     <p>Cerrar una no conformidad sin verificar la eficacia es un cierre en falso: es justo lo que un
     auditor comprueba.</p>

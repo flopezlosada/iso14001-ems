@@ -340,11 +340,13 @@ class NonConformity
     }
 
     /**
-     * Soft closure rule (PC.10.0 §4.3.4): a non-conformity may only be closed once every corrective
-     * action has been reviewed effective (efficacy OK). A pending review (efficacy null) blocks
-     * closure, and a NO-OK review means the procedure must be reopened, not closed. A
-     * non-conformity resolved by an immediate correction (no corrective actions) can still be
-     * closed — that leniency keeps minor cases unencumbered.
+     * Soft closure rule (PC.10.0 §4.3.4): a non-conformity may only be closed once no corrective
+     * action is still pending review (efficacy null) and at least one has been reviewed effective
+     * (efficacy OK). A NO-OK action does NOT block closure: it stays on record as an attempt that
+     * failed, and the fix comes from a later action reviewed effective — the two are not linked
+     * one-to-one because a non-conformity's actions are independent, so closure is judged on the
+     * aggregate, not action by action. A non-conformity resolved by an immediate correction (no
+     * corrective actions) can still be closed — that leniency keeps minor cases unencumbered.
      */
     #[Assert\Callback]
     public function validateClosure(ExecutionContextInterface $context): void
@@ -354,28 +356,35 @@ class NonConformity
         }
 
         if (!$this->canBeClosed()) {
-            $context->buildViolation('No se puede cerrar la no conformidad mientras alguna acción correctiva no esté verificada como eficaz (OK). Revisa o reabre las acciones pendientes o no eficaces.')
+            $context->buildViolation('No se puede cerrar la no conformidad: alguna acción correctiva está pendiente de verificar, o ninguna ha resultado eficaz (OK). Deja al menos una acción eficaz y ninguna a medias.')
                 ->atPath('status')
                 ->addViolation();
         }
     }
 
     /**
-     * Whether this non-conformity may be closed (PC.10.0 §4.3.4): every corrective action must have
-     * been reviewed effective (efficacy OK). One with no corrective actions (resolved by an immediate
-     * correction) may also be closed. Shared by {@see validateClosure} and the close CTA.
+     * Whether this non-conformity may be closed (PC.10.0 §4.3.4): no corrective action may be pending
+     * review (efficacy null) and at least one must have been reviewed effective (efficacy OK). A NO-OK
+     * action does not block closure — it remains as the historical record of an attempt that did not
+     * work, superseded by a later effective one. A non-conformity with no corrective actions (resolved
+     * by an immediate correction) may also be closed. Shared by {@see validateClosure} and the close CTA.
      *
      * @return bool true when closure is allowed
      */
     public function canBeClosed(): bool
     {
-        foreach ($this->correctiveActions as $action) {
-            if (Efficacy::OK !== $action->getEfficacy()) {
-                return false;
-            }
+        $hasPendingReview = $this->correctiveActions->exists(
+            static fn (int $i, CorrectiveAction $action): bool => null === $action->getEfficacy(),
+        );
+        if ($hasPendingReview) {
+            return false;
         }
 
-        return true;
+        $hasEffective = $this->correctiveActions->exists(
+            static fn (int $i, CorrectiveAction $action): bool => Efficacy::OK === $action->getEfficacy(),
+        );
+
+        return $this->correctiveActions->isEmpty() || $hasEffective;
     }
 
     public function getOpenedAt(): \DateTimeImmutable

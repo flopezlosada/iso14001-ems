@@ -13,9 +13,12 @@ use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 /**
- * Closure rule of {@see NonConformity} (PC.10.0 §4.3.4): a non-conformity can only be closed once
- * every corrective action is reviewed effective (efficacy OK); a pending or NO-OK review blocks
- * closure, while a non-conformity with no actions (immediate correction) stays closeable.
+ * Closure rule of {@see NonConformity} (PC.10.0 §4.3.4): a non-conformity can only be closed once no
+ * corrective action is still pending review and at least one has been reviewed effective (efficacy
+ * OK). A pending review blocks closure; a NO-OK review does not (it stays on record and is superseded
+ * by a later effective action), but a non-conformity whose only reviewed actions are NO-OK cannot be
+ * closed for want of an effective one. A non-conformity with no actions (immediate correction) stays
+ * closeable.
  *
  * Exercised through the real Symfony validator, since the rule is a declarative Assert\Callback
  * (a mock would prove nothing).
@@ -95,8 +98,21 @@ final class NonConformityClosureValidationTest extends KernelTestCase
         self::assertSame(1, $this->closureViolations($this->nonConformity(NonConformityStatus::CLOSED, [Efficacy::OK, null])));
     }
 
-    public function testClosingWithANotOkReviewIsRejected(): void
+    public function testClosingWithOnlyANotOkReviewIsRejected(): void
     {
+        // A single ineffective action leaves no effective one: closure needs at least one OK.
         self::assertSame(1, $this->closureViolations($this->nonConformity(NonConformityStatus::CLOSED, [Efficacy::NOT_OK])));
+    }
+
+    public function testClosingWithANotOkSupersededByAnEffectiveActionIsAllowed(): void
+    {
+        // The failed attempt stays on record; a later effective action unblocks closure.
+        self::assertSame(0, $this->closureViolations($this->nonConformity(NonConformityStatus::CLOSED, [Efficacy::NOT_OK, Efficacy::OK])));
+    }
+
+    public function testClosingWithANotOkAndAPendingReviewIsRejected(): void
+    {
+        // Even with a failed attempt on record, an unreviewed action still blocks closure.
+        self::assertSame(1, $this->closureViolations($this->nonConformity(NonConformityStatus::CLOSED, [Efficacy::NOT_OK, null])));
     }
 }
