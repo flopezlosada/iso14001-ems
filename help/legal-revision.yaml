@@ -1,0 +1,23 @@
+slug: legal-revision
+title: Frecuencia y próxima revisión
+summary: >
+    Cada cuánto se reevalúa el cumplimiento del requisito. La próxima revisión se calcula sola
+    (última revisión + frecuencia); no se teclea a mano.
+legal:
+    - label: 'ISO 14001:2015 · apartado 9.1.2 (Evaluación del cumplimiento)'
+      note: >
+          La norma exige evaluar el cumplimiento a intervalos planificados; fijar una frecuencia y
+          seguir la próxima revisión es la evidencia de que esos intervalos se respetan.
+      url: 'https://www.iso.org/standard/60857.html'
+docs:
+    - PC-06.03
+body: |
+    <p>La <strong>frecuencia de evaluación</strong> dice cada cuánto hay que volver a comprobar si el
+    requisito se sigue cumpliendo (habitualmente anual o semestral).</p>
+    <p>La <strong>próxima revisión</strong> no se escribe a mano: se calcula sumando la frecuencia a la
+    fecha de la última revisión. Así la fecha se mantiene coherente y no se olvida.</p>
+    <p>En el listado y en la ficha verás un aviso cuando toca:</p>
+    <ul>
+        <li><strong>Próxima</strong>: la revisión se acerca (dentro del plazo de aviso).</li>
+        <li><strong>Vencida</strong>: la fecha ya llegó o pasó y hay que reevaluar el cumplimiento.</li>
+    </ul>
