@@ -54,20 +54,21 @@ final class ManagementReviewControllerTest extends WebTestCase
         $client = $this->loggedInClient();
         $exercise = SchoolYear::current(new \DateTimeImmutable());
 
-        // No review for the current course yet -> the guide's first step is pending and offers to
-        // create the acta. This also renders the shared _workflow_guide partial end to end.
+        // No review for the current course yet -> the guide's first step is pending and its CTA
+        // offers to create the acta. This also renders the shared _workflow_guide partial end to end.
+        // (We assert on the CTA text, not the step label "Crear el acta del curso …", which is fixed.)
         $client->request('GET', '/management-review');
         self::assertResponseIsSuccessful();
-        self::assertStringContainsString('Crear el acta del curso '.$exercise, (string) $client->getResponse()->getContent());
+        self::assertStringContainsString('Crear el acta '.$exercise, (string) $client->getResponse()->getContent());
 
-        // Once this course's review exists, that step is done and the CTA is gone.
+        // Once this course's review exists, that step is done and its create CTA is gone.
         $em = static::getContainer()->get(EntityManagerInterface::class);
         $em->persist((new ManagementReview())->setExercise($exercise));
         $em->flush();
 
         $client->request('GET', '/management-review');
         self::assertResponseIsSuccessful();
-        self::assertStringNotContainsString('Crear el acta del curso '.$exercise, (string) $client->getResponse()->getContent());
+        self::assertStringNotContainsString('Crear el acta '.$exercise, (string) $client->getResponse()->getContent());
     }
 
     public function testCreatingReviewGeneratesEverySection(): void
