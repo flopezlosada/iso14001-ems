@@ -8,6 +8,7 @@ use App\Entity\TrainingAction;
 use App\Enum\Area;
 use App\Form\TrainingActionType;
 use App\Repository\TrainingActionRepository;
+use App\Repository\TrainingEvidenceRepository;
 use App\Security\Voter\AreaVoter;
 use App\Service\AuditLogger;
 use Doctrine\ORM\EntityManagerInterface;
@@ -51,6 +52,26 @@ class TrainingController extends AbstractController
         return $this->render('training/index.html.twig', [
             'year' => $year,
             'actions' => $actions->findForYear($year),
+        ]);
+    }
+
+    /**
+     * Shows a training action in detail (the main view of the item), with its long texts as cards
+     * and the training evidences linked to it as a secondary history.
+     */
+    #[Route('/{year}/{id}', name: 'training_show', requirements: ['year' => '\d{4}', 'id' => '\d+'], methods: ['GET'])]
+    public function show(int $year, TrainingAction $action, TrainingEvidenceRepository $evidences): Response
+    {
+        $this->denyAccessUnlessGranted(AreaVoter::READ, Area::TRAINING);
+
+        if ($action->getPlanYear() !== $year) {
+            throw $this->createNotFoundException('The training action does not belong to the given year.');
+        }
+
+        return $this->render('training/show.html.twig', [
+            'year' => $year,
+            'action' => $action,
+            'evidences' => $evidences->findByTrainingAction($action),
         ]);
     }
 

@@ -1,0 +1,25 @@
+slug: proveedor-incidencia
+title: Incidencia de proveedor
+summary: >
+    Un problema detectado con un proveedor o contrata (plazo, calidad, cumplimiento ambiental). Si es
+    grave, es candidata a abrir una no conformidad; su resolución cierra el seguimiento.
+legal:
+    - label: 'ISO 14001:2015 · apartado 8.1 (Control de procesos contratados externamente)'
+      note: >
+          Controlar a los proveedores incluye registrar y tratar los problemas que afecten al
+          desempeño ambiental del centro.
+      url: 'https://www.iso.org/standard/60857.html'
+docs:
+    - PC.05.0
+    - F.12.0
+body: |
+    <p>Registra aquí los problemas surgidos en la relación con el proveedor: retrasos, mala calidad,
+    incumplimientos ambientales, etc.</p>
+    <p>Cada incidencia lleva dos marcas:</p>
+    <ul>
+        <li><strong>Gravedad</strong>: una incidencia <em>grave</em> es candidata a abrir una no
+        conformidad, que puedes crear directamente desde la ficha con los datos ya rellenados.</li>
+        <li><strong>Resolución</strong>: mientras no tenga resolución queda <em>pendiente</em>; al
+        anotar cómo se resolvió, se da por <em>resuelta</em>.</li>
+    </ul>
+    <p>Una acumulación de incidencias suele reflejarse en la siguiente evaluación anual del proveedor.</p>

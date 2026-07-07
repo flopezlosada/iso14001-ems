@@ -1,0 +1,80 @@
+{% extends 'app_shell.html.twig' %}
+
+{% block title %}{{ action.description }}{% endblock %}
+
+{% block breadcrumb %}
+    <a href="{{ path('app_homepage') }}">Inicio</a><span class="sep">/</span>
+    <a href="{{ path('training_year', { year: year }) }}">Formación {{ year }}</a><span class="sep">/</span>
+    {{ action.description }}
+{% endblock %}
+
+{% block body %}
+    {% set can_write = is_granted('AREA_WRITE', constant('App\\Enum\\Area::TRAINING')) %}
+    {% set status = action.status %}
+    <div class="page-head">
+        <div>
+            <h1>{{ action.description }} <span class="badge {{ status.badgeClass }}">{{ status.label }}</span> {{ help_button('formacion-estado') }}</h1>
+            <p class="lead">Acción del plan de formación {{ action.planYear }}{% if action.type %} · {{ action.type.label }}{% endif %}.</p>
+        </div>
+        <div class="page-actions">
+            {% if can_write %}<a class="btn secondary" href="{{ path('training_edit', { year: year, id: action.id }) }}">Editar acción</a>{% endif %}
+        </div>
+    </div>
+
+    {% if action.needsReview %}
+        <div class="card">
+            <h2>Pendiente de revisión {{ help_button('formacion-estado') }}</h2>
+            <p>{{ action.reviewNote ? action.reviewNote|nl2br : 'Esta acción se importó con datos que hay que verificar a mano. Edítala para corregirlos y desmarcar «Necesita revisión».' }}</p>
+        </div>
+    {% endif %}
+
+    <div class="card">
+        <dl class="detail-grid">
+            <dt>Año del plan</dt><dd>{{ action.planYear }}</dd>
+            <dt>Tipo</dt><dd>{{ action.type ? action.type.label : '—' }}</dd>
+            <dt>Dirigido a</dt><dd>{{ action.targetAudience }}</dd>
+            <dt>Fecha prevista</dt><dd>{{ action.plannedDate ? action.plannedDate|date('d/m/Y') : '—' }}</dd>
+            <dt>Fecha real</dt><dd>{{ action.actualDate ? action.actualDate|date('d/m/Y') : '—' }}</dd>
+        </dl>
+        <h2>Objetivos</h2>
+        <p>{{ action.objectives|nl2br }}</p>
+        <h2>Metodología</h2>
+        <p>{{ action.methodology|nl2br }}</p>
+        <h2>Evaluación de la eficacia {{ help_button('formacion-eficacia') }}</h2>
+        <p>{{ action.efficacyEvaluation ? action.efficacyEvaluation|nl2br : '—' }}</p>
+    </div>
+
+    <div class="page-head">
+        <h2>Evidencias registradas</h2>
+        <a class="btn secondary" href="{{ path('training_evidence_index') }}">Ver todas las evidencias</a>
+    </div>
+
+    <div class="card">
+        {% if evidences is empty %}
+            <div class="empty-state">
+                <h2>Sin evidencias vinculadas</h2>
+                <p>Las evidencias de formación (asistencia, cuestionarios) se registran en su propio registro y se pueden vincular a esta acción.</p>
+            </div>
+        {% else %}
+            {# Histórico secundario: filas cortas → tabla. El detalle largo vive en el registro de evidencias. #}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Fecha</th><th>Nombre</th><th>Tipo de formación</th><th>Cuestionario</th>{% if can_write %}<th></th>{% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for evidence in evidences %}
+                        <tr>
+                            <td class="mono">{{ evidence.trainingDate|date('d/m/Y') }}</td>
+                            <td>{{ evidence.personName }}</td>
+                            <td class="muted">{{ evidence.trainingDescription }}</td>
+                            <td>{{ evidence.questionnaireCompleted ? 'Sí' : 'No' }}</td>
+                            {% if can_write %}<td><a href="{{ path('training_evidence_edit', { id: evidence.id }) }}">Editar</a></td>{% endif %}
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    </div>
+{% endblock %}

@@ -1,0 +1,24 @@
+slug: formacion-estado
+title: Estado de la acción formativa
+summary: >
+    En qué punto está cada curso del plan: planificado, ya impartido pendiente de evaluar su eficacia,
+    o evaluado (cerrado). Marca de un vistazo qué te queda por hacer este año.
+legal:
+    - label: 'ISO 14001:2015 · apartado 7.2 (Competencia)'
+      note: >
+          La norma pide planificar la formación necesaria y, cuando se imparte, evaluar la eficacia de
+          las acciones tomadas: el estado ordena ese ciclo.
+      url: 'https://www.iso.org/standard/60857.html'
+docs:
+    - F.03.0
+body: |
+    <p>El estado se deduce de los datos de la propia acción, no se elige a mano:</p>
+    <ol>
+        <li><strong>Planificada</strong>: prevista pero aún no impartida (sin fecha real).</li>
+        <li><strong>Pendiente de evaluar</strong>: ya impartida (tiene fecha real), pero falta valorar
+        su eficacia.</li>
+        <li><strong>Evaluada</strong>: impartida y con la eficacia valorada; nada más que hacer.</li>
+    </ol>
+    <p>Aparte, una acción puede quedar marcada como <strong>Revisar</strong> cuando se importó con datos
+    que hay que verificar a mano (por ejemplo, una fecha que no se pudo interpretar). Edítala, corrige
+    el dato y desmarca la revisión para que siga su ciclo normal.</p>

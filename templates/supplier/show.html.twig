@@ -9,12 +9,23 @@
 {% endblock %}
 
 {% block body %}
+    {% set can_write = is_granted('AREA_WRITE', constant('App\\Enum\\Area::SUPPLIER')) %}
+    {% set evaluation = supplier.evaluationFor(currentYear) %}
     <div class="page-head">
         <div>
-            <h1>{{ supplier.name }}</h1>
+            <h1>{{ supplier.name }}
+                {% if evaluation %}
+                    <span class="badge {{ evaluation.criterion.badgeClass }}">{{ evaluation.criterion.label }} {{ currentYear }}</span>
+                {% else %}
+                    <span class="badge badge--draft">Sin evaluar {{ currentYear }}</span>
+                {% endif %}
+                {{ help_button('proveedor-evaluacion') }}
+            </h1>
             <p class="lead">{{ supplier.productOrService }}</p>
         </div>
-        <a class="btn secondary" href="{{ path('supplier_edit', { id: supplier.id }) }}">Editar proveedor</a>
+        <div class="page-actions">
+            {% if can_write %}<a class="btn secondary" href="{{ path('supplier_edit', { id: supplier.id }) }}">Editar proveedor</a>{% endif %}
+        </div>
     </div>
 
     {% if supplier.notes %}
@@ -25,8 +36,8 @@
     {% endif %}
 
     <div class="page-head">
-        <h2>Evaluaciones anuales</h2>
-        <a class="btn" href="{{ path('supplier_evaluation_new', { id: supplier.id }) }}">+ Añadir evaluación</a>
+        <h2>Evaluaciones anuales {{ help_button('proveedor-evaluacion') }}</h2>
+        {% if can_write %}<a class="btn" href="{{ path('supplier_evaluation_new', { id: supplier.id }) }}">+ Añadir evaluación</a>{% endif %}
     </div>
 
     <div class="card">
@@ -39,17 +50,16 @@
             <table>
                 <thead>
                     <tr>
-                        <th>Año</th><th>Estado</th><th>Criterio</th><th>Observaciones</th><th></th>
+                        <th>Año</th><th>Evaluación</th><th>Observaciones</th>{% if can_write %}<th></th>{% endif %}
                     </tr>
                 </thead>
                 <tbody>
-                    {% for evaluation in supplier.evaluations %}
+                    {% for ev in supplier.evaluations %}
                         <tr>
-                            <td>{{ evaluation.year }}</td>
-                            <td>{{ evaluation.criterion.statusLabel }}</td>
-                            <td>{{ evaluation.criterion.label }}</td>
-                            <td class="muted">{{ evaluation.notes ?? '—' }}</td>
-                            <td><a href="{{ path('supplier_evaluation_edit', { id: supplier.id, evaluationId: evaluation.id }) }}">Editar</a></td>
+                            <td class="mono">{{ ev.year }}{% if ev.year == currentYear %} <span class="muted">· en curso</span>{% endif %}</td>
+                            <td><span class="badge {{ ev.criterion.badgeClass }}">{{ ev.criterion.label }}</span> <span class="muted">· {{ ev.criterion.statusLabel }}</span></td>
+                            <td class="muted">{{ ev.notes ?? '—' }}</td>
+                            {% if can_write %}<td><a href="{{ path('supplier_evaluation_edit', { id: supplier.id, evaluationId: ev.id }) }}">Editar</a></td>{% endif %}
                         </tr>
                     {% endfor %}
                 </tbody>
@@ -58,8 +68,8 @@
     </div>
 
     <div class="page-head">
-        <h2>Incidencias</h2>
-        <a class="btn" href="{{ path('supplier_incident_new', { id: supplier.id }) }}">+ Añadir incidencia</a>
+        <h2>Incidencias {{ help_button('proveedor-incidencia') }}</h2>
+        {% if can_write %}<a class="btn" href="{{ path('supplier_incident_new', { id: supplier.id }) }}">+ Añadir incidencia</a>{% endif %}
     </div>
 
     <div class="card">
@@ -69,29 +79,30 @@
                 <p>Registra aquí los problemas de plazo, calidad o cumplimiento del proveedor.</p>
             </div>
         {% else %}
-            <table>
-                <thead>
-                    <tr>
-                        <th>Fecha</th><th>Descripción</th><th>Resolución</th><th>Grave</th><th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for incident in supplier.incidents %}
-                        <tr>
-                            <td>{{ incident.occurredOn|date('d/m/Y') }}</td>
-                            <td class="muted">{{ incident.description|length > 60 ? incident.description|slice(0, 60) ~ '…' : incident.description }}</td>
-                            <td class="muted">{{ incident.resolution ?? '—' }}</td>
-                            <td>
-                                {%- if incident.severe -%}
-                                    Sí ·
-                                    <a href="{{ path('non_conformity_new', { origin: 'internal', description: 'Incidencia con proveedor ' ~ supplier.name ~ ': ' ~ incident.description }) }}">Abrir NC</a>
-                                {%- else -%}No{%- endif -%}
-                            </td>
-                            <td><a href="{{ path('supplier_incident_edit', { id: supplier.id, incidentId: incident.id }) }}">Editar</a></td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+            {# Las incidencias tienen textos largos (descripción, resolución): fichas, no tabla. #}
+            {% for incident in supplier.incidents %}
+                <div class="action-item">
+                    <p class="action-desc">{{ incident.description|nl2br }}</p>
+                    <div class="action-meta">
+                        <span class="meta-item"><span class="meta-label">Fecha</span>{{ incident.occurredOn|date('d/m/Y') }}</span>
+                        <span class="meta-item"><span class="meta-label">Gravedad</span>
+                            {%- if incident.severe -%}<span class="badge badge--danger">Grave</span>{%- else -%}<span class="muted">Normal</span>{%- endif -%}
+                        </span>
+                        <span class="meta-item"><span class="meta-label">Resolución</span>
+                            {%- if incident.resolution -%}<span class="badge badge--success">Resuelta</span>{%- else -%}<span class="badge badge--warning">Pendiente</span>{%- endif -%}
+                        </span>
+                    </div>
+                    {% if incident.resolution %}
+                        <div class="action-efficacy"><span class="meta-label">Resolución</span>{{ incident.resolution|nl2br }}</div>
+                    {% endif %}
+                    <div class="action-actions">
+                        {% if incident.severe and can_write %}
+                            <a href="{{ path('non_conformity_new', { origin: 'internal', description: 'Incidencia con proveedor ' ~ supplier.name ~ ': ' ~ incident.description }) }}">Abrir NC</a>
+                        {% endif %}
+                        {% if can_write %}<a href="{{ path('supplier_incident_edit', { id: supplier.id, incidentId: incident.id }) }}">Editar incidencia</a>{% endif %}
+                    </div>
+                </div>
+            {% endfor %}
         {% endif %}
     </div>
 {% endblock %}

@@ -23,14 +23,14 @@ final class SupplierFixtures extends AbstractDemoFixture
                 'name' => 'Gestión de Residuos Sierra Norte S.L.',
                 'service' => 'Gestor autorizado de residuos peligrosos',
                 'notes' => 'Recoge fluorescentes, envases contaminados y pilas.',
-                'evaluations' => [[2024, SupplierCriterion::CAPABLE], [2025, SupplierCriterion::CAPABLE]],
+                'evaluations' => [[2024, SupplierCriterion::CAPABLE], [2025, SupplierCriterion::CAPABLE], [2026, SupplierCriterion::CAPABLE]],
                 'incidents' => [],
             ],
             [
                 'name' => 'Calefacción y Clima del Valle',
                 'service' => 'Mantenimiento de la caldera de calefacción',
                 'notes' => null,
-                'evaluations' => [[2024, SupplierCriterion::CAPABLE], [2025, SupplierCriterion::ON_TRIAL]],
+                'evaluations' => [[2024, SupplierCriterion::CAPABLE], [2025, SupplierCriterion::ON_TRIAL], [2026, SupplierCriterion::ON_TRIAL]],
                 'incidents' => [
                     ['2025-01-18', 'Retraso de dos semanas en la revisión anual de la caldera.', 'Se reprogramó la visita y se reforzó el contrato de mantenimiento.', true],
                 ],
@@ -46,7 +46,7 @@ final class SupplierFixtures extends AbstractDemoFixture
                 'name' => 'Limpiezas Buitrago',
                 'service' => 'Servicio de limpieza de instalaciones',
                 'notes' => 'Uso de productos de limpieza con etiqueta ecológica pendiente de confirmar.',
-                'evaluations' => [[2024, SupplierCriterion::ON_TRIAL], [2025, SupplierCriterion::NOT_CAPABLE]],
+                'evaluations' => [[2024, SupplierCriterion::ON_TRIAL], [2025, SupplierCriterion::NOT_CAPABLE], [2026, SupplierCriterion::NOT_CAPABLE]],
                 'incidents' => [
                     ['2025-03-05', 'Uso de productos no autorizados sin ficha de datos de seguridad.', null, false],
                 ],

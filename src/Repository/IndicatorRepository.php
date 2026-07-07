@@ -19,16 +19,6 @@ class IndicatorRepository extends ServiceEntityRepository
     }
 
     /**
-     * All indicators ordered by process and then name, ready to render the list.
-     *
-     * @return Indicator[] all indicators
-     */
-    public function findAllOrdered(): array
-    {
-        return $this->findBy([], ['process' => 'ASC', 'name' => 'ASC']);
-    }
-
-    /**
      * All indicators with their measurements eagerly fetched, to summarise the year's results
      * without an N+1 over each indicator's measurements.
      *

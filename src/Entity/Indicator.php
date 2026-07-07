@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Entity;
 
+use App\Enum\IndicatorYearStatus;
 use App\Enum\MeasurementPeriodicity;
 use App\Enum\SgmaProcess;
 use App\Repository\IndicatorRepository;
@@ -80,6 +81,28 @@ class Indicator
     public function touch(): void
     {
         $this->updatedAt = new \DateTimeImmutable();
+    }
+
+    /**
+     * The indicator's standing for a given year, rolled up from that year's measurements: not
+     * measured if there is none, breached if any transgresses the reference value, otherwise on
+     * target. Iterates the (already loaded) collection, so callers should eager-fetch measurements
+     * to avoid an N+1 across a listing.
+     */
+    public function statusForYear(int $year): IndicatorYearStatus
+    {
+        $measured = false;
+        foreach ($this->measurements as $measurement) {
+            if ($measurement->getYear() !== $year) {
+                continue;
+            }
+            $measured = true;
+            if ($measurement->isBreached()) {
+                return IndicatorYearStatus::BREACHED;
+            }
+        }
+
+        return $measured ? IndicatorYearStatus::ON_TARGET : IndicatorYearStatus::NOT_MEASURED;
     }
 
     public function getId(): ?int

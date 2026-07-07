@@ -24,16 +24,19 @@
             <table data-list-tools>
                 <thead>
                     <tr>
-                        <th>Indicador</th><th data-filter>Proceso</th><th data-filter>Periodicidad</th><th>Valor de referencia {{ help_button('indicador-referencia') }}</th>
+                        <th>Indicador</th><th data-filter>Proceso</th><th data-filter>Periodicidad</th><th>Valor de referencia {{ help_button('indicador-referencia') }}</th><th data-filter="estado">Estado {{ currentYear }} {{ help_button('indicador-estado') }}</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for indicator in indicators %}
+                        {# Estado RESPECTO AL AÑO EN CURSO (no la última medición, que puede ser de otro año). #}
+                        {% set status = indicator.statusForYear(currentYear) %}
                         <tr>
                             <td><a class="cell-link" href="{{ path('indicator_show', { id: indicator.id }) }}">{{ indicator.name }}</a>{% if not indicator.active %} <span class="muted">(inactivo)</span>{% endif %}</td>
                             <td>{{ indicator.process.label }}</td>
                             <td>{{ indicator.periodicity.label }}</td>
                             <td class="muted">{{ indicator.referenceValue ?? '—' }}</td>
+                            <td><a class="badge {{ status.badgeClass }}" href="{{ path('indicator_show', { id: indicator.id }) }}">{{ status.label }}</a></td>
                         </tr>
                     {% endfor %}
                 </tbody>

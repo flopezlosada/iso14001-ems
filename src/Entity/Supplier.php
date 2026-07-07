@@ -90,6 +90,21 @@ class Supplier
         return $this->evaluations->first() ?: null;
     }
 
+    /**
+     * The evaluation for a specific year, or null if the supplier was not evaluated that year. Lets
+     * the control list show the standing for the period in course, not just the latest on record.
+     */
+    public function evaluationFor(int $year): ?SupplierEvaluation
+    {
+        foreach ($this->evaluations as $evaluation) {
+            if ($evaluation->getYear() === $year) {
+                return $evaluation;
+            }
+        }
+
+        return null;
+    }
+
     public function getId(): ?int
     {
         return $this->id;

@@ -52,4 +52,19 @@ enum SupplierCriterion: string
             self::NOT_CAPABLE => 'No capacitado',
         };
     }
+
+    /**
+     * CSS badge class for the shared semantic scale: a capable supplier is approved (green), one on
+     * trial is approved with caution (amber), a not-capable one is rejected (red).
+     *
+     * @return string the badge modifier class
+     */
+    public function badgeClass(): string
+    {
+        return match ($this) {
+            self::CAPABLE => 'badge--success',
+            self::ON_TRIAL => 'badge--warning',
+            self::NOT_CAPABLE => 'badge--danger',
+        };
+    }
 }
