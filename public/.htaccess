@@ -1,5 +1,13 @@
 DirectoryIndex index.php
 
+# Force HTTPS (behind cdmon's TLS-terminating proxy: check X-Forwarded-Proto to avoid loops)
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{HTTP:X-Forwarded-Proto} !https
+    RewriteCond %{HTTPS} off
+    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+</IfModule>
+
 <IfModule mod_negotiation.c>
     Options -MultiViews
 </IfModule>
