@@ -1,0 +1,25 @@
+{% extends 'email/base.html.twig' %}
+
+{% block title %}Tu enlace de acceso · SGA{% endblock %}
+{% block preheader %}Enlace de acceso al SGA, válido durante 10 minutos.{% endblock %}
+
+{% block heading %}
+    <h1 style="margin:0 0 16px; font-family:Georgia,'Times New Roman',serif; font-size:20px; font-weight:bold; color:#20231E;">Tu enlace de acceso</h1>
+{% endblock %}
+
+{% block content %}
+    <p style="margin:0 0 20px;">Pulsa el botón para entrar en el Sistema de Gestión Ambiental. El enlace es válido durante <strong>10 minutos</strong> y solo se puede usar una vez.</p>
+
+    <table role="presentation" cellpadding="0" cellspacing="0">
+        <tr>
+            <td style="border-radius:8px; background:#20231E;">
+                <a href="{{ url }}" style="display:inline-block; padding:13px 24px; font-family:Arial,Helvetica,sans-serif; font-size:15px; font-weight:bold; color:#FFFFFF; text-decoration:none; border-radius:8px;">Entrar en el SGA</a>
+            </td>
+        </tr>
+    </table>
+
+    <p style="margin:22px 0 0; font-size:13px; color:#8A8F86;">Si el botón no funciona, copia y pega esta dirección en tu navegador:</p>
+    <p style="margin:6px 0 0; font-size:13px; word-break:break-all;"><a href="{{ url }}" style="color:#3D5A3D;">{{ url }}</a></p>
+
+    <p style="margin:20px 0 0; font-size:13px; color:#8A8F86;">Si no has solicitado este acceso, ignora este mensaje.</p>
+{% endblock %}

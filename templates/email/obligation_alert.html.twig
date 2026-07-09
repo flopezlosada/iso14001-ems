@@ -1,30 +1,33 @@
-<!DOCTYPE html>
-<html lang="es">
-<head><meta charset="utf-8"></head>
-<body style="font-family: Arial, sans-serif; color: #1a1a1a; line-height: 1.5;">
-    <p>Hola {{ user.fullName }},</p>
+{% extends 'email/base.html.twig' %}
 
-    <p>Estas obligaciones del sistema de gestión ambiental (ISO 14001) tienen una revisión pendiente a fecha de {{ today|date('d/m/Y') }}:</p>
+{% block title %}Obligaciones pendientes · SGA{% endblock %}
+{% block preheader %}{{ alerts|length }} obligación(es) del SGA con revisión pendiente a {{ today|date('d/m/Y') }}.{% endblock %}
 
-    <table cellpadding="8" cellspacing="0" border="0" style="border-collapse: collapse; width: 100%; max-width: 640px;">
+{% block heading %}
+    <h1 style="margin:0 0 16px; font-family:Georgia,'Times New Roman',serif; font-size:20px; font-weight:bold; color:#20231E;">Obligaciones pendientes</h1>
+{% endblock %}
+
+{% block content %}
+    <p style="margin:0 0 14px;">Hola {{ user.fullName }},</p>
+    <p style="margin:0 0 18px;">Estas obligaciones del Sistema de Gestión Ambiental (ISO 14001) tienen una revisión pendiente a fecha de <strong>{{ today|date('d/m/Y') }}</strong>:</p>
+
+    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse; width:100%; border:1px solid #E4E6E0; border-radius:8px; overflow:hidden;">
         <thead>
-            <tr style="text-align: left; border-bottom: 2px solid #ddd;">
-                <th>Documento</th>
-                <th>Revisión</th>
+            <tr style="background:#F4F6F2;">
+                <th align="left" style="padding:10px 12px; font-family:Arial,Helvetica,sans-serif; font-size:12px; text-transform:uppercase; letter-spacing:0.4px; color:#5C6159; border-bottom:1px solid #E4E6E0;">Documento</th>
+                <th align="left" style="padding:10px 12px; font-family:Arial,Helvetica,sans-serif; font-size:12px; text-transform:uppercase; letter-spacing:0.4px; color:#5C6159; border-bottom:1px solid #E4E6E0;">Revisión</th>
             </tr>
         </thead>
         <tbody>
             {% for alert in alerts %}
                 {% set doc = alert.document %}
                 {% set overdue = alert.nextDueDate < today %}
-                <tr style="border-bottom: 1px solid #eee;">
-                    <td>
-                        <strong>{{ doc.code }}</strong> — {{ doc.title }}
-                        {% if doc.instructions %}
-                            <div style="color: #666; font-size: 13px; margin-top: 4px;">{{ doc.instructions }}</div>
-                        {% endif %}
+                <tr>
+                    <td style="padding:12px; border-bottom:1px solid #EEF0EC; vertical-align:top;">
+                        <strong style="color:#20231E;">{{ doc.code }}</strong> <span style="color:#5C6159;">— {{ doc.title }}</span>
+                        {% if doc.instructions %}<div style="color:#8A8F86; font-size:13px; margin-top:4px;">{{ doc.instructions }}</div>{% endif %}
                     </td>
-                    <td style="white-space: nowrap; color: {{ overdue ? '#b00020' : '#a06000' }};">
+                    <td style="padding:12px; border-bottom:1px solid #EEF0EC; white-space:nowrap; vertical-align:top; color:{{ overdue ? '#B00020' : '#8A6D00' }}; font-weight:bold;">
                         {{ overdue ? 'Venció el' : 'Vence el' }} {{ alert.nextDueDate|date('d/m/Y') }}
                     </td>
                 </tr>
@@ -32,8 +35,5 @@
         </tbody>
     </table>
 
-    <p style="margin-top: 20px;">Entra en la aplicación del SGA para cumplimentarlas o marcarlas como hechas.</p>
-
-    <p style="color: #888; font-size: 12px;">Este es un aviso automático del sistema de gestión ambiental del {{ app_organization_name }}.</p>
-</body>
-</html>
+    <p style="margin:20px 0 0; color:#5C6159;">Entra en la aplicación del SGA para cumplimentarlas o marcarlas como hechas.</p>
+{% endblock %}
