@@ -34,6 +34,8 @@ class SecurityController extends AbstractController
         string $googleClientId,
         #[Autowire(service: 'limiter.magic_link')]
         private readonly RateLimiterFactory $magicLinkLimiter,
+        #[Autowire('%app.mailer_from%')]
+        private readonly string $mailerFrom,
     ) {
         $this->googleSsoEnabled = '' !== $googleClientId;
     }
@@ -79,7 +81,7 @@ class SecurityController extends AbstractController
         if (null !== $user) {
             $loginLink = $loginLinkHandler->createLoginLink($user);
             $mailer->send((new Email())
-                ->from('no-reply@iso14001-ems.local')
+                ->from($this->mailerFrom)
                 ->to($user->getEmail())
                 ->subject('Tu enlace de acceso')
                 ->text("Entra en la aplicación con este enlace (válido 10 minutos):\n\n".$loginLink->getUrl()));
