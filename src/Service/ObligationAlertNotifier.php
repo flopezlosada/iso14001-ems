@@ -10,6 +10,8 @@ use App\Repository\RoleRepository;
 use App\Repository\ScheduledAlertRepository;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Monolog\Attribute\WithMonologChannel;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Email;
@@ -24,6 +26,7 @@ use Twig\Environment;
  * into a single e-mail (so nobody gets one mail per document), sends it, and stamps the alerts as
  * notified so they are not re-sent within the same cycle.
  */
+#[WithMonologChannel('obligation_cron')]
 final class ObligationAlertNotifier
 {
     /** Stable code of the role that receives escalated alerts. */
@@ -38,6 +41,7 @@ final class ObligationAlertNotifier
         private readonly EntityManagerInterface $em,
         #[Autowire('%app.mailer_from%')]
         private readonly string $from,
+        private readonly LoggerInterface $logger,
     ) {
     }
 
@@ -102,7 +106,13 @@ final class ObligationAlertNotifier
         }
         $this->em->flush();
 
-        return ['alerts' => \count($due), 'emails' => \count($perUser), 'withoutRecipient' => $withoutRecipient];
+        $summary = ['alerts' => \count($due), 'emails' => \count($perUser), 'withoutRecipient' => $withoutRecipient];
+
+        // Heartbeat: leave one dated line per run on the dedicated obligation_cron channel, so the
+        // scheduled cron can be verified from var/log/obligations.log even when nothing was due.
+        $this->logger->info('Recordatorios de obligaciones ejecutados', $summary);
+
+        return $summary;
     }
 
     /**
