@@ -1,6 +1,7 @@
 monolog:
     channels:
         - deprecation # Deprecations are logged in the dedicated "deprecation" channel when it exists
+        - obligation_cron # Heartbeat of the scheduled-reminder cron: one dated line per run
 
 when@dev:
     monolog:
@@ -37,7 +38,7 @@ when@prod:
                 action_level: error
                 handler: nested
                 excluded_http_codes: [404, 405]
-                channels: ["!deprecation"]
+                channels: ["!deprecation", "!obligation_cron"]
                 buffer_size: 50 # How many messages should be saved? Prevent memory leaks
             nested:
                 # Shared hosting (cdmon): write to a readable file under var/log so the
@@ -54,3 +55,12 @@ when@prod:
                 type: stream
                 channels: [deprecation]
                 path: "%kernel.logs_dir%/%kernel.environment%.deprecations.log"
+            # Always-on heartbeat for the shell cron: the cron line cannot be edited on cdmon
+            # (managed via ticket), so the app itself leaves one dated line per run here — proof
+            # the scheduler fired even when no obligation was due. NOT wrapped in fingers_crossed,
+            # so it is written unconditionally, not only on errors.
+            obligation_cron:
+                type: stream
+                channels: [obligation_cron]
+                path: "%kernel.logs_dir%/obligations.log"
+                level: info
