@@ -145,10 +145,9 @@ final class DafoControllerTest extends WebTestCase
             'dafo_analysis[opportunities]' => 'Prestigio por la certificación.',
         ]);
 
-        self::assertResponseRedirects('/dafo');
-
         $analysis = static::getContainer()->get(DafoAnalysisRepository::class)->findOneBy(['schoolYear' => '2025-2026']);
         self::assertNotNull($analysis);
+        self::assertResponseRedirects('/dafo/'.$analysis->getId());
         self::assertSame('2025-2026', $analysis->getSchoolYear());
 
         self::assertNotNull(

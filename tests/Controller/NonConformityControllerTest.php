@@ -88,10 +88,9 @@ final class NonConformityControllerTest extends WebTestCase
             'non_conformity[description]' => 'No hay evidencia de la comunicación previa de residuos peligrosos.',
         ]);
 
-        self::assertResponseRedirects('/non-conformities');
-
         $nc = static::getContainer()->get(NonConformityRepository::class)->findOneBy([]);
         self::assertNotNull($nc);
+        self::assertResponseRedirects('/non-conformities/'.$nc->getId());
         self::assertSame('NC.AE.2026.01', $nc->getReference());
         self::assertSame(NonConformityStatus::OPEN, $nc->getStatus());
         self::assertNull($nc->getClosedAt());
@@ -102,7 +101,9 @@ final class NonConformityControllerTest extends WebTestCase
 
         $client->followRedirect();
         self::assertResponseIsSuccessful();
-        self::assertSelectorTextContains('table', 'NC.AE.2026.01');
+        self::assertSelectorTextContains('h1', 'NC.AE.2026.01');
+        // El flash de guardado se muestra como toast de éxito en la ficha destino.
+        self::assertSelectorTextContains('.toast--success', 'No conformidad NC.AE.2026.01 guardada');
     }
 
     public function testSequenceIncrementsWithinSameOriginAndYear(): void

@@ -95,10 +95,9 @@ final class LegalRequirementControllerTest extends WebTestCase
             'legal_requirement[complianceStatus]' => 'pending',
         ]);
 
-        self::assertResponseRedirects('/legal-requirements');
-
         $requirement = static::getContainer()->get(LegalRequirementRepository::class)->findOneBy([]);
         self::assertNotNull($requirement);
+        self::assertResponseRedirects('/legal-requirements/'.$requirement->getId());
         self::assertSame('RL-01', $requirement->getReference());
 
         self::assertNotNull(

@@ -296,7 +296,7 @@ final class DocumentDetailControllerTest extends WebTestCase
         $client->followRedirect();
         // Rejected: it stays active (no banner) and the reason is demanded.
         self::assertSelectorNotExists('.lifecycle-banner');
-        self::assertSelectorTextContains('.flash', 'motivo');
+        self::assertSelectorTextContains('.toast', 'motivo');
     }
 
     public function testAdminArchivesDocument(): void

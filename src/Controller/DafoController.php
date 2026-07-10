@@ -164,7 +164,7 @@ class DafoController extends AbstractController
             );
             $this->addFlash('success', sprintf('Análisis DAFO %s guardado.', $analysis->getSchoolYear()));
 
-            return $this->redirectToRoute('dafo_index');
+            return $this->redirectToRoute('dafo_show', ['id' => $analysis->getId()]);
         }
 
         return $this->render('dafo/form.html.twig', [

@@ -203,7 +203,7 @@ class ObjectiveController extends AbstractController
             );
             $this->addFlash('success', sprintf('Objetivo %s guardado.', $objective->getReference()));
 
-            return $this->redirectToRoute('objective_year', ['schoolYear' => $schoolYear]);
+            return $this->redirectToRoute('objective_show', ['schoolYear' => $schoolYear, 'id' => $objective->getId()]);
         }
 
         return $this->render('objective/form.html.twig', [
