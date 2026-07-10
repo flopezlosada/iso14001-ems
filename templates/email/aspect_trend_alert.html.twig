@@ -1,35 +1,37 @@
-<!DOCTYPE html>
-<html lang="es">
-<head><meta charset="utf-8"></head>
-<body style="font-family: Arial, sans-serif; color: #1a1a1a; line-height: 1.5;">
-    <p>Hola {{ user.fullName }},</p>
+{% extends 'email/base.html.twig' %}
 
-    <p>Estos aspectos ambientales (ISO 14001) van al alza respecto a años anteriores a fecha de {{ today|date('d/m/Y') }}. Conviene vigilarlos antes de la evaluación anual, ya que apuntan a ser significativos:</p>
+{% block title %}Aspectos ambientales a vigilar · SGA{% endblock %}
+{% block preheader %}{{ watch|length }} aspecto(s) ambiental(es) al alza a vigilar antes de la evaluación anual.{% endblock %}
 
-    <table cellpadding="8" cellspacing="0" border="0" style="border-collapse: collapse; width: 100%; max-width: 640px;">
+{% block heading %}
+    <h1 style="margin:0 0 16px; font-family:Georgia,'Times New Roman',serif; font-size:20px; font-weight:bold; color:#20231E;">Aspectos ambientales a vigilar</h1>
+{% endblock %}
+
+{% block content %}
+    <p style="margin:0 0 14px;">Hola {{ user.fullName }},</p>
+    <p style="margin:0 0 18px;">Estos aspectos ambientales (ISO 14001) van al alza respecto a años anteriores a fecha de <strong>{{ today|date('d/m/Y') }}</strong>. Conviene vigilarlos antes de la evaluación anual, ya que apuntan a ser significativos:</p>
+
+    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse; width:100%; border:1px solid #E4E6E0; border-radius:8px; overflow:hidden;">
         <thead>
-            <tr style="text-align: left; border-bottom: 2px solid #ddd;">
-                <th>Aspecto</th>
-                <th>Variación</th>
-                <th>Intensidad sugerida</th>
+            <tr style="background:#F4F6F2;">
+                <th align="left" style="padding:10px 12px; font-family:Arial,Helvetica,sans-serif; font-size:12px; text-transform:uppercase; letter-spacing:0.4px; color:#5C6159; border-bottom:1px solid #E4E6E0;">Aspecto</th>
+                <th align="left" style="padding:10px 12px; font-family:Arial,Helvetica,sans-serif; font-size:12px; text-transform:uppercase; letter-spacing:0.4px; color:#5C6159; border-bottom:1px solid #E4E6E0;">Variación</th>
+                <th align="left" style="padding:10px 12px; font-family:Arial,Helvetica,sans-serif; font-size:12px; text-transform:uppercase; letter-spacing:0.4px; color:#5C6159; border-bottom:1px solid #E4E6E0;">Intensidad sugerida</th>
             </tr>
         </thead>
         <tbody>
             {% for row in watch %}
-                <tr style="border-bottom: 1px solid #eee;">
-                    <td><strong>{{ row.aspect.name }}</strong></td>
-                    <td style="white-space: nowrap; color: #b00020;">
+                <tr>
+                    <td style="padding:12px; border-bottom:1px solid #EEF0EC; vertical-align:top;"><strong style="color:#20231E;">{{ row.aspect.name }}</strong></td>
+                    <td style="padding:12px; border-bottom:1px solid #EEF0EC; white-space:nowrap; vertical-align:top; color:#B00020; font-weight:bold;">
                         {{ row.estimate.changeRatio >= 0 ? '+' : '' }}{{ (row.estimate.changeRatio * 100)|round(1) }}%
                     </td>
                     {# Every watched aspect is HIGH by construction (isWatchworthy); shown for clarity and in case the watch criterion widens later. #}
-                    <td style="white-space: nowrap;">{{ row.estimate.level.label }}</td>
+                    <td style="padding:12px; border-bottom:1px solid #EEF0EC; white-space:nowrap; vertical-align:top; color:#5C6159;">{{ row.estimate.level.label }}</td>
                 </tr>
             {% endfor %}
         </tbody>
     </table>
 
-    <p style="margin-top: 20px;">Entra en la aplicación del SGA para revisarlos en "Qué toca" o en el módulo de aspectos ambientales.</p>
-
-    <p style="color: #888; font-size: 12px;">Este es un aviso automático del sistema de gestión ambiental del {{ app_organization_name }}.</p>
-</body>
-</html>
+    <p style="margin:20px 0 0; color:#5C6159;">Entra en la aplicación del SGA para revisarlos en «Qué toca» o en el módulo de aspectos ambientales.</p>
+{% endblock %}

@@ -11,7 +11,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 use Symfony\Component\Mailer\MailerInterface;
-use Symfony\Component\Mime\Email;
+use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\RateLimiter\RateLimiterFactory;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
@@ -80,11 +80,14 @@ class SecurityController extends AbstractController
 
         if (null !== $user) {
             $loginLink = $loginLinkHandler->createLoginLink($user);
-            $mailer->send((new Email())
+            $mailer->send((new TemplatedEmail())
                 ->from($this->mailerFrom)
                 ->to($user->getEmail())
                 ->subject('Tu enlace de acceso')
-                ->text("Entra en la aplicación con este enlace (válido 10 minutos):\n\n".$loginLink->getUrl()));
+                ->htmlTemplate('email/magic_link.html.twig')
+                ->context(['url' => $loginLink->getUrl()])
+                // Plain-text fallback for clients that prefer it and for deliverability.
+                ->text("Entra en la aplicación del SGA con este enlace (válido 10 minutos):\n\n".$loginLink->getUrl()));
         }
 
         // Always show the same confirmation, even if the e-mail is unknown, so the page does
