@@ -216,7 +216,7 @@ final class DocumentControllerTest extends WebTestCase
 
         self::assertResponseRedirects('/obligaciones');
         $client->followRedirect();
-        self::assertSelectorTextContains('.flash', 'revisada');
+        self::assertSelectorTextContains('.toast', 'revisada');
 
         // The stored due date moved a full year on, and the completion was recorded.
         $em->clear();
@@ -264,7 +264,7 @@ final class DocumentControllerTest extends WebTestCase
         $client->submit($form);
 
         $client->followRedirect();
-        self::assertSelectorTextContains('.flash', 'no está activa');
+        self::assertSelectorTextContains('.toast', 'no está activa');
         $em->clear();
         $reloaded = $em->find(Document::class, $id);
         self::assertNotNull($reloaded);
@@ -352,7 +352,7 @@ final class DocumentControllerTest extends WebTestCase
         $client->submit($form);
 
         $client->followRedirect();
-        self::assertSelectorTextContains('.flash', 'versión en vigor');
+        self::assertSelectorTextContains('.toast', 'versión en vigor');
         $em->clear();
         $reloaded = $em->find(Document::class, $id);
         self::assertNotNull($reloaded);
