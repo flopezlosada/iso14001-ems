@@ -77,4 +77,6 @@
             </table>
         {% endif %}
     </div>
+
+    {{ include('partials/_activity_log.html.twig', { entries: activity }) }}
 {% endblock %}

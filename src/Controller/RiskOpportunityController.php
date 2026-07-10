@@ -8,6 +8,7 @@ use App\Entity\RiskAssessment;
 use App\Entity\RiskOpportunity;
 use App\Enum\Area;
 use App\Form\RiskOpportunityType;
+use App\Repository\AuditLogRepository;
 use App\Repository\RiskAssessmentRepository;
 use App\Repository\RiskOpportunityRepository;
 use App\Security\Voter\AreaVoter;
@@ -118,7 +119,7 @@ class RiskOpportunityController extends AbstractController
      * Shows a risk/opportunity in detail, including its yearly valuations.
      */
     #[Route('/{id}', name: 'risk_show', requirements: ['id' => '\d+'], methods: ['GET'])]
-    public function show(int $id, RiskOpportunityRepository $repository): Response
+    public function show(int $id, RiskOpportunityRepository $repository, AuditLogRepository $auditLogs): Response
     {
         $this->denyAccessUnlessGranted(AreaVoter::READ, Area::RISK_OPPORTUNITY);
 
@@ -129,6 +130,7 @@ class RiskOpportunityController extends AbstractController
 
         return $this->render('risk_opportunity/show.html.twig', [
             'item' => $item,
+            'activity' => $auditLogs->findForSubject('RiskOpportunity', (string) $item->getId()),
         ]);
     }
 

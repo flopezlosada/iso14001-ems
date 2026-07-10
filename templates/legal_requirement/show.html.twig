@@ -44,4 +44,6 @@
         <h2>Evidencia de cumplimiento {{ help_button('legal-cumplimiento') }}</h2>
         <p>{{ requirement.complianceEvidence ? requirement.complianceEvidence|nl2br : '—' }}</p>
     </div>
+
+    {{ include('partials/_activity_log.html.twig', { entries: activity }) }}
 {% endblock %}

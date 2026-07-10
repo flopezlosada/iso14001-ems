@@ -209,4 +209,6 @@
             {% endif %}
         </div>
     {% endif %}
+
+    {{ include('partials/_activity_log.html.twig', { entries: activity }) }}
 {% endblock %}

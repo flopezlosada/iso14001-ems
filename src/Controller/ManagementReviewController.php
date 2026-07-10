@@ -8,6 +8,7 @@ use App\Entity\ManagementReview;
 use App\Entity\User;
 use App\Enum\Area;
 use App\Form\ManagementReviewType;
+use App\Repository\AuditLogRepository;
 use App\Repository\ManagementReviewRepository;
 use App\Security\Voter\AreaVoter;
 use App\Service\AuditLogger;
@@ -65,7 +66,7 @@ class ManagementReviewController extends AbstractController
      * Shows a management review in detail (read-only), with its sections in order.
      */
     #[Route('/{id}', name: 'management_review_show', requirements: ['id' => '\d+'], methods: ['GET'])]
-    public function show(int $id, ManagementReviewRepository $repository): Response
+    public function show(int $id, ManagementReviewRepository $repository, AuditLogRepository $auditLogs): Response
     {
         $this->denyAccessUnlessGranted(AreaVoter::READ, Area::MANAGEMENT_REVIEW);
 
@@ -76,6 +77,7 @@ class ManagementReviewController extends AbstractController
 
         return $this->render('management_review/show.html.twig', [
             'review' => $review,
+            'activity' => $auditLogs->findForSubject('ManagementReview', (string) $review->getId()),
         ]);
     }
 

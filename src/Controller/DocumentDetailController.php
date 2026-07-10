@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Entity\ApprovalEvent;
+use App\Entity\AuditLog;
 use App\Entity\Document;
 use App\Entity\DocumentVersion;
 use App\Entity\User;
@@ -194,11 +195,12 @@ final class DocumentDetailController extends AbstractController
     }
 
     /**
-     * Renders the document detail with its version history (newest revision first) and, for a
-     * periodic obligation, the trail of closed period reviews (from the audit log).
+     * Renders the document detail with its version history (newest revision first), the trail of
+     * closed period reviews for a periodic obligation, and the full activity history (both from the
+     * audit log).
      *
      * @param Document           $document  the document to show, resolved from the {id} route parameter
-     * @param AuditLogRepository $auditLogs to list this obligation's period-review closures
+     * @param AuditLogRepository $auditLogs source for the period-review closures and the activity trail
      *
      * @return Response the rendered detail page
      */
@@ -241,6 +243,13 @@ final class DocumentDetailController extends AbstractController
             // The trail of "marked done for the period" events, so the responsible can see when each
             // review cycle was closed without a parallel data model (it lives in the audit log).
             'reviews' => $auditLogs->findForSubject('Document', (string) $document->getId(), 'obligation.completed'),
+            // The full activity trail for the document. Period closures are excluded here because
+            // they already have their own "Revisiones de periodo" section above; listing them in
+            // both places would duplicate every closure.
+            'activity' => array_values(array_filter(
+                $auditLogs->findForSubject('Document', (string) $document->getId()),
+                static fn (AuditLog $entry): bool => 'obligation.completed' !== $entry->getAction(),
+            )),
         ]);
     }
 

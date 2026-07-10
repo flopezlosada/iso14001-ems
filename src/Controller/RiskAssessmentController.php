@@ -9,6 +9,7 @@ use App\Entity\RiskOpportunity;
 use App\Entity\User;
 use App\Enum\Area;
 use App\Form\RiskAssessmentType;
+use App\Repository\AuditLogRepository;
 use App\Security\Voter\AreaVoter;
 use App\Security\Voter\RiskAssessmentVoter;
 use App\Service\AuditLogger;
@@ -103,6 +104,7 @@ class RiskAssessmentController extends AbstractController
     public function show(
         #[MapEntity(id: 'id')] RiskOpportunity $item,
         #[MapEntity(id: 'assessmentId')] RiskAssessment $assessment,
+        AuditLogRepository $auditLogs,
     ): Response {
         $this->denyAccessUnlessGranted(AreaVoter::READ, Area::RISK_OPPORTUNITY);
 
@@ -113,6 +115,7 @@ class RiskAssessmentController extends AbstractController
         return $this->render('risk_assessment/show.html.twig', [
             'item' => $item,
             'assessment' => $assessment,
+            'activity' => $auditLogs->findForSubject('RiskAssessment', (string) $assessment->getId()),
         ]);
     }
 

@@ -50,4 +50,6 @@
             {{ dafo.quadrant('Oportunidades', 'external positive', analysis.opportunities) }}
         </div>
     </div>
+
+    {{ include('partials/_activity_log.html.twig', { entries: activity }) }}
 {% endblock %}

@@ -1,0 +1,26 @@
+{# Historial de actividad de un objeto, leído del audit-log (AuditLog::findForSubject).
+   Solo lectura. Se incluye DENTRO de la ficha del objeto, que ya está protegida por
+   permisos: quien no puede ver la ficha no llega hasta aquí, así que la traza hereda
+   el control de acceso del objeto sin comprobación adicional.
+
+   Parámetros:
+     entries  lista de AuditLog (más reciente primero), tal cual la devuelve el repositorio. #}
+<div class="page-head"><h2>Historial de actividad</h2></div>
+<div class="card">
+    {% if entries is empty %}
+        <p class="muted">Todavía no hay actividad registrada para este elemento. Cada cambio, aprobación o aviso aparecerá aquí en cuanto ocurra.</p>
+    {% else %}
+        <ul class="activity">
+            {% for e in entries %}
+                <li>
+                    <span class="activity-when mono">{{ e.occurredAt|date('d/m/Y H:i') }}</span>
+                    <span class="activity-what">
+                        <strong>{{ e.action|audit_action }}</strong>
+                        {%- if e.summary %} · {{ e.summary }}{% endif %}
+                    </span>
+                    <span class="activity-who muted">{{ e.actor|actor_name }}</span>
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+</div>

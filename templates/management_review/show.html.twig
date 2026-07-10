@@ -102,4 +102,6 @@
             <button class="btn danger" type="submit">Eliminar</button>
         </form>
     </div>
+
+    {{ include('partials/_activity_log.html.twig', { entries: activity }) }}
 {% endblock %}

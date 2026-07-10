@@ -10,6 +10,7 @@ use App\Enum\AuditType;
 use App\Enum\NonConformityOrigin;
 use App\Enum\NonConformityStatus;
 use App\Form\NonConformityType;
+use App\Repository\AuditLogRepository;
 use App\Repository\NonConformityRepository;
 use App\Repository\SystemAuditRepository;
 use App\Security\Voter\AreaVoter;
@@ -53,12 +54,13 @@ class NonConformityController extends AbstractController
      * Shows a non-conformity in detail, including its corrective actions (the PAC).
      */
     #[Route('/{id}', name: 'non_conformity_show', requirements: ['id' => '\d+'], methods: ['GET'])]
-    public function show(NonConformity $nonConformity): Response
+    public function show(NonConformity $nonConformity, AuditLogRepository $auditLogs): Response
     {
         $this->denyAccessUnlessGranted(AreaVoter::READ, Area::NONCONFORMITY);
 
         return $this->render('non_conformity/show.html.twig', [
             'nonConformity' => $nonConformity,
+            'activity' => $auditLogs->findForSubject('NonConformity', (string) $nonConformity->getId()),
         ]);
     }
 
