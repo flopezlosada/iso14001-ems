@@ -127,7 +127,7 @@ class TrainingController extends AbstractController
             );
             $this->addFlash('success', 'Acción formativa guardada.');
 
-            return $this->redirectToRoute('training_year', ['year' => $year]);
+            return $this->redirectToRoute('training_show', ['year' => $year, 'id' => $action->getId()]);
         }
 
         return $this->render('training/form.html.twig', [

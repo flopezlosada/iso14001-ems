@@ -83,10 +83,9 @@ final class ObjectiveControllerTest extends WebTestCase
             'objective[status]' => 'in_progress',
         ]);
 
-        self::assertResponseRedirects('/objectives/2025-2026');
-
         $objective = static::getContainer()->get(ObjectiveRepository::class)->findOneBy([]);
         self::assertNotNull($objective);
+        self::assertResponseRedirects('/objectives/2025-2026/'.$objective->getId());
         self::assertSame('OBJ-01', $objective->getReference());
         self::assertSame('2025-2026', $objective->getSchoolYear());
 

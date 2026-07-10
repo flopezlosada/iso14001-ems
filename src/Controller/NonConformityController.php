@@ -199,7 +199,7 @@ class NonConformityController extends AbstractController
             );
             $this->addFlash('success', sprintf('No conformidad %s guardada.', $nonConformity->getReference()));
 
-            return $this->redirectToRoute('non_conformity_index');
+            return $this->redirectToRoute('non_conformity_show', ['id' => $nonConformity->getId()]);
         }
 
         return $this->render('non_conformity/form.html.twig', [

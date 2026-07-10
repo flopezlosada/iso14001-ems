@@ -130,14 +130,27 @@
                 </div>
             </header>
 
-            <main class="page">
-                {% for message in app.flashes('success') %}
-                    <div class="flash success">{{ message }}</div>
-                {% endfor %}
-                {% for message in app.flashes('error') %}
-                    <div class="flash error">{{ message }}</div>
-                {% endfor %}
+            {# Avisos de acción (guardado, error…): toasts flotantes con auto-cierre (public/js/toast.js).
+               Se alimentan del sistema de flash de Symfony, así que cualquier addFlash() del proyecto
+               se muestra aquí sin tocar los controllers. Se itera sobre todos los tipos; 'error' pinta
+               en rojo y el resto en verde. Sin JS quedan visibles y se cierran con la «×». #}
+            {% set flashes = app.flashes %}
+            {% if flashes is not empty %}
+                <div class="toasts" data-toasts aria-live="polite" aria-atomic="true">
+                    {% for type, messages in flashes %}
+                        {% set variant = type == 'error' ? 'error' : (type == 'info' ? 'info' : 'success') %}
+                        {% for message in messages %}
+                            {# Los errores interrumpen (role=alert); el resto se anuncian sin interrumpir. #}
+                            <div class="toast toast--{{ variant }}" role="{{ type == 'error' ? 'alert' : 'status' }}">
+                                <span class="toast__msg">{{ message }}</span>
+                                <button type="button" class="toast__close" aria-label="Cerrar aviso">&times;</button>
+                            </div>
+                        {% endfor %}
+                    {% endfor %}
+                </div>
+            {% endif %}
 
+            <main class="page">
                 {% block body %}{% endblock %}
             </main>
         </div>

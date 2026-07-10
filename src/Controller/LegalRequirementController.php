@@ -111,7 +111,7 @@ class LegalRequirementController extends AbstractController
             );
             $this->addFlash('success', sprintf('Requisito legal %s guardado.', $requirement->getReference()));
 
-            return $this->redirectToRoute('legal_requirement_index');
+            return $this->redirectToRoute('legal_requirement_show', ['id' => $requirement->getId()]);
         }
 
         return $this->render('legal_requirement/form.html.twig', [

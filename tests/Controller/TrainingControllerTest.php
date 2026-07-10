@@ -124,11 +124,10 @@ final class TrainingControllerTest extends WebTestCase
             'training_action[efficacyEvaluation]' => '',
         ]);
 
-        self::assertResponseRedirects('/training/2026');
-
         $actions = static::getContainer()->get(TrainingActionRepository::class)->findForYear(2026);
         self::assertCount(1, $actions);
         $action = $actions[0];
+        self::assertResponseRedirects('/training/2026/'.$action->getId());
         self::assertSame('Curso ISO 14001', $action->getDescription());
         // The not-yet-executed action keeps its nullable fields empty.
         self::assertNull($action->getActualDate());
@@ -139,10 +138,10 @@ final class TrainingControllerTest extends WebTestCase
             static::getContainer()->get(AuditLogRepository::class)->findOneBy(['action' => 'training.created'])
         );
 
-        // Following the redirect, the new action is listed in the year's table.
+        // Following the redirect lands on the new action's detail page.
         $client->followRedirect();
         self::assertResponseIsSuccessful();
-        self::assertSelectorTextContains('table', 'Curso ISO 14001');
+        self::assertSelectorTextContains('h1', 'Curso ISO 14001');
     }
 
     public function testSubmittingInvalidActionRedisplaysFormWithErrors(): void
