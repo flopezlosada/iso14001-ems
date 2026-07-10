@@ -7,6 +7,7 @@ namespace App\Controller;
 use App\Entity\Supplier;
 use App\Enum\Area;
 use App\Form\SupplierType;
+use App\Repository\AuditLogRepository;
 use App\Repository\SupplierRepository;
 use App\Security\Voter\AreaVoter;
 use App\Service\AuditLogger;
@@ -48,13 +49,14 @@ class SupplierController extends AbstractController
      * Shows a supplier in detail, including its yearly evaluations.
      */
     #[Route('/{id}', name: 'supplier_show', requirements: ['id' => '\d+'], methods: ['GET'])]
-    public function show(Supplier $supplier): Response
+    public function show(Supplier $supplier, AuditLogRepository $auditLogs): Response
     {
         $this->denyAccessUnlessGranted(AreaVoter::READ, Area::SUPPLIER);
 
         return $this->render('supplier/show.html.twig', [
             'supplier' => $supplier,
             'currentYear' => (int) date('Y'),
+            'activity' => $auditLogs->findForSubject('Supplier', (string) $supplier->getId()),
         ]);
     }
 

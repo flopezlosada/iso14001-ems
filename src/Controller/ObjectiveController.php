@@ -7,6 +7,7 @@ namespace App\Controller;
 use App\Entity\Objective;
 use App\Enum\Area;
 use App\Form\ObjectiveType;
+use App\Repository\AuditLogRepository;
 use App\Repository\ObjectiveRepository;
 use App\Security\Voter\AreaVoter;
 use App\Service\AuditLogger;
@@ -67,7 +68,7 @@ class ObjectiveController extends AbstractController
      * mismatched URL 404s instead of showing a record filed under the wrong year.
      */
     #[Route('/{schoolYear}/{id}', name: 'objective_show', requirements: ['schoolYear' => '\d{4}-\d{4}', 'id' => '\d+'], methods: ['GET'])]
-    public function show(string $schoolYear, Objective $objective): Response
+    public function show(string $schoolYear, Objective $objective, AuditLogRepository $auditLogs): Response
     {
         $this->denyAccessUnlessGranted(AreaVoter::READ, Area::OBJECTIVE);
 
@@ -78,6 +79,7 @@ class ObjectiveController extends AbstractController
         return $this->render('objective/show.html.twig', [
             'objective' => $objective,
             'schoolYear' => $schoolYear,
+            'activity' => $auditLogs->findForSubject('Objective', (string) $objective->getId()),
         ]);
     }
 

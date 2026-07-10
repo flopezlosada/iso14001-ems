@@ -7,6 +7,7 @@ namespace App\Controller;
 use App\Entity\LegalRequirement;
 use App\Enum\Area;
 use App\Form\LegalRequirementType;
+use App\Repository\AuditLogRepository;
 use App\Repository\LegalRequirementRepository;
 use App\Security\Voter\AreaVoter;
 use App\Service\AuditLogger;
@@ -49,13 +50,14 @@ class LegalRequirementController extends AbstractController
      * {@see $today} reference date lets the template flag an overdue or approaching review.
      */
     #[Route('/{id}', name: 'legal_requirement_show', requirements: ['id' => '\d+'], methods: ['GET'])]
-    public function show(LegalRequirement $requirement): Response
+    public function show(LegalRequirement $requirement, AuditLogRepository $auditLogs): Response
     {
         $this->denyAccessUnlessGranted(AreaVoter::READ, Area::LEGAL_REQUIREMENT);
 
         return $this->render('legal_requirement/show.html.twig', [
             'requirement' => $requirement,
             'today' => new \DateTimeImmutable('today'),
+            'activity' => $auditLogs->findForSubject('LegalRequirement', (string) $requirement->getId()),
         ]);
     }
 

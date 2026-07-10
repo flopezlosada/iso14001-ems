@@ -7,6 +7,7 @@ namespace App\Controller;
 use App\Entity\Indicator;
 use App\Enum\Area;
 use App\Form\IndicatorType;
+use App\Repository\AuditLogRepository;
 use App\Repository\IndicatorRepository;
 use App\Security\Voter\AreaVoter;
 use App\Service\AuditLogger;
@@ -48,13 +49,14 @@ class IndicatorController extends AbstractController
      * Shows an indicator in detail, including its measurements.
      */
     #[Route('/{id}', name: 'indicator_show', requirements: ['id' => '\d+'], methods: ['GET'])]
-    public function show(Indicator $indicator): Response
+    public function show(Indicator $indicator, AuditLogRepository $auditLogs): Response
     {
         $this->denyAccessUnlessGranted(AreaVoter::READ, Area::INDICATOR);
 
         return $this->render('indicator/show.html.twig', [
             'indicator' => $indicator,
             'currentYear' => (int) date('Y'),
+            'activity' => $auditLogs->findForSubject('Indicator', (string) $indicator->getId()),
         ]);
     }
 

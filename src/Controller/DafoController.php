@@ -7,6 +7,7 @@ namespace App\Controller;
 use App\Entity\DafoAnalysis;
 use App\Enum\Area;
 use App\Form\DafoAnalysisType;
+use App\Repository\AuditLogRepository;
 use App\Repository\DafoAnalysisRepository;
 use App\Security\Voter\AreaVoter;
 use App\Service\AuditLogger;
@@ -96,12 +97,13 @@ class DafoController extends AbstractController
      * Shows a single DAFO analysis read-only, as the 2x2 SWOT matrix.
      */
     #[Route('/{id}', name: 'dafo_show', requirements: ['id' => '\d+'], methods: ['GET'])]
-    public function show(DafoAnalysis $analysis): Response
+    public function show(DafoAnalysis $analysis, AuditLogRepository $auditLogs): Response
     {
         $this->denyAccessUnlessGranted(AreaVoter::READ, Area::DAFO);
 
         return $this->render('dafo/show.html.twig', [
             'analysis' => $analysis,
+            'activity' => $auditLogs->findForSubject('DafoAnalysis', (string) $analysis->getId()),
         ]);
     }
 

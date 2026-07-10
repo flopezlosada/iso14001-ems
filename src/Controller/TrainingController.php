@@ -7,6 +7,7 @@ namespace App\Controller;
 use App\Entity\TrainingAction;
 use App\Enum\Area;
 use App\Form\TrainingActionType;
+use App\Repository\AuditLogRepository;
 use App\Repository\TrainingActionRepository;
 use App\Repository\TrainingEvidenceRepository;
 use App\Security\Voter\AreaVoter;
@@ -60,7 +61,7 @@ class TrainingController extends AbstractController
      * and the training evidences linked to it as a secondary history.
      */
     #[Route('/{year}/{id}', name: 'training_show', requirements: ['year' => '\d{4}', 'id' => '\d+'], methods: ['GET'])]
-    public function show(int $year, TrainingAction $action, TrainingEvidenceRepository $evidences): Response
+    public function show(int $year, TrainingAction $action, TrainingEvidenceRepository $evidences, AuditLogRepository $auditLogs): Response
     {
         $this->denyAccessUnlessGranted(AreaVoter::READ, Area::TRAINING);
 
@@ -72,6 +73,7 @@ class TrainingController extends AbstractController
             'year' => $year,
             'action' => $action,
             'evidences' => $evidences->findByTrainingAction($action),
+            'activity' => $auditLogs->findForSubject('TrainingAction', (string) $action->getId()),
         ]);
     }
 

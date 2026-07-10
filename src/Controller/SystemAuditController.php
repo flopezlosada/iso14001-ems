@@ -9,6 +9,7 @@ use App\Entity\SystemAudit;
 use App\Enum\Area;
 use App\Enum\AuditType;
 use App\Form\SystemAuditType;
+use App\Repository\AuditLogRepository;
 use App\Repository\NonConformityRepository;
 use App\Repository\SystemAuditRepository;
 use App\Security\Voter\AreaVoter;
@@ -61,13 +62,14 @@ class SystemAuditController extends AbstractController
      * Shows an audit in detail, including the non-conformities raised in it.
      */
     #[Route('/{id}', name: 'system_audit_show', requirements: ['id' => '\d+'], methods: ['GET'])]
-    public function show(SystemAudit $audit, NonConformityRepository $nonConformities): Response
+    public function show(SystemAudit $audit, NonConformityRepository $nonConformities, AuditLogRepository $auditLogs): Response
     {
         $this->denyAccessUnlessGranted(AreaVoter::READ, Area::SYSTEM_AUDIT);
 
         return $this->render('system_audit/show.html.twig', [
             'audit' => $audit,
             'findings' => $nonConformities->findByAudit($audit),
+            'activity' => $auditLogs->findForSubject('SystemAudit', (string) $audit->getId()),
         ]);
     }
 

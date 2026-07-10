@@ -8,6 +8,7 @@ use App\Entity\EnvironmentalAspect;
 use App\Enum\Area;
 use App\Enum\AspectType;
 use App\Form\EnvironmentalAspectType;
+use App\Repository\AuditLogRepository;
 use App\Repository\EnvironmentalAspectRepository;
 use App\Security\Voter\AreaVoter;
 use App\Service\AspectWorkflowStatusProvider;
@@ -54,12 +55,13 @@ class EnvironmentalAspectController extends AbstractController
      * Shows an aspect in detail, including its yearly evaluations.
      */
     #[Route('/{id}', name: 'aspect_show', requirements: ['id' => '\d+'], methods: ['GET'])]
-    public function show(EnvironmentalAspect $aspect): Response
+    public function show(EnvironmentalAspect $aspect, AuditLogRepository $auditLogs): Response
     {
         $this->denyAccessUnlessGranted(AreaVoter::READ, Area::ASPECT);
 
         return $this->render('environmental_aspect/show.html.twig', [
             'aspect' => $aspect,
+            'activity' => $auditLogs->findForSubject('EnvironmentalAspect', (string) $aspect->getId()),
         ]);
     }
 

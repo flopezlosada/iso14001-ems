@@ -43,4 +43,6 @@
         <h2>Notas de seguimiento</h2>
         <p>{{ objective.notes ? objective.notes|nl2br : '—' }}</p>
     </div>
+
+    {{ include('partials/_activity_log.html.twig', { entries: activity }) }}
 {% endblock %}
