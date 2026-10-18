@@ -1,6 +1,12 @@
 {% extends 'app_shell.html.twig' %}
 
 {% set month_names = ['', 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'] %}
+{% set can_write = is_granted('AREA_WRITE', constant('App\\Enum\\Area::CONSUMPTION')) %}
+
+{# A recorded value, linking to its reading's detail; plus,
+   on the quantity cell, a marker showing the reading's observation as a tooltip and a link to the
+   invoice when one is attached (readers can download it too). #}
+{% macro value_cell(value, url, tint, note = null, invoice_url = null) %}<td class="num mono {{ tint }}">{% if note %}<span class="cell-note" tabindex="0" data-note="{{ note }}" aria-label="Observación: {{ note }}">i</span> {% endif %}{% if value is not same as('') %}<a class="cell-link" href="{{ url }}">{{ value }}</a>{% endif %}{% if invoice_url %} <a class="cell-invoice" href="{{ invoice_url }}" title="Ver factura" aria-label="Ver factura">F</a>{% endif %}</td>{% endmacro %}
 
 {% block title %}Consumos {{ year }}{% endblock %}
 
@@ -10,11 +16,11 @@
     <div class="page-head">
         <div>
             <h1>Consumos {{ year }}</h1>
-            <p class="lead">Lecturas de agua, electricidad y demás consumos del centro, registradas mes a mes.</p>
+            <p class="lead">Registro mensual de consumos del centro (F-6.1.2). Pulsa una cifra para ver su detalle{% if can_write %} o «+» para registrar ese mes{% endif %}.</p>
         </div>
         <div>
             <a class="btn secondary" href="{{ path('consumption_trend') }}">Ver tendencia</a>
-            <a class="btn" href="{{ path('consumption_new', { year: year }) }}">+ Añadir lectura</a>
+            {% if can_write %}<a class="btn" href="{{ path('consumption_new', { year: year }) }}">+ Añadir lectura</a>{% endif %}
         </div>
     </div>
 
@@ -25,34 +31,46 @@
         </span>
     </div>
 
-    <div class="card">
-        {% if readings is empty %}
-            <div class="empty-state">
-                <h2>Aún no hay lecturas en {{ year }}</h2>
-                <p>Empieza registrando la primera lectura del contador.</p>
-                <a class="btn" href="{{ path('consumption_new', { year: year }) }}">Registrar primera lectura</a>
-            </div>
-        {% else %}
-            <table data-list-tools>
-                <thead>
-                    <tr>
-                        <th>Mes</th><th data-filter>Tipo</th><th>Cantidad</th><th>Coste</th><th>Observaciones</th><th data-nosort>Factura</th><th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for reading in readings %}
-                        <tr>
-                            <td data-sort="{{ reading.periodMonth }}">{{ month_names[reading.periodMonth] }}</td>
-                            <td>{{ reading.type.label }}</td>
-                            <td class="mono">{{ reading.quantity }} {{ reading.type.unit }}</td>
-                            <td class="mono">{{ reading.cost is null ? '—' : reading.cost ~ ' €' }}</td>
-                            <td class="muted">{{ reading.notes ?? '' }}</td>
-                            <td>{% if reading.hasInvoice %}<a href="{{ path('consumption_invoice', { year: year, id: reading.id }) }}">Ver</a>{% else %}—{% endif %}</td>
-                            <td><a href="{{ path('consumption_edit', { year: year, id: reading.id }) }}">Editar</a></td>
-                        </tr>
+    <div class="card consumption-matrix">
+        <table>
+            <thead>
+                <tr>
+                    <th>Mes</th>
+                    {% for type in types %}
+                        {% set tint = 'tinted t-' ~ type.value %}
+                        <th class="num {{ tint }}">{{ type.label }} ({{ type.unit }})</th>
+                        {% if type.tracksCost %}<th class="num {{ tint }} is-cost">{{ type.label }} (€)</th>{% endif %}
                     {% endfor %}
-                </tbody>
-            </table>
-        {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for month in 1..12 %}
+                    <tr>
+                        <td>{{ month_names[month] }}</td>
+                        {% for type in types %}
+                            {% set reading = matrix.reading(month, type) %}
+                            {% set tint = 'tinted t-' ~ type.value %}
+                            {% if reading %}
+                                {% set show_url = path('consumption_show', { year: year, id: reading.id }) %}
+                                {{ _self.value_cell(reading.quantity|decimal, show_url, tint, (reading.notes ?? "")|trim, reading.hasInvoice ? path('consumption_invoice', { year: year, id: reading.id }) : null) }}
+                                {% if type.tracksCost %}{{ _self.value_cell(reading.cost ?? '', show_url, tint ~ ' is-cost') }}{% endif %}
+                            {% else %}
+                                <td class="num {{ tint }}">{% if can_write %}<a class="cell-add" href="{{ path('consumption_new', { year: year, type: type.value, month: month }) }}" aria-label="Registrar {{ type.label }} de {{ month_names[month]|lower }}">+</a>{% endif %}</td>
+                                {% if type.tracksCost %}<td class="num {{ tint }} is-cost"></td>{% endif %}
+                            {% endif %}
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+                <tr class="is-total">
+                    <td>Total {{ year }}</td>
+                    {% for type in types %}
+                        {% set total = matrix.total(type) %}
+                        {% set tint = 'tinted t-' ~ type.value %}
+                        <td class="num mono {{ tint }}">{{ total ? total.quantity|decimal ~ ' ' ~ type.unit : '—' }}</td>
+                        {% if type.tracksCost %}<td class="num mono {{ tint }} is-cost">{{ total and total.cost is not null ? total.cost ~ ' €' : '—' }}</td>{% endif %}
+                    {% endfor %}
+                </tr>
+            </tbody>
+        </table>
     </div>
 {% endblock %}

@@ -43,13 +43,13 @@ class ConsumptionReadingType extends AbstractType
             ->add('quantity', TextType::class, [
                 'label' => 'Cantidad',
                 'attr' => ['inputmode' => 'decimal'],
-                'help' => 'En la unidad del tipo de consumo (kWh, m³, litros, paquetes, cartuchos). Usa el punto para decimales.',
+                'help' => 'En la unidad del tipo de consumo (litros, kWh, m³, paquetes, unidades). Usa el punto para decimales.',
             ])
             ->add('cost', TextType::class, [
                 'label' => 'Coste (€)',
                 'required' => false,
                 'attr' => ['inputmode' => 'decimal'],
-                'help' => 'Déjalo vacío para el tóner (no registra coste). Usa el punto para decimales.',
+                'help' => 'Déjalo vacío para el tóner y los cartuchos de tinta (no registran coste). Usa el punto para decimales.',
             ])
             ->add('notes', TextType::class, [
                 'label' => 'Observaciones',

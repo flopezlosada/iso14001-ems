@@ -1,0 +1,50 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Tests\Service;
+
+use App\Entity\ConsumptionReading;
+use App\Enum\ConsumptionType;
+use App\Service\ConsumptionYearMatrix;
+use PHPUnit\Framework\TestCase;
+
+/**
+ * Lookups of the yearly F-6.1.2 grid: cells by (month, type) and the column totals. Readings mirror
+ * the real register, where some utilities are only recorded every few months.
+ */
+final class ConsumptionYearMatrixTest extends TestCase
+{
+    private function reading(ConsumptionType $type, int $month, string $quantity): ConsumptionReading
+    {
+        return (new ConsumptionReading())
+            ->setType($type)
+            ->setPeriodYear(2026)
+            ->setPeriodMonth($month)
+            ->setQuantity($quantity);
+    }
+
+    public function testFindsEachReadingByMonthAndTypeAndLeavesTheRestEmpty(): void
+    {
+        $january = $this->reading(ConsumptionType::GASOIL, 1, '8700.000');
+        $march = $this->reading(ConsumptionType::WATER, 3, '168.000');
+
+        $matrix = ConsumptionYearMatrix::fromReadings([$january, $march], []);
+
+        self::assertSame($january, $matrix->reading(1, ConsumptionType::GASOIL));
+        self::assertSame($march, $matrix->reading(3, ConsumptionType::WATER));
+        self::assertNull($matrix->reading(1, ConsumptionType::WATER));
+        self::assertNull($matrix->reading(2, ConsumptionType::GASOIL));
+    }
+
+    public function testTotalIsNullForAUtilityWithoutReadings(): void
+    {
+        $totals = ['electricity' => ['quantity' => '22335.000', 'cost' => '4755.34'], 'toner' => ['quantity' => '12.000', 'cost' => null]];
+
+        $matrix = ConsumptionYearMatrix::fromReadings([], $totals);
+
+        self::assertSame(['quantity' => '22335.000', 'cost' => '4755.34'], $matrix->total(ConsumptionType::ELECTRICITY));
+        self::assertSame(['quantity' => '12.000', 'cost' => null], $matrix->total(ConsumptionType::TONER));
+        self::assertNull($matrix->total(ConsumptionType::GASOIL));
+    }
+}

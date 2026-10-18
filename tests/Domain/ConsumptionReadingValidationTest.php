@@ -54,6 +54,11 @@ final class ConsumptionReadingValidationTest extends KernelTestCase
         self::assertSame(1, $this->violationsAt($this->reading(ConsumptionType::TONER, '12.50'), 'cost'));
     }
 
+    public function testInkCartridgeWithCostIsInvalid(): void
+    {
+        self::assertSame(1, $this->violationsAt($this->reading(ConsumptionType::INK_CARTRIDGE, '9.00'), 'cost'));
+    }
+
     public function testTonerWithoutCostIsValid(): void
     {
         self::assertSame(0, $this->violationsAt($this->reading(ConsumptionType::TONER, null), 'cost'));

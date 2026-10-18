@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Controller;
 
+use App\Entity\ConsumptionReading;
 use App\Entity\Role;
 use App\Entity\User;
 use App\Enum\Area;
@@ -14,6 +15,7 @@ use App\Repository\ConsumptionReadingRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Component\DomCrawler\Crawler;
 use Symfony\Component\DomCrawler\Field\FileFormField;
 use Symfony\Component\Filesystem\Filesystem;
 
@@ -24,13 +26,13 @@ use Symfony\Component\Filesystem\Filesystem;
  */
 final class ConsumptionControllerTest extends WebTestCase
 {
-    private function loggedInClient(): KernelBrowser
+    private function loggedInClient(PermissionLevel $level = PermissionLevel::WRITE): KernelBrowser
     {
         $client = static::createClient();
         $em = static::getContainer()->get(EntityManagerInterface::class);
 
         $role = new Role();
-        $role->setCode('consumos')->setName('Gestión de consumos')->setLevel(Area::CONSUMPTION, PermissionLevel::WRITE);
+        $role->setCode('consumos')->setName('Gestión de consumos')->setLevel(Area::CONSUMPTION, $level);
         $em->persist($role);
 
         $user = new User();
@@ -73,22 +75,148 @@ final class ConsumptionControllerTest extends WebTestCase
             'consumption_reading[cost]' => '250.00',
         ]);
 
-        self::assertResponseRedirects('/consumption/2026');
-
         $reading = static::getContainer()->get(ConsumptionReadingRepository::class)
             ->findOneByPeriod(ConsumptionType::WATER, 2026, 5);
         self::assertNotNull($reading);
         self::assertSame('250.00', $reading->getCost());
+        self::assertResponseRedirects('/consumption/2026/'.$reading->getId());
 
         // The creation is recorded in the activity trail.
         self::assertNotNull(
             static::getContainer()->get(AuditLogRepository::class)->findOneBy(['action' => 'consumption.created'])
         );
 
-        // Following the redirect, the new reading is listed in the year's table.
+        // Following the redirect lands on the reading's detail, with its creation in the history.
         $client->followRedirect();
         self::assertResponseIsSuccessful();
-        self::assertSelectorTextContains('table', 'Agua');
+        self::assertSelectorTextContains('h1', 'Agua · Mayo 2026');
+        self::assertAnySelectorTextSame('dd', '123.5 m³');
+
+        // And the reading shows up in its cell of the year's grid, linking to that detail.
+        $client->request('GET', '/consumption/2026');
+        self::assertSelectorExists('a.cell-link[href="/consumption/2026/'.$reading->getId().'"]');
+    }
+
+    public function testYearGridShowsEachMonthAndTheYearlyTotals(): void
+    {
+        $client = $this->loggedInClient();
+        $this->persistReading(ConsumptionType::GASOIL, 1, '8700.000', '7524.03', 'Hechos 2 pedidos en enero');
+        $this->persistReading(ConsumptionType::GASOIL, 2, '4500.000', '4443.31');
+        // Printing consumables carry no cost; their cost column does not exist in the grid.
+        $this->persistReading(ConsumptionType::INK_CARTRIDGE, 1, '12.000', null);
+
+        $client->request('GET', '/consumption/2026');
+
+        $crawler = $client->getCrawler();
+        self::assertResponseIsSuccessful();
+        self::assertSelectorCount(12 + 1, 'table tbody tr');
+        // Every row has one cell per header: the mobile layout labels cells by column index.
+        $headers = $crawler->filter('thead th')->count();
+        $crawler->filter('tbody tr')->each(
+            static fn (Crawler $row) => self::assertCount($headers, $row->filter('td')),
+        );
+        self::assertAnySelectorTextSame('thead th', 'Cartuchos de tinta (unidades)');
+        self::assertSelectorNotExists('thead th:contains("Cartuchos de tinta (€)")');
+        // The observation sits in the cell of the reading it belongs to, as a tooltip marker.
+        self::assertSelectorExists('td.t-gasoil .cell-note[data-note="Hechos 2 pedidos en enero"]');
+        self::assertSelectorCount(1, '.cell-note');
+        self::assertSelectorTextContains('tr.is-total', 'Total 2026');
+        // Totals carry their unit (the header shows it too, but the total row is read on its own).
+        self::assertAnySelectorTextSame('tr.is-total td', '13200 L');
+        self::assertAnySelectorTextSame('tr.is-total td', '11967.34 €');
+        self::assertAnySelectorTextSame('tr.is-total td', '12 unidades');
+    }
+
+    public function testEmptyCellPrefillsTheNewReadingForm(): void
+    {
+        $client = $this->loggedInClient();
+        $client->request('GET', '/consumption/2026');
+        self::assertSelectorExists('a.cell-add[href="/consumption/2026/new?type=water&month=5"]');
+
+        $client->request('GET', '/consumption/2026/new?type=water&month=5');
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('select#consumption_reading_type option[value="water"][selected]');
+        self::assertSelectorExists('select#consumption_reading_periodMonth option[value="5"][selected]');
+    }
+
+    public function testInvalidPrefillParametersAreIgnored(): void
+    {
+        $client = $this->loggedInClient();
+        $client->request('GET', '/consumption/2026/new?type=bogus&month=13');
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorNotExists('select#consumption_reading_type option[selected]');
+        self::assertSelectorNotExists('select#consumption_reading_periodMonth option[selected]');
+    }
+
+    public function testReaderOpensTheReadingDetailWithoutEditButton(): void
+    {
+        $client = $this->loggedInClient(PermissionLevel::READ);
+        $reading = $this->persistReading(ConsumptionType::GASOIL, 1, '8700.000', '7524.03', 'Hechos 2 pedidos en enero');
+
+        $client->request('GET', '/consumption/2026/'.$reading->getId());
+
+        self::assertResponseIsSuccessful();
+        self::assertAnySelectorTextSame('dd', '8700 L');
+        self::assertAnySelectorTextSame('dd', '7524.03 €');
+        self::assertAnySelectorTextSame('dd', 'Hechos 2 pedidos en enero');
+        self::assertSelectorNotExists('a[href$="/edit"]');
+    }
+
+    public function testDetailOfAReadingFromAnotherYearIsNotFound(): void
+    {
+        $client = $this->loggedInClient();
+        $reading = $this->persistReading(ConsumptionType::WATER, 3, '168.000', '301.82');
+
+        $client->request('GET', '/consumption/2025/'.$reading->getId());
+
+        self::assertResponseStatusCodeSame(404);
+    }
+
+    public function testReaderSeesValuesAndInvoicesWithoutEditOrAddLinks(): void
+    {
+        $client = $this->loggedInClient(PermissionLevel::READ);
+        $withInvoice = $this->persistReading(ConsumptionType::WATER, 3, '168.000', '301.82', null, 'consumption-invoices/factura.pdf');
+        $this->persistReading(ConsumptionType::WATER, 5, '276.000', '463.19');
+
+        $client->request('GET', '/consumption/2026');
+
+        self::assertResponseIsSuccessful();
+        // Values link to the read-only detail; nothing links to the edit or new forms.
+        self::assertAnySelectorTextSame('table a.cell-link', '276');
+        self::assertSelectorNotExists('table a[href$="/edit"]');
+        self::assertSelectorNotExists('a.cell-add');
+        // Only the reading with an attached invoice links to it, and readers may follow it.
+        self::assertSelectorCount(1, 'a.cell-invoice');
+        self::assertSelectorExists('a.cell-invoice[href="/consumption/2026/'.$withInvoice->getId().'/invoice"]');
+    }
+
+    /**
+     * Persists a 2026 reading straight to the database, bypassing the form.
+     */
+    private function persistReading(
+        ConsumptionType $type,
+        int $month,
+        string $quantity,
+        ?string $cost,
+        ?string $notes = null,
+        ?string $invoicePath = null,
+    ): ConsumptionReading {
+        $reading = (new ConsumptionReading())
+            ->setType($type)
+            ->setPeriodYear(2026)
+            ->setPeriodMonth($month)
+            ->setQuantity($quantity)
+            ->setCost($cost)
+            ->setNotes($notes)
+            ->setInvoicePath($invoicePath);
+
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $em->persist($reading);
+        $em->flush();
+
+        return $reading;
     }
 
     public function testSubmittingInvalidReadingRedisplaysFormWithErrors(): void
@@ -133,11 +261,10 @@ final class ConsumptionControllerTest extends WebTestCase
         $invoiceField->upload($this->pdfFixture('factura-junio.pdf'));
         $client->submit($form);
 
-        self::assertResponseRedirects('/consumption/2026');
-
         $reading = static::getContainer()->get(ConsumptionReadingRepository::class)
             ->findOneByPeriod(ConsumptionType::WATER, 2026, 6);
         self::assertNotNull($reading);
+        self::assertResponseRedirects('/consumption/2026/'.$reading->getId());
         self::assertTrue($reading->hasInvoice());
         self::assertSame('factura-junio.pdf', $reading->getInvoiceOriginalName());
 

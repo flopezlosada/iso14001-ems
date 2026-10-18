@@ -34,6 +34,9 @@
     --review: #3F6079;
     --review-weak: #E5EBF0;
     --review-text: #2F4A60;
+    /* Importes en euros: el centro resalta el dinero en rojo en su registro de consumos. Se apoya
+       en el rojo del sistema (sigue al tema) pero con nombre propio: no es un aviso de peligro. */
+    --money-text: var(--danger-text);
     /* Categóricos de pilar PDCA (calendario): apagados y distintos del ámbar/rojo de urgencia. */
     --pillar-plan: #5C7A99;
     --pillar-do: #5F8A5A;
@@ -477,6 +480,49 @@ tbody tr.is-in-force { background: var(--success-weak); }
     font: 400 14px var(--font-body);
     background: var(--surface);
     color: var(--text);
+}
+
+/* ---- Matriz anual de consumos (F-6.1.2): meses × consumos, como el Excel ---- */
+.consumption-matrix { overflow-x: auto; }
+.consumption-matrix th, .consumption-matrix td { white-space: nowrap; }
+.consumption-matrix tbody td { padding: 8px 10px; }
+.consumption-matrix .num { text-align: right; }
+.consumption-matrix .cell-add { color: var(--text-faint); text-decoration: none; padding: 0 6px; }
+.consumption-matrix .cell-add:hover { color: var(--accent); }
+.consumption-matrix tr.is-total td { font-weight: 600; border-top: 2px solid var(--border-strong); background: var(--surface-sunken); }
+/* Cada tipo de consumo tiñe sus columnas (cantidad y €) para leerlas como un bloque. El tinte se deriva de tokens de tono existentes, así sigue al tema claro/oscuro. */
+.consumption-matrix .t-gasoil        { --tint: var(--danger); }
+.consumption-matrix .t-electricity   { --tint: var(--warning); }
+.consumption-matrix .t-water         { --tint: var(--review); }
+.consumption-matrix .t-paper         { --tint: var(--pillar-do); }
+.consumption-matrix .t-toner         { --tint: var(--pillar-act); }
+.consumption-matrix .t-ink_cartridge { --tint: var(--pillar-check); }
+.consumption-matrix td.tinted { background: color-mix(in srgb, var(--tint) 10%, transparent); }
+.consumption-matrix thead th.tinted,
+.consumption-matrix tr.is-total td.tinted { background: color-mix(in srgb, var(--tint) 22%, var(--surface-sunken)); }
+/* Los euros se resaltan en rojo (también su enlace de edición), como en el registro del centro. */
+.consumption-matrix .is-cost,
+.consumption-matrix .is-cost a.cell-link { color: var(--money-text); }
+/* Observación de una lectura: marcador en su celda; la nota se abre como tooltip al pasar el ratón,
+   al enfocar con teclado o al tocar en móvil (title no funciona en pantallas táctiles). */
+.consumption-matrix .cell-note {
+    position: relative; display: inline-block; width: 1.4em; height: 1.4em; line-height: 1.4em;
+    border-radius: 50%; text-align: center; font-size: 10.5px; font-style: italic; cursor: help;
+    color: var(--text-muted); border: 1px solid var(--border-strong);
+}
+.consumption-matrix .cell-note:hover::after,
+.consumption-matrix .cell-note:focus::after {
+    content: attr(data-note); position: absolute; right: 0; bottom: calc(100% + 6px); z-index: 10;
+    width: max-content; max-width: 16rem; white-space: normal; text-align: left; font-style: normal;
+    padding: 6px 10px; border-radius: var(--radius); font: 400 12.5px/1.4 var(--font-body);
+    background: var(--text); color: var(--surface); box-shadow: var(--shadow-card);
+}
+.consumption-matrix .cell-invoice { font-size: 10.5px; color: var(--text-faint); text-decoration: none; }
+.consumption-matrix .cell-invoice:hover { color: var(--accent); }
+/* En móvil cada mes se apila como tarjeta: sin esto, cada consumo sin registrar sería una línea
+   con etiqueta y sin valor. */
+@media (max-width: 760px) {
+    .consumption-matrix tbody td:empty { display: none; }
 }
 
 /* ---- Herramientas de listado (table-tools.js): búsqueda, filtros, orden ---- */
