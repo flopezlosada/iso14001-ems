@@ -36,6 +36,34 @@ class ConsumptionReadingRepository extends ServiceEntityRepository
     }
 
     /**
+     * Yearly totals of quantity and cost per utility for one year, keyed by the type's value and
+     * only for utilities with readings. Summed in SQL so the DECIMAL precision is kept (no float
+     * arithmetic in PHP). The cost total is null when none of the type's readings has a cost.
+     *
+     * @param int $year the period year
+     *
+     * @return array<string, array{quantity: numeric-string, cost: numeric-string|null}> totals per type value
+     */
+    public function totalsForYear(int $year): array
+    {
+        /** @var list<array{type: ConsumptionType, quantity: numeric-string, cost: numeric-string|null}> $rows */
+        $rows = $this->createQueryBuilder('r')
+            ->select('r.type AS type, SUM(r.quantity) AS quantity, SUM(r.cost) AS cost')
+            ->andWhere('r.periodYear = :year')
+            ->setParameter('year', $year)
+            ->groupBy('r.type')
+            ->getQuery()
+            ->getResult();
+
+        $totals = [];
+        foreach ($rows as $row) {
+            $totals[$row['type']->value] = ['quantity' => $row['quantity'], 'cost' => $row['cost']];
+        }
+
+        return $totals;
+    }
+
+    /**
      * Finds the single reading for a utility in a given month, or null if not recorded yet.
      *
      * @param ConsumptionType $type  the utility

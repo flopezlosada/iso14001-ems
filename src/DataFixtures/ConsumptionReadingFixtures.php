@@ -9,7 +9,7 @@ use App\Enum\ConsumptionType;
 use Doctrine\Persistence\ObjectManager;
 
 /**
- * Monthly consumption readings (electricity, water, gasoil, paper, toner). Sample DEMO data,
+ * Monthly consumption readings (gasoil, electricity, water, paper, toner, ink cartridges). Sample DEMO data,
  * modelled on the centre's "CONSUMOS LUZ AGUA GASOIL PAPEL TÓNER" sheet: realistic seasonal shapes
  * for a school (heating peaks in winter, near-zero in August).
  *
@@ -42,7 +42,8 @@ final class ConsumptionReadingFixtures extends AbstractDemoFixture
                 1 => 3200, 2 => 3000, 3 => 2400, 4 => 1500, 10 => 1800, 11 => 2600, 12 => 3100,
             ]],
             [ConsumptionType::PAPER, 4.50, [3 => 120, 6 => 90, 9 => 150, 12 => 110]],
-            [ConsumptionType::TONER, 48.00, [3 => 8, 6 => 6, 9 => 10, 12 => 7]],
+            [ConsumptionType::TONER, 0.0, [3 => 8, 6 => 6, 9 => 10, 12 => 7]],
+            [ConsumptionType::INK_CARTRIDGE, 0.0, [1 => 4, 5 => 3, 10 => 5]],
         ];
 
         foreach (self::YEAR_FACTORS as $year => $factor) {
@@ -57,7 +58,7 @@ final class ConsumptionReadingFixtures extends AbstractDemoFixture
                         ->setPeriodYear($year)
                         ->setPeriodMonth($month)
                         ->setQuantity((string) $quantity)
-                        ->setCost((string) round($quantity * $unitPrice, 2));
+                        ->setCost($type->tracksCost() ? (string) round($quantity * $unitPrice, 2) : null);
                     $manager->persist($reading);
                 }
             }

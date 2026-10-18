@@ -24,7 +24,12 @@ MONTHS = {
 }
 
 # Workbook label -> ConsumptionType enum value.
-TYPE_BY_LABEL = {'GASOIL': 'gasoil', 'LUZ': 'electricity', 'AGUA': 'water', 'PAPEL': 'paper', 'TONER': 'toner'}
+TYPE_BY_LABEL = {
+    'GASOIL': 'gasoil', 'LUZ': 'electricity', 'AGUA': 'water', 'PAPEL': 'paper',
+    'TONER': 'toner', 'CARTUCHOS': 'ink_cartridge',
+}
+# Printing consumables record only units, never a cost (entity rule).
+NO_COST_TYPES = {'toner', 'ink_cartridge'}
 COST_TOKENS = ('EURO',)  # a column whose header mentions euros is the cost column
 
 
@@ -82,8 +87,7 @@ def normalize(path):
                 if qty == '':
                     skipped.append(f'{ctype} {year}-{month:02d}: cost without quantity (cost={cost})')
                     continue
-                # toner records no cost (entity rule)
-                if ctype == 'toner':
+                if ctype in NO_COST_TYPES:
                     cost = ''
                 out.append({'type': ctype, 'period_year': year, 'period_month': month,
                             'quantity': qty, 'cost': cost, 'notes': ''})

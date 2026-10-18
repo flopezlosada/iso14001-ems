@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Controller;
 
+use App\Entity\ConsumptionReading;
 use App\Entity\Role;
 use App\Entity\User;
 use App\Enum\Area;
@@ -14,6 +15,7 @@ use App\Repository\ConsumptionReadingRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Component\DomCrawler\Crawler;
 use Symfony\Component\DomCrawler\Field\FileFormField;
 use Symfony\Component\Filesystem\Filesystem;
 
@@ -24,13 +26,13 @@ use Symfony\Component\Filesystem\Filesystem;
  */
 final class ConsumptionControllerTest extends WebTestCase
 {
-    private function loggedInClient(): KernelBrowser
+    private function loggedInClient(PermissionLevel $level = PermissionLevel::WRITE): KernelBrowser
     {
         $client = static::createClient();
         $em = static::getContainer()->get(EntityManagerInterface::class);
 
         $role = new Role();
-        $role->setCode('consumos')->setName('Gestión de consumos')->setLevel(Area::CONSUMPTION, PermissionLevel::WRITE);
+        $role->setCode('consumos')->setName('Gestión de consumos')->setLevel(Area::CONSUMPTION, $level);
         $em->persist($role);
 
         $user = new User();
@@ -85,10 +87,103 @@ final class ConsumptionControllerTest extends WebTestCase
             static::getContainer()->get(AuditLogRepository::class)->findOneBy(['action' => 'consumption.created'])
         );
 
-        // Following the redirect, the new reading is listed in the year's table.
+        // Following the redirect, the new reading shows up in its cell of the year's grid.
         $client->followRedirect();
         self::assertResponseIsSuccessful();
-        self::assertSelectorTextContains('table', 'Agua');
+        self::assertAnySelectorTextSame('table a.cell-link', '123.5');
+    }
+
+    public function testYearGridShowsEachMonthAndTheYearlyTotals(): void
+    {
+        $client = $this->loggedInClient();
+        $this->persistReading(ConsumptionType::GASOIL, 1, '8700.000', '7524.03', 'Hechos 2 pedidos en enero');
+        $this->persistReading(ConsumptionType::GASOIL, 2, '4500.000', '4443.31');
+        // Printing consumables carry no cost; their cost column does not exist in the grid.
+        $this->persistReading(ConsumptionType::INK_CARTRIDGE, 1, '12.000', null);
+
+        $client->request('GET', '/consumption/2026');
+
+        $crawler = $client->getCrawler();
+        self::assertResponseIsSuccessful();
+        self::assertSelectorCount(12 + 1, 'table tbody tr');
+        // Every row has one cell per header: the mobile layout labels cells by column index.
+        $headers = $crawler->filter('thead th')->count();
+        $crawler->filter('tbody tr')->each(
+            static fn (Crawler $row) => self::assertCount($headers, $row->filter('td')),
+        );
+        self::assertAnySelectorTextSame('thead th', 'Cartuchos de tinta (unidades)');
+        self::assertSelectorNotExists('thead th:contains("Cartuchos de tinta (€)")');
+        self::assertAnySelectorTextSame('td.notes', 'Hechos 2 pedidos en enero');
+        self::assertSelectorTextContains('tr.is-total', 'Total 2026');
+        self::assertSelectorTextContains('tr.is-total', '13200');
+        self::assertSelectorTextContains('tr.is-total', '11967.34');
+    }
+
+    public function testEmptyCellPrefillsTheNewReadingForm(): void
+    {
+        $client = $this->loggedInClient();
+        $client->request('GET', '/consumption/2026');
+        self::assertSelectorExists('a.cell-add[href="/consumption/2026/new?type=water&month=5"]');
+
+        $client->request('GET', '/consumption/2026/new?type=water&month=5');
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('select#consumption_reading_type option[value="water"][selected]');
+        self::assertSelectorExists('select#consumption_reading_periodMonth option[value="5"][selected]');
+    }
+
+    public function testInvalidPrefillParametersAreIgnored(): void
+    {
+        $client = $this->loggedInClient();
+        $client->request('GET', '/consumption/2026/new?type=bogus&month=13');
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorNotExists('select#consumption_reading_type option[selected]');
+        self::assertSelectorNotExists('select#consumption_reading_periodMonth option[selected]');
+    }
+
+    public function testReaderSeesValuesAndInvoicesWithoutEditOrAddLinks(): void
+    {
+        $client = $this->loggedInClient(PermissionLevel::READ);
+        $withInvoice = $this->persistReading(ConsumptionType::WATER, 3, '168.000', '301.82', null, 'consumption-invoices/factura.pdf');
+        $this->persistReading(ConsumptionType::WATER, 5, '276.000', '463.19');
+
+        $client->request('GET', '/consumption/2026');
+
+        self::assertResponseIsSuccessful();
+        self::assertAnySelectorTextSame('table td', '276');
+        self::assertSelectorNotExists('a.cell-link');
+        self::assertSelectorNotExists('a.cell-add');
+        // Only the reading with an attached invoice links to it, and readers may follow it.
+        self::assertSelectorCount(1, 'a.cell-invoice');
+        self::assertSelectorExists('a.cell-invoice[href="/consumption/2026/'.$withInvoice->getId().'/invoice"]');
+    }
+
+    /**
+     * Persists a 2026 reading straight to the database, bypassing the form.
+     */
+    private function persistReading(
+        ConsumptionType $type,
+        int $month,
+        string $quantity,
+        ?string $cost,
+        ?string $notes = null,
+        ?string $invoicePath = null,
+    ): ConsumptionReading {
+        $reading = (new ConsumptionReading())
+            ->setType($type)
+            ->setPeriodYear(2026)
+            ->setPeriodMonth($month)
+            ->setQuantity($quantity)
+            ->setCost($cost)
+            ->setNotes($notes)
+            ->setInvoicePath($invoicePath);
+
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $em->persist($reading);
+        $em->flush();
+
+        return $reading;
     }
 
     public function testSubmittingInvalidReadingRedisplaysFormWithErrors(): void

@@ -479,6 +479,23 @@ tbody tr.is-in-force { background: var(--success-weak); }
     color: var(--text);
 }
 
+/* ---- Matriz anual de consumos (F-6.1.2): meses × consumos, como el Excel ---- */
+.consumption-matrix { overflow-x: auto; }
+.consumption-matrix th, .consumption-matrix td { white-space: nowrap; }
+.consumption-matrix tbody td { padding: 8px 10px; }
+.consumption-matrix .num { text-align: right; }
+.consumption-matrix td.notes { white-space: normal; min-width: 14em; }
+.consumption-matrix .cell-add { color: var(--text-faint); text-decoration: none; padding: 0 6px; }
+.consumption-matrix .cell-add:hover { color: var(--accent); }
+.consumption-matrix tr.is-total td { font-weight: 600; border-top: 2px solid var(--border-strong); background: var(--surface-sunken); }
+.consumption-matrix .cell-invoice { font-size: 10.5px; color: var(--text-faint); text-decoration: none; }
+.consumption-matrix .cell-invoice:hover { color: var(--accent); }
+/* En móvil cada mes se apila como tarjeta: sin esto, cada consumo sin registrar sería una línea
+   con etiqueta y sin valor. */
+@media (max-width: 760px) {
+    .consumption-matrix tbody td:empty { display: none; }
+}
+
 /* ---- Herramientas de listado (table-tools.js): búsqueda, filtros, orden ---- */
 /* Barra de controles destacada sobre la tabla: superficie hundida + borde, para que
    búsqueda y filtros se lean como herramientas (y se usen) en vez de pasar inadvertidos. */

@@ -11,6 +11,7 @@ use App\Form\ConsumptionReadingType;
 use App\Repository\ConsumptionReadingRepository;
 use App\Security\Voter\AreaVoter;
 use App\Service\AuditLogger;
+use App\Service\ConsumptionYearMatrix;
 use App\Service\FileUploader;
 use App\Service\YearlyTrendChart;
 use Doctrine\ORM\EntityManagerInterface;
@@ -21,7 +22,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
- * Monthly consumption capture (form F-6.1.2): list a year's readings and add/edit one.
+ * Monthly consumption capture (form F-6.1.2): show a year as the form's grid and add/edit a reading.
  *
  * Requires an authenticated user (ROLE_USER). Fine-grained per-role read/write permissions
  * will come with the permissions module.
@@ -75,7 +76,8 @@ class ConsumptionController extends AbstractController
     }
 
     /**
-     * Lists every reading recorded for the given year.
+     * Shows the given year as the form F-6.1.2 grid: months as rows, utilities as columns, with
+     * the yearly total of each column.
      */
     #[Route('/{year}', name: 'consumption_year', requirements: ['year' => '\d{4}'], methods: ['GET'])]
     public function year(int $year, ConsumptionReadingRepository $readings): Response
@@ -84,12 +86,15 @@ class ConsumptionController extends AbstractController
 
         return $this->render('consumption/index.html.twig', [
             'year' => $year,
-            'readings' => $readings->findForYear($year),
+            'types' => ConsumptionType::cases(),
+            'matrix' => ConsumptionYearMatrix::fromReadings($readings->findForYear($year), $readings->totalsForYear($year)),
         ]);
     }
 
     /**
-     * Creates a new reading for the given year.
+     * Creates a new reading for the given year. The optional "type" and "month" query parameters
+     * (sent by an empty cell of the yearly grid) preselect the utility and the month; invalid
+     * values are ignored and leave the field for the user to choose.
      */
     #[Route('/{year}/new', name: 'consumption_new', requirements: ['year' => '\d{4}'], methods: ['GET', 'POST'])]
     public function new(int $year, Request $request, EntityManagerInterface $em): Response
@@ -97,6 +102,16 @@ class ConsumptionController extends AbstractController
         $this->denyAccessUnlessGranted(AreaVoter::WRITE, Area::CONSUMPTION);
 
         $reading = (new ConsumptionReading())->setPeriodYear($year);
+
+        $type = ConsumptionType::tryFrom($request->query->getString('type'));
+        if (null !== $type) {
+            $reading->setType($type);
+        }
+
+        $month = $request->query->getInt('month');
+        if ($month >= 1 && $month <= 12) {
+            $reading->setPeriodMonth($month);
+        }
 
         return $this->handleForm($reading, $year, $request, $em);
     }
