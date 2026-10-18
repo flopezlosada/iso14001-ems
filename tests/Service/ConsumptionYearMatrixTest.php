@@ -39,7 +39,7 @@ final class ConsumptionYearMatrixTest extends TestCase
         self::assertNull($matrix->reading(2, ConsumptionType::GASOIL));
     }
 
-    public function testMonthNotesAreDistinctNonBlankAndInColumnOrder(): void
+    public function testMonthNotesKeepTheirUtilityAreNonBlankAndInColumnOrder(): void
     {
         $matrix = ConsumptionYearMatrix::fromReadings([
             $this->reading(ConsumptionType::WATER, 1, '202.000', 'Cambio comercializadora'),
@@ -49,8 +49,13 @@ final class ConsumptionYearMatrixTest extends TestCase
             $this->reading(ConsumptionType::TONER, 1, '3.000'),
         ], []);
 
-        // Gasoil comes before water in the form, the repeated note is shown once, blanks and nulls are dropped.
-        self::assertSame(['Hechos 2 pedidos en enero', 'Cambio comercializadora'], $matrix->notes(1));
+        // Column order (gasoil, electricity, water); each note keeps its utility, so the same text on two
+        // utilities stays twice; blanks and nulls are dropped and the text is trimmed.
+        self::assertSame([
+            ['type' => ConsumptionType::GASOIL, 'note' => 'Hechos 2 pedidos en enero'],
+            ['type' => ConsumptionType::ELECTRICITY, 'note' => 'Cambio comercializadora'],
+            ['type' => ConsumptionType::WATER, 'note' => 'Cambio comercializadora'],
+        ], $matrix->notes(1));
         self::assertSame([], $matrix->notes(2));
     }
 

@@ -49,19 +49,20 @@ final readonly class ConsumptionYearMatrix
     }
 
     /**
-     * The observations recorded in a month across all its readings, in column order and without
-     * blanks or repetitions (the form has a single "observations" cell per month).
+     * The observations recorded in a month, each with the utility its reading belongs to, in column
+     * order and without blank notes. The grid shows them in a single cell per month, so the type is
+     * what tells which measurement a note is about.
      *
-     * @return list<string> the distinct notes of that month
+     * @return list<array{type: ConsumptionType, note: string}> the non-blank notes of that month
      */
     public function notes(int $month): array
     {
         $notes = array_map(
-            fn (ConsumptionType $type): string => trim($this->reading($month, $type)?->getNotes() ?? ''),
+            fn (ConsumptionType $type): array => ['type' => $type, 'note' => trim($this->reading($month, $type)?->getNotes() ?? '')],
             ConsumptionType::cases(),
         );
 
-        return array_values(array_unique(array_filter($notes, static fn (string $note): bool => '' !== $note)));
+        return array_values(array_filter($notes, static fn (array $entry): bool => '' !== $entry['note']));
     }
 
     /**

@@ -59,7 +59,7 @@
                                 {% if type.tracksCost %}<td class="num {{ tint }} is-cost"></td>{% endif %}
                             {% endif %}
                         {% endfor %}
-                        <td class="muted notes">{{ matrix.notes(month)|join(' · ') }}</td>
+                        <td class="muted notes">{% for entry in matrix.notes(month) %}<strong>{{ entry.type.label }}:</strong> {{ entry.note }}{% if not loop.last %} · {% endif %}{% endfor %}</td>
                     </tr>
                 {% endfor %}
                 <tr class="is-total">

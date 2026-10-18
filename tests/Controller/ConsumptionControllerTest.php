@@ -113,7 +113,7 @@ final class ConsumptionControllerTest extends WebTestCase
         );
         self::assertAnySelectorTextSame('thead th', 'Cartuchos de tinta (unidades)');
         self::assertSelectorNotExists('thead th:contains("Cartuchos de tinta (€)")');
-        self::assertAnySelectorTextSame('td.notes', 'Hechos 2 pedidos en enero');
+        self::assertAnySelectorTextSame('td.notes', 'Gasoil: Hechos 2 pedidos en enero');
         self::assertSelectorTextContains('tr.is-total', 'Total 2026');
         // Totals carry their unit (the header shows it too, but the total row is read on its own).
         self::assertAnySelectorTextSame('tr.is-total td', '13200 L');
