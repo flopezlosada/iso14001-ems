@@ -5,7 +5,7 @@
 
 {# A recorded value: a link to its reading's edit form for writers, plain text for readers; plus a
    link to the invoice when one is attached (readers can download it too). #}
-{% macro value_cell(value, url, invoice_url = null) %}<td class="num mono">{% if url %}<a class="cell-link" href="{{ url }}">{{ value }}</a>{% else %}{{ value }}{% endif %}{% if invoice_url %} <a class="cell-invoice" href="{{ invoice_url }}" title="Ver factura" aria-label="Ver factura">F</a>{% endif %}</td>{% endmacro %}
+{% macro value_cell(value, url, tint, invoice_url = null) %}<td class="num mono {{ tint }}">{% if url %}<a class="cell-link" href="{{ url }}">{{ value }}</a>{% else %}{{ value }}{% endif %}{% if invoice_url %} <a class="cell-invoice" href="{{ invoice_url }}" title="Ver factura" aria-label="Ver factura">F</a>{% endif %}</td>{% endmacro %}
 
 {% block title %}Consumos {{ year }}{% endblock %}
 
@@ -36,8 +36,9 @@
                 <tr>
                     <th>Mes</th>
                     {% for type in types %}
-                        <th class="num">{{ type.label }} ({{ type.unit }})</th>
-                        {% if type.tracksCost %}<th class="num">{{ type.label }} (€)</th>{% endif %}
+                        {% set tint = 'tinted t-' ~ type.value %}
+                        <th class="num {{ tint }}">{{ type.label }} ({{ type.unit }})</th>
+                        {% if type.tracksCost %}<th class="num {{ tint }} is-cost">{{ type.label }} (€)</th>{% endif %}
                     {% endfor %}
                     <th>Observaciones</th>
                 </tr>
@@ -48,13 +49,14 @@
                         <td>{{ month_names[month] }}</td>
                         {% for type in types %}
                             {% set reading = matrix.reading(month, type) %}
+                            {% set tint = 'tinted t-' ~ type.value %}
                             {% if reading %}
                                 {% set edit_url = can_write ? path('consumption_edit', { year: year, id: reading.id }) : null %}
-                                {{ _self.value_cell(reading.quantity|decimal, edit_url, reading.hasInvoice ? path('consumption_invoice', { year: year, id: reading.id }) : null) }}
-                                {% if type.tracksCost %}{{ _self.value_cell(reading.cost ?? '', reading.cost is null ? null : edit_url) }}{% endif %}
+                                {{ _self.value_cell(reading.quantity|decimal, edit_url, tint, reading.hasInvoice ? path('consumption_invoice', { year: year, id: reading.id }) : null) }}
+                                {% if type.tracksCost %}{{ _self.value_cell(reading.cost ?? '', reading.cost is null ? null : edit_url, tint ~ ' is-cost') }}{% endif %}
                             {% else %}
-                                <td class="num">{% if can_write %}<a class="cell-add" href="{{ path('consumption_new', { year: year, type: type.value, month: month }) }}" aria-label="Registrar {{ type.label }} de {{ month_names[month]|lower }}">+</a>{% endif %}</td>
-                                {% if type.tracksCost %}<td class="num"></td>{% endif %}
+                                <td class="num {{ tint }}">{% if can_write %}<a class="cell-add" href="{{ path('consumption_new', { year: year, type: type.value, month: month }) }}" aria-label="Registrar {{ type.label }} de {{ month_names[month]|lower }}">+</a>{% endif %}</td>
+                                {% if type.tracksCost %}<td class="num {{ tint }} is-cost"></td>{% endif %}
                             {% endif %}
                         {% endfor %}
                         <td class="muted notes">{{ matrix.notes(month)|join(' · ') }}</td>
@@ -64,8 +66,9 @@
                     <td>Total {{ year }}</td>
                     {% for type in types %}
                         {% set total = matrix.total(type) %}
-                        <td class="num mono">{{ total ? total.quantity|decimal : '—' }}</td>
-                        {% if type.tracksCost %}<td class="num mono">{{ total and total.cost is not null ? total.cost : '—' }}</td>{% endif %}
+                        {% set tint = 'tinted t-' ~ type.value %}
+                        <td class="num mono {{ tint }}">{{ total ? total.quantity|decimal : '—' }}</td>
+                        {% if type.tracksCost %}<td class="num mono {{ tint }} is-cost">{{ total and total.cost is not null ? total.cost : '—' }}</td>{% endif %}
                     {% endfor %}
                     <td></td>
                 </tr>

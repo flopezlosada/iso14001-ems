@@ -488,6 +488,20 @@ tbody tr.is-in-force { background: var(--success-weak); }
 .consumption-matrix .cell-add { color: var(--text-faint); text-decoration: none; padding: 0 6px; }
 .consumption-matrix .cell-add:hover { color: var(--accent); }
 .consumption-matrix tr.is-total td { font-weight: 600; border-top: 2px solid var(--border-strong); background: var(--surface-sunken); }
+/* Cada tipo de consumo tiñe sus columnas (cantidad y €) para leerlas como un bloque. El tinte se deriva de tokens de tono existentes, así sigue al tema claro/oscuro. */
+.consumption-matrix .t-gasoil        { --tint: var(--danger); }
+.consumption-matrix .t-electricity   { --tint: var(--warning); }
+.consumption-matrix .t-water         { --tint: var(--review); }
+.consumption-matrix .t-paper         { --tint: var(--pillar-do); }
+.consumption-matrix .t-toner         { --tint: var(--pillar-act); }
+.consumption-matrix .t-ink_cartridge { --tint: var(--pillar-check); }
+/* Dos tonos del mismo color por consumo: más intenso para la cantidad, más suave para los euros. */
+.consumption-matrix td.tinted { background: color-mix(in srgb, var(--tint) 12%, transparent); }
+.consumption-matrix td.tinted.is-cost { background: color-mix(in srgb, var(--tint) 5%, transparent); }
+.consumption-matrix thead th.tinted,
+.consumption-matrix tr.is-total td.tinted { background: color-mix(in srgb, var(--tint) 24%, var(--surface-sunken)); }
+.consumption-matrix thead th.tinted.is-cost,
+.consumption-matrix tr.is-total td.tinted.is-cost { background: color-mix(in srgb, var(--tint) 11%, var(--surface-sunken)); }
 .consumption-matrix .cell-invoice { font-size: 10.5px; color: var(--text-faint); text-decoration: none; }
 .consumption-matrix .cell-invoice:hover { color: var(--accent); }
 /* En móvil cada mes se apila como tarjeta: sin esto, cada consumo sin registrar sería una línea
