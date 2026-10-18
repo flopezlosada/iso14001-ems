@@ -115,8 +115,10 @@ final class ConsumptionControllerTest extends WebTestCase
         self::assertSelectorNotExists('thead th:contains("Cartuchos de tinta (€)")');
         self::assertAnySelectorTextSame('td.notes', 'Hechos 2 pedidos en enero');
         self::assertSelectorTextContains('tr.is-total', 'Total 2026');
-        self::assertSelectorTextContains('tr.is-total', '13200');
-        self::assertSelectorTextContains('tr.is-total', '11967.34');
+        // Totals carry their unit (the header shows it too, but the total row is read on its own).
+        self::assertAnySelectorTextSame('tr.is-total td', '13200 L');
+        self::assertAnySelectorTextSame('tr.is-total td', '11967.34 €');
+        self::assertAnySelectorTextSame('tr.is-total td', '12 unidades');
     }
 
     public function testEmptyCellPrefillsTheNewReadingForm(): void

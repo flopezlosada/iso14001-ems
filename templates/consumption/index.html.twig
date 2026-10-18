@@ -67,8 +67,8 @@
                     {% for type in types %}
                         {% set total = matrix.total(type) %}
                         {% set tint = 'tinted t-' ~ type.value %}
-                        <td class="num mono {{ tint }}">{{ total ? total.quantity|decimal : '—' }}</td>
-                        {% if type.tracksCost %}<td class="num mono {{ tint }} is-cost">{{ total and total.cost is not null ? total.cost : '—' }}</td>{% endif %}
+                        <td class="num mono {{ tint }}">{{ total ? total.quantity|decimal ~ ' ' ~ type.unit : '—' }}</td>
+                        {% if type.tracksCost %}<td class="num mono {{ tint }} is-cost">{{ total and total.cost is not null ? total.cost ~ ' €' : '—' }}</td>{% endif %}
                     {% endfor %}
                     <td></td>
                 </tr>
