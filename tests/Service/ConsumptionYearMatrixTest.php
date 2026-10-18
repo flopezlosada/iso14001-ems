@@ -10,20 +10,18 @@ use App\Service\ConsumptionYearMatrix;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Lookups of the yearly F-6.1.2 grid: cells by (month, type), the month's observations and the
- * column totals. Readings mirror the real register, where most months have no notes and some
- * utilities are only recorded every few months.
+ * Lookups of the yearly F-6.1.2 grid: cells by (month, type) and the column totals. Readings mirror
+ * the real register, where some utilities are only recorded every few months.
  */
 final class ConsumptionYearMatrixTest extends TestCase
 {
-    private function reading(ConsumptionType $type, int $month, string $quantity, ?string $notes = null): ConsumptionReading
+    private function reading(ConsumptionType $type, int $month, string $quantity): ConsumptionReading
     {
         return (new ConsumptionReading())
             ->setType($type)
             ->setPeriodYear(2026)
             ->setPeriodMonth($month)
-            ->setQuantity($quantity)
-            ->setNotes($notes);
+            ->setQuantity($quantity);
     }
 
     public function testFindsEachReadingByMonthAndTypeAndLeavesTheRestEmpty(): void
@@ -37,26 +35,6 @@ final class ConsumptionYearMatrixTest extends TestCase
         self::assertSame($march, $matrix->reading(3, ConsumptionType::WATER));
         self::assertNull($matrix->reading(1, ConsumptionType::WATER));
         self::assertNull($matrix->reading(2, ConsumptionType::GASOIL));
-    }
-
-    public function testMonthNotesKeepTheirUtilityAreNonBlankAndInColumnOrder(): void
-    {
-        $matrix = ConsumptionYearMatrix::fromReadings([
-            $this->reading(ConsumptionType::WATER, 1, '202.000', 'Cambio comercializadora'),
-            $this->reading(ConsumptionType::GASOIL, 1, '8700.000', 'Hechos 2 pedidos en enero'),
-            $this->reading(ConsumptionType::ELECTRICITY, 1, '4642.000', ' Cambio comercializadora '),
-            $this->reading(ConsumptionType::PAPER, 1, '300.000', '   '),
-            $this->reading(ConsumptionType::TONER, 1, '3.000'),
-        ], []);
-
-        // Column order (gasoil, electricity, water); each note keeps its utility, so the same text on two
-        // utilities stays twice; blanks and nulls are dropped and the text is trimmed.
-        self::assertSame([
-            ['type' => ConsumptionType::GASOIL, 'note' => 'Hechos 2 pedidos en enero'],
-            ['type' => ConsumptionType::ELECTRICITY, 'note' => 'Cambio comercializadora'],
-            ['type' => ConsumptionType::WATER, 'note' => 'Cambio comercializadora'],
-        ], $matrix->notes(1));
-        self::assertSame([], $matrix->notes(2));
     }
 
     public function testTotalIsNullForAUtilityWithoutReadings(): void

@@ -49,23 +49,6 @@ final readonly class ConsumptionYearMatrix
     }
 
     /**
-     * The observations recorded in a month, each with the utility its reading belongs to, in column
-     * order and without blank notes. The grid shows them in a single cell per month, so the type is
-     * what tells which measurement a note is about.
-     *
-     * @return list<array{type: ConsumptionType, note: string}> the non-blank notes of that month
-     */
-    public function notes(int $month): array
-    {
-        $notes = array_map(
-            fn (ConsumptionType $type): array => ['type' => $type, 'note' => trim($this->reading($month, $type)?->getNotes() ?? '')],
-            ConsumptionType::cases(),
-        );
-
-        return array_values(array_filter($notes, static fn (array $entry): bool => '' !== $entry['note']));
-    }
-
-    /**
      * Yearly totals of a utility, or null when it has no reading that year.
      *
      * @return array{quantity: numeric-string, cost: numeric-string|null}|null
