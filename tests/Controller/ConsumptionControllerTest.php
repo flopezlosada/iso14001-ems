@@ -75,22 +75,26 @@ final class ConsumptionControllerTest extends WebTestCase
             'consumption_reading[cost]' => '250.00',
         ]);
 
-        self::assertResponseRedirects('/consumption/2026');
-
         $reading = static::getContainer()->get(ConsumptionReadingRepository::class)
             ->findOneByPeriod(ConsumptionType::WATER, 2026, 5);
         self::assertNotNull($reading);
         self::assertSame('250.00', $reading->getCost());
+        self::assertResponseRedirects('/consumption/2026/'.$reading->getId());
 
         // The creation is recorded in the activity trail.
         self::assertNotNull(
             static::getContainer()->get(AuditLogRepository::class)->findOneBy(['action' => 'consumption.created'])
         );
 
-        // Following the redirect, the new reading shows up in its cell of the year's grid.
+        // Following the redirect lands on the reading's detail, with its creation in the history.
         $client->followRedirect();
         self::assertResponseIsSuccessful();
-        self::assertAnySelectorTextSame('table a.cell-link', '123.5');
+        self::assertSelectorTextContains('h1', 'Agua · Mayo 2026');
+        self::assertAnySelectorTextSame('dd', '123.5 m³');
+
+        // And the reading shows up in its cell of the year's grid, linking to that detail.
+        $client->request('GET', '/consumption/2026');
+        self::assertSelectorExists('a.cell-link[href="/consumption/2026/'.$reading->getId().'"]');
     }
 
     public function testYearGridShowsEachMonthAndTheYearlyTotals(): void
@@ -146,6 +150,30 @@ final class ConsumptionControllerTest extends WebTestCase
         self::assertSelectorNotExists('select#consumption_reading_periodMonth option[selected]');
     }
 
+    public function testReaderOpensTheReadingDetailWithoutEditButton(): void
+    {
+        $client = $this->loggedInClient(PermissionLevel::READ);
+        $reading = $this->persistReading(ConsumptionType::GASOIL, 1, '8700.000', '7524.03', 'Hechos 2 pedidos en enero');
+
+        $client->request('GET', '/consumption/2026/'.$reading->getId());
+
+        self::assertResponseIsSuccessful();
+        self::assertAnySelectorTextSame('dd', '8700 L');
+        self::assertAnySelectorTextSame('dd', '7524.03 €');
+        self::assertAnySelectorTextSame('dd', 'Hechos 2 pedidos en enero');
+        self::assertSelectorNotExists('a[href$="/edit"]');
+    }
+
+    public function testDetailOfAReadingFromAnotherYearIsNotFound(): void
+    {
+        $client = $this->loggedInClient();
+        $reading = $this->persistReading(ConsumptionType::WATER, 3, '168.000', '301.82');
+
+        $client->request('GET', '/consumption/2025/'.$reading->getId());
+
+        self::assertResponseStatusCodeSame(404);
+    }
+
     public function testReaderSeesValuesAndInvoicesWithoutEditOrAddLinks(): void
     {
         $client = $this->loggedInClient(PermissionLevel::READ);
@@ -155,8 +183,9 @@ final class ConsumptionControllerTest extends WebTestCase
         $client->request('GET', '/consumption/2026');
 
         self::assertResponseIsSuccessful();
-        self::assertAnySelectorTextSame('table td', '276');
-        self::assertSelectorNotExists('a.cell-link');
+        // Values link to the read-only detail; nothing links to the edit or new forms.
+        self::assertAnySelectorTextSame('table a.cell-link', '276');
+        self::assertSelectorNotExists('table a[href$="/edit"]');
         self::assertSelectorNotExists('a.cell-add');
         // Only the reading with an attached invoice links to it, and readers may follow it.
         self::assertSelectorCount(1, 'a.cell-invoice');
@@ -232,11 +261,10 @@ final class ConsumptionControllerTest extends WebTestCase
         $invoiceField->upload($this->pdfFixture('factura-junio.pdf'));
         $client->submit($form);
 
-        self::assertResponseRedirects('/consumption/2026');
-
         $reading = static::getContainer()->get(ConsumptionReadingRepository::class)
             ->findOneByPeriod(ConsumptionType::WATER, 2026, 6);
         self::assertNotNull($reading);
+        self::assertResponseRedirects('/consumption/2026/'.$reading->getId());
         self::assertTrue($reading->hasInvoice());
         self::assertSame('factura-junio.pdf', $reading->getInvoiceOriginalName());
 

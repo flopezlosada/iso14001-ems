@@ -1,0 +1,40 @@
+{% extends 'app_shell.html.twig' %}
+
+{% set month_names = ['', 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'] %}
+
+{% block title %}{{ reading.type.label }} · {{ month_names[reading.periodMonth] }} {{ year }}{% endblock %}
+
+{% block breadcrumb %}
+    <a href="{{ path('app_homepage') }}">Inicio</a><span class="sep">/</span>
+    <a href="{{ path('consumption_year', { year: year }) }}">Consumos {{ year }}</a><span class="sep">/</span>
+    {{ reading.type.label }} · {{ month_names[reading.periodMonth] }}
+{% endblock %}
+
+{% block body %}
+    <div class="page-head">
+        <div>
+            <h1>{{ reading.type.label }} · {{ month_names[reading.periodMonth] }} {{ year }}</h1>
+        </div>
+        <div class="page-actions">
+            <a class="btn secondary" href="{{ path('consumption_year', { year: year }) }}">← Consumos {{ year }}</a>
+            {% if is_granted('AREA_WRITE', constant('App\\Enum\\Area::CONSUMPTION')) %}
+                <a class="btn" href="{{ path('consumption_edit', { year: year, id: reading.id }) }}">Editar lectura</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card">
+        <dl class="detail-grid">
+            <dt>Cantidad</dt><dd class="mono">{{ reading.quantity|decimal }} {{ reading.type.unit }}</dd>
+            {% if reading.type.tracksCost %}
+                <dt>Coste</dt><dd class="mono">{{ reading.cost is null ? '—' : reading.cost ~ ' €' }}</dd>
+            {% endif %}
+            <dt>Observaciones</dt><dd>{{ reading.notes ?: '—' }}</dd>
+            <dt>Factura</dt>
+            <dd>{% if reading.hasInvoice %}<a href="{{ path('consumption_invoice', { year: year, id: reading.id }) }}">{{ reading.invoiceOriginalName ?? 'factura' }}</a>{% else %}—{% endif %}</dd>
+            <dt>Última actualización</dt><dd>{{ reading.updatedAt|date('d/m/Y') }}</dd>
+        </dl>
+    </div>
+
+    {{ include('partials/_activity_log.html.twig', { entries: activity }) }}
+{% endblock %}

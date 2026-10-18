@@ -25,7 +25,7 @@
                     Si subes otra, la reemplaza.
                 </p>
             {% endif %}
-            {{ f.actions(path('consumption_year', { year: year })) }}
+            {{ f.actions(reading.id ? path('consumption_show', { year: year, id: reading.id }) : path('consumption_year', { year: year })) }}
         {{ form_end(form) }}
     </div>
 {% endblock %}

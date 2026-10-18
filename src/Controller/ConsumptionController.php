@@ -8,6 +8,7 @@ use App\Entity\ConsumptionReading;
 use App\Enum\Area;
 use App\Enum\ConsumptionType;
 use App\Form\ConsumptionReadingType;
+use App\Repository\AuditLogRepository;
 use App\Repository\ConsumptionReadingRepository;
 use App\Security\Voter\AreaVoter;
 use App\Service\AuditLogger;
@@ -88,6 +89,26 @@ class ConsumptionController extends AbstractController
             'year' => $year,
             'types' => ConsumptionType::cases(),
             'matrix' => ConsumptionYearMatrix::fromReadings($readings->findForYear($year), $readings->totalsForYear($year)),
+        ]);
+    }
+
+    /**
+     * Detail of a single reading (the target of each value in the yearly grid), with its activity
+     * history. 404 when the reading does not belong to the given year.
+     */
+    #[Route('/{year}/{id}', name: 'consumption_show', requirements: ['year' => '\d{4}', 'id' => '\d+'], methods: ['GET'])]
+    public function show(int $year, ConsumptionReading $reading, AuditLogRepository $auditLogs): Response
+    {
+        $this->denyAccessUnlessGranted(AreaVoter::READ, Area::CONSUMPTION);
+
+        if ($reading->getPeriodYear() !== $year) {
+            throw $this->createNotFoundException('The reading does not belong to the given year.');
+        }
+
+        return $this->render('consumption/show.html.twig', [
+            'year' => $year,
+            'reading' => $reading,
+            'activity' => $auditLogs->findForSubject('ConsumptionReading', (string) $reading->getId()),
         ]);
     }
 
@@ -187,7 +208,7 @@ class ConsumptionController extends AbstractController
             );
             $this->addFlash('success', 'Lectura de consumo guardada.');
 
-            return $this->redirectToRoute('consumption_year', ['year' => $year]);
+            return $this->redirectToRoute('consumption_show', ['year' => $year, 'id' => $reading->getId()]);
         }
 
         return $this->render('consumption/form.html.twig', [
