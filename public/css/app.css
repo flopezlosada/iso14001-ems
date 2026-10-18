@@ -34,6 +34,9 @@
     --review: #3F6079;
     --review-weak: #E5EBF0;
     --review-text: #2F4A60;
+    /* Importes en euros: el centro resalta el dinero en rojo en su registro de consumos. Se apoya
+       en el rojo del sistema (sigue al tema) pero con nombre propio: no es un aviso de peligro. */
+    --money-text: var(--danger-text);
     /* Categóricos de pilar PDCA (calendario): apagados y distintos del ámbar/rojo de urgencia. */
     --pillar-plan: #5C7A99;
     --pillar-do: #5F8A5A;
@@ -495,13 +498,12 @@ tbody tr.is-in-force { background: var(--success-weak); }
 .consumption-matrix .t-paper         { --tint: var(--pillar-do); }
 .consumption-matrix .t-toner         { --tint: var(--pillar-act); }
 .consumption-matrix .t-ink_cartridge { --tint: var(--pillar-check); }
-/* Dos tonos del mismo color por consumo: más intenso para la cantidad, más suave para los euros. */
-.consumption-matrix td.tinted { background: color-mix(in srgb, var(--tint) 12%, transparent); }
-.consumption-matrix td.tinted.is-cost { background: color-mix(in srgb, var(--tint) 5%, transparent); }
+.consumption-matrix td.tinted { background: color-mix(in srgb, var(--tint) 10%, transparent); }
 .consumption-matrix thead th.tinted,
-.consumption-matrix tr.is-total td.tinted { background: color-mix(in srgb, var(--tint) 24%, var(--surface-sunken)); }
-.consumption-matrix thead th.tinted.is-cost,
-.consumption-matrix tr.is-total td.tinted.is-cost { background: color-mix(in srgb, var(--tint) 11%, var(--surface-sunken)); }
+.consumption-matrix tr.is-total td.tinted { background: color-mix(in srgb, var(--tint) 22%, var(--surface-sunken)); }
+/* Los euros se resaltan en rojo (también su enlace de edición), como en el registro del centro. */
+.consumption-matrix .is-cost,
+.consumption-matrix .is-cost a.cell-link { color: var(--money-text); }
 .consumption-matrix .cell-invoice { font-size: 10.5px; color: var(--text-faint); text-decoration: none; }
 .consumption-matrix .cell-invoice:hover { color: var(--accent); }
 /* En móvil cada mes se apila como tarjeta: sin esto, cada consumo sin registrar sería una línea
