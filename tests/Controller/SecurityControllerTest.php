@@ -8,7 +8,9 @@ use App\Entity\Role;
 use App\Entity\User;
 use App\Repository\AuditLogRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Component\BrowserKit\Cookie;
 use Symfony\Component\Security\Http\LoginLink\LoginLinkHandlerInterface;
 
 /**
@@ -34,6 +36,22 @@ final class SecurityControllerTest extends WebTestCase
         $em->flush();
 
         return $user;
+    }
+
+    /**
+     * Follows a magic link for the given user and returns the remember-me cookie it sets.
+     */
+    private function signInAndGetRememberMeCookie(KernelBrowser $client, User $user): Cookie
+    {
+        $handler = static::getContainer()->get('security.authenticator.login_link_handler.main');
+        \assert($handler instanceof LoginLinkHandlerInterface);
+        $client->request('GET', $handler->createLoginLink($user)->getUrl());
+        self::assertResponseRedirects();
+
+        $cookie = $client->getCookieJar()->get('REMEMBERME');
+        self::assertNotNull($cookie, 'The magic link must set the remember-me cookie.');
+
+        return $cookie;
     }
 
     public function testLoginPageIsPublic(): void
@@ -75,6 +93,35 @@ final class SecurityControllerTest extends WebTestCase
         self::assertNotNull(
             static::getContainer()->get(AuditLogRepository::class)->findOneBy(['action' => 'user.login'])
         );
+    }
+
+    public function testMagicLinkKeepsUserSignedInAfterSessionIsLost(): void
+    {
+        $client = static::createClient();
+        $rememberMe = $this->signInAndGetRememberMeCookie($client, $this->persistUser('remembered@example.test', admin: true));
+
+        // A fresh cookie jar simulates closing the browser / the session expiring.
+        $client->restart();
+        $client->getCookieJar()->set($rememberMe);
+        $client->request('GET', '/consumption/2026');
+
+        self::assertResponseIsSuccessful();
+    }
+
+    public function testRememberMeCookieIsRejectedOnceUserIsDeactivated(): void
+    {
+        $client = static::createClient();
+        $user = $this->persistUser('revoked@example.test', admin: true);
+        $rememberMe = $this->signInAndGetRememberMeCookie($client, $user);
+
+        $user->setActive(false);
+        static::getContainer()->get(EntityManagerInterface::class)->flush();
+
+        $client->restart();
+        $client->getCookieJar()->set($rememberMe);
+        $client->request('GET', '/consumption/2026');
+
+        self::assertResponseRedirects('/login');
     }
 
     public function testRequestingLinkEmailsAKnownUser(): void
