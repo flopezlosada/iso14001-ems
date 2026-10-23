@@ -27,6 +27,16 @@ security:
                 signature_properties: ['id']
                 lifetime: 600 # the link is valid for 10 minutes
                 max_uses: 1 # single-use: the link is invalidated after the first successful use
+            # Keeps users signed in across browser restarts and session expiry, so they do not have
+            # to request a new magic link every time. Always on: the link is clicked from the e-mail
+            # (a separate GET), so a "remember me" checkbox on the login form could never reach it.
+            # The cookie is renewed on each use (sliding window) and invalidated if the user's e-mail
+            # or active flag changes; logout clears it.
+            remember_me:
+                secret: '%kernel.secret%'
+                lifetime: 2592000 # 30 days
+                always_remember_me: true
+                signature_properties: ['email', 'active']
             logout:
                 path: app_logout
                 target: login
