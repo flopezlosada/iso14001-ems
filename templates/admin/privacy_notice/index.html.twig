@@ -1,0 +1,51 @@
+{% extends 'app_shell.html.twig' %}
+
+{% block title %}Protección de datos{% endblock %}
+
+{% block breadcrumb %}
+    <a href="{{ path('app_homepage') }}">Inicio</a><span class="sep">/</span>Protección de datos
+{% endblock %}
+
+{% block body %}
+    <div class="page-head">
+        <div>
+            <p class="eyebrow">Administración</p>
+            <h1>Protección de datos</h1>
+            <p class="lead">La información que cada persona tiene que leer al entrar. Es información, no un consentimiento: el centro trata estos datos por obligación legal, y lo que se guarda es la prueba de que cada cual la ha leído.</p>
+        </div>
+    </div>
+
+    <div class="card" style="max-width: 760px;">
+        {% if current %}
+            <h2>Versión en vigor</h2>
+            <p>Publicada el {{ current.publishedAt|date('d/m/Y \\a \\l\\a\\s H:i') }}{% if current.publishedBy %} por {{ current.publishedBy.fullName }}{% endif %}. La han leído <strong>{{ readers }} de {{ activeUsers }}</strong> personas con la cuenta activa.</p>
+            <p><a href="{{ path('privacy_notice_public') }}">Ver cómo se muestra</a></p>
+        {% else %}
+            <h2>Todavía no hay ninguna versión publicada</h2>
+            <p>Así que <strong>no se le pide a nadie</strong>. El formulario trae un texto propuesto: revísalo con la dirección (sobre todo quién es el responsable y el contacto del delegado o delegada de protección de datos) antes de publicarlo. En cuanto lo publiques, cada persona lo verá al abrir la aplicación y no podrá seguir hasta pulsar «Entendido».</p>
+        {% endif %}
+    </div>
+
+    <form class="card" style="max-width: 760px;" method="post" action="{{ path('admin_privacy_notice_publish') }}"
+          data-confirm="Al publicar, todo el personal tendrá que volver a leerla y pulsar «Entendido» antes de seguir. ¿Publicar?">
+        <input type="hidden" name="_token" value="{{ csrf_token('privacy_notice_publish') }}">
+        <h2>{{ current ? 'Publicar una versión nueva' : 'Publicar la primera versión' }}</h2>
+        <p class="help">Una versión publicada no se edita; cualquier cambio, aunque sea una errata, es una versión nueva.</p>
+
+        <div class="form-row">
+            <label for="summary">Resumen</label>
+            <p class="help">Lo primero que se lee. Escrito como <strong>una línea por punto, «Etiqueta: texto»</strong> (Responsable: …, Finalidad: …, Legitimación: …, Destinatarios: …, Derechos: …), se muestra como una ficha; si no, como texto seguido.</p>
+            <textarea id="summary" name="summary" rows="10" required maxlength="30000">{{ current ? current.summary : include('admin/privacy_notice/_proposed_summary.txt.twig') }}</textarea>
+        </div>
+
+        <div class="form-row">
+            <label for="body">Información completa</label>
+            <p class="help">Aparece plegada bajo el resumen. Texto plano: se respetan los saltos de línea y una línea en blanco separa párrafos.</p>
+            <textarea id="body" name="body" rows="20" required maxlength="30000">{{ current ? current.body : include('admin/privacy_notice/_proposed_body.txt.twig') }}</textarea>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn">Publicar</button>
+        </div>
+    </form>
+{% endblock %}

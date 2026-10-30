@@ -45,6 +45,9 @@ security:
     access_control:
         - { path: ^/login, roles: PUBLIC_ACCESS }
         - { path: ^/connect, roles: PUBLIC_ACCESS }
+        # The data-protection information must be readable BEFORE signing in (linked from the login
+        # page). Only the public copy: the reading screen and its "Entendido" belong to signed-in users.
+        - { path: ^/proteccion-datos$, roles: PUBLIC_ACCESS }
         # Machine-to-machine cron endpoint: authenticated by a shared secret token in the controller,
         # not by a logged-in session, so the firewall must let it through unauthenticated. Pinned to
         # the exact path (not a broad ^/cron prefix) so a future /cron/* route is not opened by accident.
