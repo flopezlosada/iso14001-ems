@@ -44,7 +44,8 @@
                         <button type="submit" class="btn">Marcar revisado</button>
                     </form>
                 {% else %}
-                    <span class="muted" title="Aprueba una versión del documento en su ficha de control documental antes de poder marcar su revisión.">Pendiente de aprobar</span>
+                    {# Enlaza a la ficha: ahí se ve en qué paso del ciclo está y a quién le toca. #}
+                    <a class="muted" href="{{ path('document_show', { id: obl.id }) }}" title="Aprueba una versión del documento en su ficha de control documental antes de poder marcar su revisión.">Pendiente de aprobar →</a>
                 {% endif %}
             {% endif %}
         </td>

@@ -49,26 +49,67 @@ final class ManagementReviewControllerTest extends WebTestCase
         return static::getContainer()->get(ManagementReviewRepository::class);
     }
 
-    public function testWorkflowGuideOffersCreatingTheActaUntilThisCoursesReviewExists(): void
+    public function testWorkflowGuideOffersCreatingTheActaOfTheClosedCourseUntilItExists(): void
     {
         $client = $this->loggedInClient();
-        $exercise = SchoolYear::current(new \DateTimeImmutable());
+        $current = SchoolYear::current(new \DateTimeImmutable());
+        $closed = SchoolYear::previous($current);
 
-        // No review for the current course yet -> the guide's first step is pending and its CTA
-        // offers to create the acta. This also renders the shared _workflow_guide partial end to end.
-        // (We assert on the CTA text, not the step label "Crear el acta del curso …", which is fixed.)
+        // A course is reviewed once it has ended: with no acta at all, the guide drives the closed
+        // course, never the one that has just started (that would invite a premature acta). This also
+        // renders the shared _workflow_guide partial end to end. (We assert on the CTA text, not the
+        // step label "Crear el acta del curso …", which is fixed.)
         $client->request('GET', '/management-review');
         self::assertResponseIsSuccessful();
-        self::assertStringContainsString('Crear el acta '.$exercise, (string) $client->getResponse()->getContent());
+        $content = (string) $client->getResponse()->getContent();
+        self::assertStringContainsString('Crear el acta '.$closed, $content);
+        self::assertStringNotContainsString('Crear el acta '.$current, $content);
 
-        // Once this course's review exists, that step is done and its create CTA is gone.
+        // Once the closed course's acta exists, that step is done and no create CTA is offered —
+        // in particular not one for the course that has just started.
         $em = static::getContainer()->get(EntityManagerInterface::class);
-        $em->persist((new ManagementReview())->setExercise($exercise));
+        $em->persist((new ManagementReview())->setExercise($closed));
         $em->flush();
 
         $client->request('GET', '/management-review');
         self::assertResponseIsSuccessful();
-        self::assertStringNotContainsString('Crear el acta '.$exercise, (string) $client->getResponse()->getContent());
+        $content = (string) $client->getResponse()->getContent();
+        self::assertStringNotContainsString('Crear el acta '.$closed, $content);
+        self::assertStringNotContainsString('Crear el acta '.$current, $content);
+    }
+
+    public function testWorkflowGuideFollowsTheCurrentCourseWhenItsActaWasStartedEarly(): void
+    {
+        $client = $this->loggedInClient();
+        $current = SchoolYear::current(new \DateTimeImmutable());
+
+        // Direction held this course's review before it ended (e.g. in June): the guide follows it.
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $em->persist((new ManagementReview())->setExercise($current));
+        $em->flush();
+
+        $client->request('GET', '/management-review');
+        self::assertResponseIsSuccessful();
+        self::assertStringContainsString('Acta del curso '.$current, (string) $client->getResponse()->getContent());
+    }
+
+    public function testNewFormSuggestsTheCourseUnderReviewOnlyWhileItHasNoActa(): void
+    {
+        $client = $this->loggedInClient();
+        $closed = SchoolYear::previous(SchoolYear::current(new \DateTimeImmutable()));
+
+        $crawler = $client->request('GET', '/management-review/new');
+        self::assertResponseIsSuccessful();
+        self::assertSame($closed, $crawler->filter('#management_review_exercise')->attr('value'));
+
+        // Its acta exists: suggesting it again would only fail the one-acta-per-course validation.
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $em->persist((new ManagementReview())->setExercise($closed));
+        $em->flush();
+
+        $crawler = $client->request('GET', '/management-review/new');
+        self::assertResponseIsSuccessful();
+        self::assertSame('', (string) $crawler->filter('#management_review_exercise')->attr('value'));
     }
 
     public function testCreatingReviewGeneratesEverySection(): void
