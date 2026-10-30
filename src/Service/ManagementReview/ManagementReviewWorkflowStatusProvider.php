@@ -6,6 +6,7 @@ namespace App\Service\ManagementReview;
 
 use App\Enum\ReviewSectionGroup;
 use App\Repository\ManagementReviewRepository;
+use App\Util\SchoolYear;
 
 /**
  * Computes the {@see ManagementReviewWorkflowStatus} of a course from the existing data, without an
@@ -17,6 +18,24 @@ final readonly class ManagementReviewWorkflowStatusProvider
     public function __construct(
         private ManagementReviewRepository $reviews,
     ) {
+    }
+
+    /**
+     * The course whose review the workflow guide should drive on a given date. A course is reviewed
+     * once it has run its course (the annual obligation falls due at the start of the next one), so
+     * this is normally the previous course: pointing at the course that has just started would invite
+     * creating a premature acta for it. The current course is chosen only when its acta already
+     * exists, i.e. Direction chose to hold the review before the course ended (e.g. in June).
+     *
+     * @param \DateTimeImmutable $on the reference date (today)
+     *
+     * @return string the school year under review, in "YYYY-YYYY" format
+     */
+    public function exerciseUnderReview(\DateTimeImmutable $on): string
+    {
+        $current = SchoolYear::current($on);
+
+        return null !== $this->reviews->findOneByExercise($current) ? $current : SchoolYear::previous($current);
     }
 
     /**

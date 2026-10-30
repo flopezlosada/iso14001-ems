@@ -77,6 +77,28 @@ final class ManagementReviewWorkflowStatusProviderTest extends TestCase
         self::assertTrue($status->isComplete());
     }
 
+    public function testReviewsThePreviousCourseOnceANewOneHasStarted(): void
+    {
+        $repo = $this->createMock(ManagementReviewRepository::class);
+        $repo->method('findOneByExercise')->with('2026-2027')->willReturn(null);
+
+        $provider = new ManagementReviewWorkflowStatusProvider($repo);
+
+        // 30/10/2026 is in course 2026-2027, which has no acta: the course under review is 2025-2026.
+        self::assertSame('2025-2026', $provider->exerciseUnderReview(new \DateTimeImmutable('2026-10-30')));
+    }
+
+    public function testReviewsTheCurrentCourseWhenItsActaWasStartedBeforeItEnded(): void
+    {
+        $repo = $this->createMock(ManagementReviewRepository::class);
+        $repo->method('findOneByExercise')->with('2025-2026')->willReturn((new ManagementReview())->setExercise('2025-2026'));
+
+        $provider = new ManagementReviewWorkflowStatusProvider($repo);
+
+        // June 2026 is still course 2025-2026 and its acta already exists: the guide follows it.
+        self::assertSame('2025-2026', $provider->exerciseUnderReview(new \DateTimeImmutable('2026-06-20')));
+    }
+
     private function section(ReviewSectionKey $key, ?string $content = null, ?string $decision = null): ManagementReviewSection
     {
         return (new ManagementReviewSection())

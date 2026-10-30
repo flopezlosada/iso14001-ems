@@ -121,7 +121,7 @@
         {% if reviews is empty %}
             <div class="empty-state">
                 <h2>Aún no hay revisiones</h2>
-                <p>Crea la revisión por la dirección del curso en vigor.</p>
+                <p>Crea el acta de la revisión por la dirección del último curso cerrado.</p>
                 {% if can_write %}<a class="btn" href="{{ path('management_review_new') }}">Crear la primera</a>{% endif %}
             </div>
         {% else %}

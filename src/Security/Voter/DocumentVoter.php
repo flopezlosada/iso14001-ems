@@ -38,7 +38,7 @@ class DocumentVoter extends Voter
      * Code of the role that owns document control (the RSGMA). Holding it grants the lifecycle
      * actions on any document, regardless of who is its responsible/approver.
      */
-    private const string DOCUMENT_CONTROL_ROLE = 'ems_manager';
+    public const string DOCUMENT_CONTROL_ROLE = 'ems_manager';
 
     protected function supports(string $attribute, mixed $subject): bool
     {

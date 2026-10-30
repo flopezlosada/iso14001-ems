@@ -13,6 +13,7 @@ use App\Enum\DocumentType;
 use App\Enum\VersionStatus;
 use App\Repository\AuditLogRepository;
 use App\Repository\DocumentRepository;
+use App\Repository\RoleRepository;
 use App\Security\Voter\DocumentVoter;
 use App\Service\AuditLogger;
 use App\Service\Document\DocumentPdfGenerator;
@@ -201,11 +202,12 @@ final class DocumentDetailController extends AbstractController
      *
      * @param Document           $document  the document to show, resolved from the {id} route parameter
      * @param AuditLogRepository $auditLogs source for the period-review closures and the activity trail
+     * @param RoleRepository     $roles     to name who reviews and who approves a pending revision
      *
      * @return Response the rendered detail page
      */
     #[Route('/documentos/{id}', name: 'document_show', requirements: ['id' => '\d+'], methods: ['GET'])]
-    public function show(Document $document, AuditLogRepository $auditLogs): Response
+    public function show(Document $document, AuditLogRepository $auditLogs, RoleRepository $roles): Response
     {
         $versions = $document->getVersions()->toArray();
         usort($versions, static fn (DocumentVersion $a, DocumentVersion $b): int => $b->getRevisionNumber() <=> $a->getRevisionNumber());
@@ -233,9 +235,16 @@ final class DocumentDetailController extends AbstractController
             }
         }
 
+        // Who acts next on a pending revision (PC.01.0): the RSGMA reviews it, the type's approver
+        // approves it. Named on the page so a user who cannot act sees whom the step is waiting on.
+        $approverCode = $document->getType()->approverRoleCode();
+        $roleNames = $roles->findNamesByCode(array_filter([DocumentVoter::DOCUMENT_CONTROL_ROLE, $approverCode]));
+
         return $this->render('document/show.html.twig', [
             'document' => $document,
             'versions' => $versions,
+            'reviewerRole' => $roleNames[DocumentVoter::DOCUMENT_CONTROL_ROLE] ?? null,
+            'approverRole' => null !== $approverCode ? ($roleNames[$approverCode] ?? null) : null,
             'current' => $current,
             'displayVersion' => $displayVersion,
             'hasOpenRevision' => $hasOpenRevision,

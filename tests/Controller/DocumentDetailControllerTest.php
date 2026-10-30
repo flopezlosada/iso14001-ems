@@ -505,6 +505,7 @@ final class DocumentDetailControllerTest extends WebTestCase
         // The RSGMA (ems_manager) is the reviewer (PC.01.0); here also the procedure's responsible.
         $role = (new Role())->setCode('ems_manager')->setName('RSGMA');
         $document = $this->persistProcedure($em, 'PG-07.10', $role);
+        $em->persist((new Role())->setCode('direction')->setName('Dirección'));
         $version = (new DocumentVersion())->setRevisionNumber(0)->setStatus(VersionStatus::IN_REVIEW)->setChangeSummary('Inicial.')->setBody('<p>Contenido</p>');
         $document->addVersion($version);
         $em->persist($version);
@@ -517,8 +518,9 @@ final class DocumentDetailControllerTest extends WebTestCase
         $client->submitForm('Revisar');
 
         $client->followRedirect();
-        // Now reviewed and pending approval (the RSGMA is not the approver of a procedure, Dirección is).
-        self::assertSelectorTextContains('body', 'Revisado');
+        // Now reviewed and pending approval (the RSGMA is not the approver of a procedure, Dirección is):
+        // the row names the approver, so the reviewer knows whom to tell.
+        self::assertSelectorTextContains('tbody', 'pendiente de aprobar: le toca a Dirección');
     }
 
     public function testCannotApproveUnreviewedRevision(): void
@@ -540,8 +542,9 @@ final class DocumentDetailControllerTest extends WebTestCase
         $client->request('GET', '/documentos/'.$document->getId());
 
         self::assertResponseIsSuccessful();
-        // Sin revisar no se ofrece aprobar: la fila muestra "pendiente de revisar", no "Aprobar".
-        self::assertSelectorTextContains('tbody', 'pendiente de revisar');
+        // Sin revisar no se ofrece aprobar: la fila muestra "pendiente de revisar", no "Aprobar", y
+        // nombra el rol al que le toca revisar (la dirección no puede, así sabe a quién avisar).
+        self::assertSelectorTextContains('tbody', 'pendiente de revisar: le toca a RSGMA');
         self::assertSelectorTextNotContains('tbody', 'Aprobar');
     }
 

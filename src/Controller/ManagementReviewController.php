@@ -16,7 +16,6 @@ use App\Service\FileUploader;
 use App\Service\ManagementReview\ManagementReviewPdfGenerator;
 use App\Service\ManagementReview\ManagementReviewPrefiller;
 use App\Service\ManagementReview\ManagementReviewWorkflowStatusProvider;
-use App\Util\SchoolYear;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
@@ -51,14 +50,11 @@ class ManagementReviewController extends AbstractController
     {
         $this->denyAccessUnlessGranted(AreaVoter::READ, Area::MANAGEMENT_REVIEW);
 
-        $currentExercise = SchoolYear::current(new \DateTimeImmutable());
-
         return $this->render('management_review/index.html.twig', [
             'reviews' => $repository->findAllOrdered(),
-            'currentExercise' => $currentExercise,
-            // Guía "qué falta este curso": pendientes del acta de la dirección, cada uno enlazado a
-            // su acción.
-            'status' => $workflow->for($currentExercise),
+            // Guía "qué falta": pendientes del acta del curso en revisión (normalmente el que acaba
+            // de cerrarse), cada uno enlazado a su acción.
+            'status' => $workflow->for($workflow->exerciseUnderReview(new \DateTimeImmutable())),
         ]);
     }
 
@@ -83,14 +79,22 @@ class ManagementReviewController extends AbstractController
 
     /**
      * Creates a review for a course: the meeting metadata is captured here and the sections are then
-     * pre-filled from the other modules before redirecting to the edit page.
+     * pre-filled from the other modules before redirecting to the edit page. The course field starts
+     * with the course under review (the one the workflow guide points at) while it has no acta yet;
+     * otherwise it is left blank, since suggesting an existing course would only fail validation.
      */
     #[Route('/new', name: 'management_review_new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $em): Response
+    public function new(Request $request, EntityManagerInterface $em, ManagementReviewRepository $repository, ManagementReviewWorkflowStatusProvider $workflow): Response
     {
         $this->denyAccessUnlessGranted(AreaVoter::WRITE, Area::MANAGEMENT_REVIEW);
 
-        return $this->handleForm(new ManagementReview(), $request, $em, lockExercise: false);
+        $review = new ManagementReview();
+        $exercise = $workflow->exerciseUnderReview(new \DateTimeImmutable());
+        if (null === $repository->findOneByExercise($exercise)) {
+            $review->setExercise($exercise);
+        }
+
+        return $this->handleForm($review, $request, $em, lockExercise: false);
     }
 
     /**

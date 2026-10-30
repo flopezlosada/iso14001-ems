@@ -157,10 +157,13 @@
                                         <input type="hidden" name="_token" value="{{ csrf_token('document_approve' ~ document.id) }}">
                                         <button class="btn secondary" type="submit">Aprobar</button>
                                     </form>
+                                {# Quien no puede dar el paso ve a quién le toca, para saber a quién avisar. #}
                                 {%- elseif v.reviewed -%}
-                                    <span class="muted">Revisado{% if v.reviewedBy %} por {{ v.reviewedBy }}{% endif %} · pendiente de aprobar</span>
+                                    <span class="muted">Revisado{% if v.reviewedBy %} por {{ v.reviewedBy }}{% endif %} · pendiente de aprobar{% if approverRole %}: le toca a {{ approverRole }}{% endif %}</span>
                                 {%- elseif v.status.value == 'in_review' -%}
-                                    <span class="muted">En revisión · pendiente de revisar</span>
+                                    <span class="muted">En revisión · pendiente de revisar{% if reviewerRole %}: le toca a {{ reviewerRole }}{% endif %}</span>
+                                {%- elseif v.status.value == 'draft' -%}
+                                    <span class="muted">Borrador · pendiente de enviar a revisión{% if document.responsibleRole %}: le toca a {{ document.responsibleRole.name }}{% endif %}</span>
                                 {%- else -%}
                                     <span class="muted">Pendiente</span>
                                 {%- endif -%}
