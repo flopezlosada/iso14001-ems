@@ -79,6 +79,7 @@ class AuditLogExtension extends AbstractExtension
         'restored' => 'Reactivado',
         'completed' => 'Marcado como hecho',
         'generated' => 'Generado',
+        'published' => 'Publicado',
         'revision_drafted' => 'Revisión redactada',
         'revision_edited' => 'Revisión editada',
         'revision_submitted' => 'Revisión enviada a revisar',

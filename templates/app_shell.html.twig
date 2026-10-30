@@ -53,9 +53,12 @@
                             <a href="{{ path('admin_role_index') }}" class="{{ route starts with 'admin_role' ? 'is-active' }}">Roles y permisos</a>
                             <a href="{{ path('admin_settings_edit') }}" class="{{ route starts with 'admin_settings' ? 'is-active' }}">Ajustes</a>
                             <a href="{{ path('admin_operational_control_item_index') }}" class="{{ route starts with 'admin_operational_control_item' ? 'is-active' }}">Checklist control operacional</a>
+                            <a href="{{ path('admin_privacy_notice_index') }}" class="{{ route starts with 'admin_privacy_notice' ? 'is-active' }}">Protección de datos</a>
                         </div>
                     </div>
                 {% endif %}
+                {# En móvil el pie de la barra lateral (con este mismo enlace) no se ve: en el cajón es donde queda. #}
+                <a href="{{ path('privacy_notice_public') }}" class="nav-privacy">Protección de datos</a>
             </nav>
 
             {# Fondo oscurecido del cajón móvil; al pulsarlo se cierra. Solo visible en móvil. #}
@@ -64,6 +67,7 @@
             <div class="sidebar-foot">
                 SGA · ISO 14001<br>
                 Sistema de gestión ambiental
+                <br><a href="{{ path('privacy_notice_public') }}">Protección de datos</a>
             </div>
         </aside>
 
@@ -106,6 +110,7 @@
                                         <a role="option" class="quickjump__item" href="{{ path('admin_role_index') }}"><span class="quickjump__name">Roles y permisos</span><span class="quickjump__hint">Administración</span></a>
                                         <a role="option" class="quickjump__item" href="{{ path('admin_settings_edit') }}"><span class="quickjump__name">Ajustes</span><span class="quickjump__hint">Administración</span></a>
                                         <a role="option" class="quickjump__item" href="{{ path('admin_operational_control_item_index') }}"><span class="quickjump__name">Checklist control operacional</span><span class="quickjump__hint">Administración</span></a>
+                                        <a role="option" class="quickjump__item" href="{{ path('admin_privacy_notice_index') }}"><span class="quickjump__name">Protección de datos</span><span class="quickjump__hint">Administración</span></a>
                                     {% endif %}
                                 </div>
                                 <p class="quickjump__empty" hidden>Sin resultados</p>
